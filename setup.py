@@ -128,6 +128,8 @@ class PyradianceBDistWheel(bdist_wheel):
             with open(zip_name, 'wb') as wtr:
                 wtr.write(requests.get(url).content)
         print(os.listdir())
+        radiance_dir = "radiance"
+        os.makedirs(radiance_dir, exist_ok=True)
         if wheel["zip_tag"] == "Linux":
             # tarball inside zip need to be extracted
             with zipfile.ZipFile(zip_name, "r") as zip_ref:
@@ -138,41 +140,39 @@ class PyradianceBDistWheel(bdist_wheel):
             else:
                 raise ValueError("Could not find Linux tar.gz file")
             with tarfile.open(tarpath) as tarf:
-                tarf.extractall()
+                tarf.extractall(radiance_dir)
             print(os.listdir())
-            radiance_dir = Path(tarpath.stem).stem
             os.remove(tarpath)
         else:
             with zipfile.ZipFile(zip_name, "r") as zip_ref:
-                zip_ref.extractall()
-            if wheel["zip_tag"].startswith("OSX"):
+                zip_ref.extractall(radiance_dir)
+            # if wheel["zip_tag"].startswith("OSX"):
                 # OSX extract to just radiance
-                radiance_dir = "radiance"
-            else:
+                # radiance_dir = "radiance"
+            # else:
                 # Windows extract to the zip name
-                radiance_dir = Path(zip_name).stem
+                # radiance_dir = Path(zip_name).stem
             print(os.listdir())
         os.remove(zip_name)
-        print(f"{radiance_dir=}")
+        print(os.listdir(radiance_dir))
         shutil.copy(wheel_path, platform_wheel_path)
         with zipfile.ZipFile(platform_wheel_path, "a") as zip:
             _root = os.path.abspath(radiance_dir)
             for dir_path, _, files in os.walk(_root):
                 for file in files:
                     from_path = os.path.join(dir_path, file)
+                    print(f"{from_path=}")
                     to_path = os.path.basename(file)
+                    print(f"{to_path=}")
                     if Path(file).stem in RADBINS and Path(file).suffix != ".1":
-                        os.chmod(file, 0o755)
+                        os.chmod(from_path, 0o755)
                         zip.write(from_path, f"pyradiance/bin/{to_path}")
                     if Path(file).name in RADCALS:
                         zip.write(from_path, f"pyradiance/lib/{to_path}")
         os.remove(wheel_path)
         for whlfile in glob.glob(os.path.join(self.dist_dir, "*.whl")):
             os.makedirs("wheelhouse", exist_ok=True)
-            with InWheel(
-                in_wheel=whlfile,
-                out_wheel=os.path.join("wheelhouse", os.path.basename(whlfile)),
-            ):
+            with InWheel(in_wheel=whlfile, out_wheel=os.path.join("wheelhouse", os.path.basename(whlfile)),):
                 print(f"Updating RECORD file of {whlfile}")
         shutil.rmtree(self.dist_dir)
         print("Copying new wheels")
