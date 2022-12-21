@@ -122,10 +122,12 @@ class PyradianceBDistWheel(bdist_wheel):
         without_platform = str(wheel_path)[:-7] 
         platform_wheel_path = without_platform + wheel["wheel"]
         zip_name = f'Radiance_{RADTAG}_{wheel["zip_tag"]}.zip'
-        if not Path(zip_name).exists():
+        if not os.path.exists(zip_name):
             url = f'https://github.com/LBNL-ETA/Radiance/releases/download/{RADTAG}/{zip_name}'
-            with open(zip_name, 'wb') as f:
-                f.write(requests.get(url).content)
+            print("{url=}")
+            with open(zip_name, 'wb') as wtr:
+                wtr.write(requests.get(url).content)
+        print(os.listdir())
         if wheel["zip_tag"] == "Linux":
             # tarball inside zip need to be extracted
             with zipfile.ZipFile(zip_name, "r") as zip_ref:
@@ -157,6 +159,7 @@ class PyradianceBDistWheel(bdist_wheel):
                     from_path = os.path.join(dir_path, file)
                     to_path = os.path.basename(file)
                     if Path(file).stem in RADBINS and Path(file).suffix != ".1":
+                        os.chmod(file, 0o755)
                         zip.write(from_path, f"pyradiance/bin/{to_path}")
                     if Path(file).name in RADCALS:
                         zip.write(from_path, f"pyradiance/lib/{to_path}")
