@@ -1,0 +1,89 @@
+void plastic Ceiling
+0
+0
+5 0.7384 0.7195 0.6540 0.0110 0.0500
+
+void plastic Chairs
+0
+0
+5 .5 .5 .5 0 0
+
+void plastic CubeFabric
+0
+0
+5 .45 .45 .45 0 0
+
+void plastic CubeFrame
+0
+0
+5 .15 .15 .15 0 0
+
+void plastic Desks
+0
+0
+5 0.6579 0.5451 0.3271 0.0427 0.1000
+
+void plastic DeskLeg
+0
+0
+5 .1 .1 .1 0 0
+
+void plastic Extwalls
+0
+0
+5 .3 .3 .3 0 0
+
+void plastic Floor
+0
+0
+5 0.1977 0.1761 0.1398 0.0004 0.2000
+
+void glass GlDay
+0
+0
+3 .654 .654 .654
+
+void glass GlView
+0
+0
+3 .654 .654 .654
+
+void plastic Walls
+0
+0
+5 0.7672 0.7765 0.7191 0.0011 0.2000
+
+void plastic windowframe
+0
+0
+5 .3 .3 .3 0 0
+
+void plastic concrete
+0
+0
+5 0.4701 0.4230 0.3244 0.0016 0.2000
+
+# monitor dark pixel
+void glow dark_p
+0
+0
+4 1.39 1.39 1.39 0
+
+# monitor bright pixel
+void glow brightp
+0
+0
+4 173 173 173 0
+
+# monitor screen
+void trans screen
+0
+0
+7 .074 .075 .077 .033 .01 0.4 1
+
+# monitor frame
+void plastic box
+0
+0
+5 .054 .054 .062 .013 .1
+
