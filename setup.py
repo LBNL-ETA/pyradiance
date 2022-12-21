@@ -80,9 +80,9 @@ class PyradianceBDistWheel(bdist_wheel):
         self.all = False
 
     def run(self) -> None:
-        shutil.rmtree("build")
-        shutil.rmtree("dist")
-        shutil.rmtree("pyradiance.egg-info")
+        shutil.rmtree("build", ignore_errors=True)
+        shutil.rmtree("dist", ignore_errors=True)
+        shutil.rmtree("pyradiance.egg-info", ignore_errors=True)
         super().run()
         wheels = {
             "darwin": {
