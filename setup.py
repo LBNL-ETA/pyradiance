@@ -101,7 +101,7 @@ class PyradianceBDistWheel(bdist_wheel):
                     "zip_tag": "Linux",
                 }
             },
-            "win32": {
+            "windows": {
                 "i386": {
                     "wheel": "win32.whl",
                     "zip_tag": "Windows",
@@ -124,7 +124,7 @@ class PyradianceBDistWheel(bdist_wheel):
         zip_name = f'Radiance_{RADTAG}_{wheel["zip_tag"]}.zip'
         if not os.path.exists(zip_name):
             url = f'https://github.com/LBNL-ETA/Radiance/releases/download/{RADTAG}/{zip_name}'
-            print("{url=}")
+            print(f"{url=}")
             with open(zip_name, 'wb') as wtr:
                 wtr.write(requests.get(url).content)
         print(os.listdir())
@@ -139,6 +139,7 @@ class PyradianceBDistWheel(bdist_wheel):
                 raise ValueError("Could not find Linux tar.gz file")
             with tarfile.open(tarpath) as tarf:
                 tarf.extractall()
+            print(os.listdir())
             radiance_dir = Path(tarpath.stem).stem
             os.remove(tarpath)
         else:
@@ -150,7 +151,9 @@ class PyradianceBDistWheel(bdist_wheel):
             else:
                 # Windows extract to the zip name
                 radiance_dir = Path(zip_name).stem
+            print(os.listdir())
         os.remove(zip_name)
+        print(f"{radiance_dir=}")
         shutil.copy(wheel_path, platform_wheel_path)
         with zipfile.ZipFile(platform_wheel_path, "a") as zip:
             _root = os.path.abspath(radiance_dir)
