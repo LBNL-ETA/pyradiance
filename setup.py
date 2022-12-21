@@ -1,26 +1,10 @@
-# Copyright (c) Microsoft Corporation.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-import glob
 import os
 import platform
 import shutil
-import sys
 import tarfile
 import zipfile
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict
 
 import requests
 from setuptools import setup
@@ -70,10 +54,6 @@ RADCALS = [
 
 
 class PyradianceBDistWheel(bdist_wheel):
-    user_options = bdist_wheel.user_options + [
-        ("all", "a", "create wheels for all platforms")
-    ]
-    boolean_options = bdist_wheel.boolean_options + ["all"]
 
     def initialize_options(self) -> None:
         super().initialize_options()
@@ -124,10 +104,8 @@ class PyradianceBDistWheel(bdist_wheel):
         zip_name = f'Radiance_{RADTAG}_{wheel["zip_tag"]}.zip'
         if not os.path.exists(zip_name):
             url = f'https://github.com/LBNL-ETA/Radiance/releases/download/{RADTAG}/{zip_name}'
-            print(f"{url=}")
             with open(zip_name, 'wb') as wtr:
                 wtr.write(requests.get(url).content)
-        print(os.listdir())
         radiance_dir = "radiance"
         os.makedirs(radiance_dir, exist_ok=True)
         if wheel["zip_tag"] == "Linux":
@@ -141,20 +119,11 @@ class PyradianceBDistWheel(bdist_wheel):
                 raise ValueError("Could not find Linux tar.gz file")
             with tarfile.open(tarpath) as tarf:
                 tarf.extractall(radiance_dir)
-            print(os.listdir())
             os.remove(tarpath)
         else:
             with zipfile.ZipFile(zip_name, "r") as zip_ref:
                 zip_ref.extractall(radiance_dir)
-            # if wheel["zip_tag"].startswith("OSX"):
-                # OSX extract to just radiance
-                # radiance_dir = "radiance"
-            # else:
-                # Windows extract to the zip name
-                # radiance_dir = Path(zip_name).stem
-            print(os.listdir())
         os.remove(zip_name)
-        print(os.listdir(radiance_dir))
         shutil.copy(wheel_path, platform_wheel_path)
         with zipfile.ZipFile(platform_wheel_path, "a") as zip:
             _root = os.path.abspath(radiance_dir)
@@ -163,28 +132,26 @@ class PyradianceBDistWheel(bdist_wheel):
                     from_path = os.path.join(dir_path, file)
                     to_path = os.path.basename(file)
                     if Path(file).stem in RADBINS and Path(file).suffix != ".1":
-                        print(f"{from_path=}")
                         os.chmod(from_path, 0o755)
                         zip.write(from_path, f"pyradiance/bin/{to_path}")
                     if Path(file).name in RADCALS:
                         zip.write(from_path, f"pyradiance/lib/{to_path}")
         os.remove(wheel_path)
-        for whlfile in glob.glob(os.path.join(self.dist_dir, "*.whl")):
+        for whlfile in list(dist_dir.glob("*.whl")):
+        # for whlfile in glob.glob(os.path.join(self.dist_dir, "*.whl")):
             os.makedirs("wheelhouse", exist_ok=True)
-            with InWheel(in_wheel=whlfile, out_wheel=os.path.join("wheelhouse", os.path.basename(whlfile)),):
+            with InWheel(in_wheel=str(whlfile), out_wheel=os.path.join("wheelhouse", os.path.basename(whlfile)),):
                 print(f"Updating RECORD file of {whlfile}")
         shutil.rmtree(self.dist_dir)
-        print("Copying new wheels")
         shutil.move("wheelhouse", self.dist_dir)
         shutil.rmtree(radiance_dir)
-        print(os.listdir(self.dist_dir))
         
 
 setup(
     name="pyradiance",
     author="LBNL",
     author_email="taoningwang@lbl.gov",
-    description="",
+    description="Wrapper for Radiance command-line tools",
     long_description=Path("README.md").read_text(encoding="utf-8"),
     long_description_content_type="text/markdown",
     license="BSD-3-Clause",
