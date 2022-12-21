@@ -26,14 +26,14 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Install pyradiance
+    - name: Build Wheels
       run: |
         pip install requests wheel auditwheel pytest
         python setup.py bdist_wheel
-        pip install .
 
-    - name: Run tests
+    - name: Install and test
       run: |
+        pip install .
         pytest test
 
     - name: upload wheels
@@ -57,14 +57,14 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Install pyradiance
+    - name: Build Wheels
       run: |
         pip install requests wheel auditwheel pytest
         python setup.py bdist_wheel
-        pip install .
 
-    - name: Run tests
+    - name: Install and test
       run: |
+        pip install .
         pytest test
 
     - name: upload wheels
@@ -91,14 +91,14 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Install pyradiance
+    - name: Build Wheels
       run: |
         pip install requests wheel auditwheel pytest
         python setup.py bdist_wheel
-        pip install .
 
-    - name: Run tests
+    - name: Install and test
       run: |
+        pip install .
         pytest test
 
     - name: upload wheels

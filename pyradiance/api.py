@@ -1133,6 +1133,7 @@ def rtrace(
     nproc: Optional[int] = None,
     options: Optional[SamplingParameters] = None,
     report: bool = False,
+    version: bool = False,
 ) -> bytes:
     """Run rtrace.
     Args:
@@ -1161,9 +1162,12 @@ def rtrace(
     Returns:
         A string of bytes representing the output of rtrace.
     """
+    cmd = [str(BINPATH / "rtrace")]
+    if version:
+        cmd.append("-version")
+        return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
     if not isinstance(rays, bytes):
         raise TypeError("Rays must be bytes")
-    cmd = [str(BINPATH / "rtrace")]
     if not header:
         cmd.append("-h")
     if irradiance:
