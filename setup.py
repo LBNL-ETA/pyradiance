@@ -161,10 +161,9 @@ class PyradianceBDistWheel(bdist_wheel):
             for dir_path, _, files in os.walk(_root):
                 for file in files:
                     from_path = os.path.join(dir_path, file)
-                    print(f"{from_path=}")
                     to_path = os.path.basename(file)
-                    print(f"{to_path=}")
                     if Path(file).stem in RADBINS and Path(file).suffix != ".1":
+                        print(f"{from_path=}")
                         os.chmod(from_path, 0o755)
                         zip.write(from_path, f"pyradiance/bin/{to_path}")
                     if Path(file).name in RADCALS:
@@ -178,6 +177,7 @@ class PyradianceBDistWheel(bdist_wheel):
         print("Copying new wheels")
         shutil.move("wheelhouse", self.dist_dir)
         shutil.rmtree(radiance_dir)
+        print(os.listdir(self.dist_dir))
         
 
 setup(
