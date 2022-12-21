@@ -17,6 +17,7 @@ import os
 import platform
 import shutil
 import sys
+import tarfile
 import zipfile
 from pathlib import Path
 from typing import Dict, List
@@ -67,25 +68,6 @@ RADCALS = [
     'minimalBSDFt.xml',
 ]
 
-def extractall(zip: zipfile.ZipFile, path: str) -> None:
-    for name in zip.namelist():
-        member = zip.getinfo(name)
-        extracted_path = zip.extract(member, path)
-        attr = member.external_attr >> 16
-        if attr != 0:
-            os.chmod(extracted_path, attr)
-# 
-# 
-def download(zip_name: str) -> None:
-    zip_file = f'Radiance_{RADTAG}_{zip_name}.zip'
-    if os.path.exists("radiance/" + zip_file):
-        return
-    url = f'https://github.com/LBNL-ETA/Radiance/releases/download/{RADTAG}/'
-    url = url + zip_file
-    print(f"Fetching {url}")
-    with open("radiance/" + zip_file, 'wb') as f:
-        f.write(requests.get(url).content)
-
 
 class PyradianceBDistWheel(bdist_wheel):
     user_options = bdist_wheel.user_options + [
@@ -98,97 +80,87 @@ class PyradianceBDistWheel(bdist_wheel):
         self.all = False
 
     def run(self) -> None:
-        shutil.rmtree("build", ignore_errors=True)
-        shutil.rmtree("dist", ignore_errors=True)
-        shutil.rmtree("pyradiance.egg-info", ignore_errors=True)
+        shutil.rmtree("build")
+        shutil.rmtree("dist")
+        shutil.rmtree("pyradiance.egg-info")
         super().run()
-        os.makedirs("radiance", exist_ok=True)
-        # os.makedirs("pyradiance/radiance", exist_ok=True)
-        base_wheel_bundles: List[Dict[str, str]] = [
-            {
-                "wheel": "macosx_10_13_x86_64.whl",
-                "machine": "x86_64",
-                "platform": "darwin",
-                "zip_name": "OSX",
+        wheels = {
+            "darwin": {
+                "x86_64": {
+                    "wheel": "macosx_10_13_x86_64.whl",
+                    "zip_tag": "OSX",
+                },
+                "arm64": {
+                    "wheel": "macosx_11_0_arm64.whl",
+                    "zip_tag": "OSX_arm64",
+                },
             },
-            {
-                "wheel": "macosx_11_0_universal2.whl",
-                "machine": "x86_64",
-                "platform": "darwin",
-                "zip_name": "OSX",
+            "linux": {
+                "x86_64": {
+                    "wheel": "manylinux1_x86_64.whl",
+                    "zip_tag": "Linux",
+                }
             },
-            {
-                "wheel": "macosx_11_0_arm64.whl",
-                "machine": "arm64",
-                "platform": "darwin",
-                "zip_name": "OSX_arm64",
+            "win32": {
+                "i386": {
+                    "wheel": "win32.whl",
+                    "zip_tag": "Windows",
+                },
+                "amd64": {
+                    "wheel": "win_amd64.whl",
+                    "zip_tag": "Windows",
+                },
             },
-            {
-                "wheel": "manylinux1_x86_64.whl",
-                "machine": "x86_64",
-                "platform": "linux",
-                "zip_name": "Linux",
-            },
-            # {
-            #     "wheel": "manylinux_2_17_aarch64.manylinux2014_aarch64.whl",
-            #     "machine": "aarch64",
-            #     "platform": "linux",
-            #     "zip_name": "linux-arm64",
-            # },
-            {
-                "wheel": "win32.whl",
-                "machine": "i386",
-                "platform": "win32",
-                "zip_name": "Windows",
-            },
-            {
-                "wheel": "win_amd64.whl",
-                "machine": "amd64",
-                "platform": "win32",
-                "zip_name": "Windows",
-            },
-        ]
-        # self._download_and_extract_local_driver(base_wheel_bundles)
+        }
+        wheel = wheels[platform.system().lower()][platform.machine().lower()]
+        self._build_wheels(wheel)
 
-        wheels = base_wheel_bundles
-        if not self.all:
-            # Limit to 1, since for MacOS e.g. we have multiple wheels for the same platform and architecture and Conda expects 1.
-            wheels = list(
-                filter(
-                    lambda wheel: wheel["platform"] == sys.platform
-                    and wheel["machine"] == platform.machine().lower(),
-                    base_wheel_bundles,
-                )
-            )[:1]
-        self._build_wheels(wheels)
-
-    def _build_wheels(
-        self,
-        wheels: List[Dict[str, str]],
-    ) -> None:
-        base_wheel_location: str = glob.glob(os.path.join(self.dist_dir, "*.whl"))[0]
-        without_platform = base_wheel_location[:-7]
-        for wheel_bundle in wheels:
-            download(wheel_bundle["zip_name"])
-            zip_file = (
-                f"radiance/Radiance_{RADTAG}_{wheel_bundle['zip_name']}.zip"
-            )
-            with zipfile.ZipFile(zip_file, "r") as zip_ref:
-                # extractall(zip, f"radiance/{wheel_bundle['zip_name']}")
-                zip_ref.extractall(f"radiance/{wheel_bundle['zip_name']}")
-            wheel_location = without_platform + wheel_bundle["wheel"]
-            shutil.copy(base_wheel_location, wheel_location)
-            with zipfile.ZipFile(wheel_location, "a") as zip:
-                driver_root = os.path.abspath(f"radiance/{wheel_bundle['zip_name']}")
-                for dir_path, _, files in os.walk(driver_root):
-                    for file in files:
-                        from_path = os.path.join(dir_path, file)
-                        to_path = os.path.basename(file)
-                        if Path(file).stem in RADBINS and Path(file).suffix != ".1":
-                            zip.write(from_path, f"pyradiance/bin/{to_path}")
-                        if Path(file).name in RADCALS:
-                            zip.write(from_path, f"pyradiance/lib/{to_path}")
-        os.remove(base_wheel_location)
+    def _build_wheels(self, wheel: Dict[str, str]) -> None:
+        assert self.dist_dir is not None
+        dist_dir = Path(self.dist_dir)
+        wheel_path = list(dist_dir.glob("*.whl"))[0]
+        without_platform = str(wheel_path)[:-7] 
+        platform_wheel_path = without_platform + wheel["wheel"]
+        zip_name = f'Radiance_{RADTAG}_{wheel["zip_tag"]}.zip'
+        if not Path(zip_name).exists():
+            url = f'https://github.com/LBNL-ETA/Radiance/releases/download/{RADTAG}/{zip_name}'
+            with open(zip_name, 'wb') as f:
+                f.write(requests.get(url).content)
+        if wheel["zip_tag"] == "Linux":
+            # tarball inside zip need to be extracted
+            with zipfile.ZipFile(zip_name, "r") as zip_ref:
+                zip_ref.extractall()
+            tarpath = [i for i in Path().glob("radiance*Linux.tar.gz")]
+            if len(tarpath) == 1:
+                tarpath = tarpath[0]
+            else:
+                raise ValueError("Could not find Linux tar.gz file")
+            with tarfile.open(tarpath) as tarf:
+                tarf.extractall()
+            radiance_dir = Path(tarpath.stem).stem
+            os.remove(tarpath)
+        else:
+            with zipfile.ZipFile(zip_name, "r") as zip_ref:
+                zip_ref.extractall()
+            if wheel["zip_tag"].startswith("OSX"):
+                # OSX extract to just radiance
+                radiance_dir = "radiance"
+            else:
+                # Windows extract to the zip name
+                radiance_dir = Path(zip_name).stem
+        os.remove(zip_name)
+        shutil.copy(wheel_path, platform_wheel_path)
+        with zipfile.ZipFile(platform_wheel_path, "a") as zip:
+            _root = os.path.abspath(radiance_dir)
+            for dir_path, _, files in os.walk(_root):
+                for file in files:
+                    from_path = os.path.join(dir_path, file)
+                    to_path = os.path.basename(file)
+                    if Path(file).stem in RADBINS and Path(file).suffix != ".1":
+                        zip.write(from_path, f"pyradiance/bin/{to_path}")
+                    if Path(file).name in RADCALS:
+                        zip.write(from_path, f"pyradiance/lib/{to_path}")
+        os.remove(wheel_path)
         for whlfile in glob.glob(os.path.join(self.dist_dir, "*.whl")):
             os.makedirs("wheelhouse", exist_ok=True)
             with InWheel(
@@ -199,34 +171,8 @@ class PyradianceBDistWheel(bdist_wheel):
         shutil.rmtree(self.dist_dir)
         print("Copying new wheels")
         shutil.move("wheelhouse", self.dist_dir)
-
-    # def _download_and_extract_local_driver(
-    #     self,
-    #     wheels: List[Dict[str, str]],
-    # ) -> None:
-    #     zip_names_for_current_system = set(
-    #         map(
-    #             lambda wheel: wheel["zip_name"],
-    #             filter(
-    #                 lambda wheel: wheel["machine"] == platform.machine().lower()
-    #                 and wheel["platform"] == sys.platform,
-    #                 wheels,
-    #             ),
-    #         )
-    #     )
-    #     for wheel in wheels:
-    #         if wheel["machine"] == platform.machine().lower() and wheel["platform"] == sys.platform:
-    #             zip_name = wheel["zip_name"]
-    #             break
-
-    #     assert len(zip_names_for_current_system) == 1
-    #     zip_name = zip_names_for_current_system.pop()
-    #     download(zip_name)
-    #     zip_file = f"radiance/radiance_{RADTAG}_{zip_name}.zip"
-    #     print(zip_file)
-    #     with zipfile.ZipFile(zip_file, "r") as zip:
-    #         extractall(zip, "pyradiance/radiance")
-
+        shutil.rmtree(radiance_dir)
+        
 
 setup(
     name="pyradiance",
