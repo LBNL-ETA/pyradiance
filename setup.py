@@ -171,10 +171,11 @@ class PyradianceBDistWheel(bdist_wheel):
         for wheel_bundle in wheels:
             download(wheel_bundle["zip_name"])
             zip_file = (
-                f"radiance/radiance_{RADTAG}_{wheel_bundle['zip_name']}.zip"
+                f"radiance/Radiance_{RADTAG}_{wheel_bundle['zip_name']}.zip"
             )
-            with zipfile.ZipFile(zip_file, "r") as zip:
-                extractall(zip, f"radiance/{wheel_bundle['zip_name']}")
+            with zipfile.ZipFile(zip_file, "r") as zip_ref:
+                # extractall(zip, f"radiance/{wheel_bundle['zip_name']}")
+                zip_ref.extractall(f"radiance/{wheel_bundle['zip_name']}")
             wheel_location = without_platform + wheel_bundle["wheel"]
             shutil.copy(base_wheel_location, wheel_location)
             with zipfile.ZipFile(wheel_location, "a") as zip:

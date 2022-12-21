@@ -62,15 +62,16 @@ jobs:
         pip install requests wheel auditwheel pytest
         python setup.py bdist_wheel
 
+    - name: upload wheels
+      uses: actions/upload-artifact@v2
+      with:
+        path: ./dist/*.whl
+
     - name: Install and test
       run: |
         pip install .
         pytest test
 
-    - name: upload wheels
-      uses: actions/upload-artifact@v2
-      with:
-        path: ./dist/*.whl
 
   build_test_windows:
     runs-on: windows-latest
