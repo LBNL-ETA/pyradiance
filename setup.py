@@ -139,7 +139,6 @@ class PyradianceBDistWheel(bdist_wheel):
                         zip.write(from_path, f"pyradiance/lib/{to_path}")
         os.remove(wheel_path)
         for whlfile in list(dist_dir.glob("*.whl")):
-        # for whlfile in glob.glob(os.path.join(self.dist_dir, "*.whl")):
             os.makedirs("wheelhouse", exist_ok=True)
             with InWheel(in_wheel=str(whlfile), out_wheel=os.path.join("wheelhouse", os.path.basename(whlfile)),):
                 print(f"Updating RECORD file of {whlfile}")
@@ -153,7 +152,7 @@ setup(
     author="LBNL",
     author_email="taoningwang@lbl.gov",
     version="0.0.1a1",
-    description="Wrapper for Radiance command-line tools",
+    description="Python interface for Radiance command-line tools",
     long_description=Path("README.md").read_text(encoding="utf-8"),
     long_description_content_type="text/markdown",
     license="BSD-3-Clause",
@@ -165,7 +164,7 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
-        # "License :: OSI Approved :: Apache Software License",
+        "License :: OSI Approved :: BSD 3-Clause License",
         "Operating System :: OS Independent",
     ],
     python_requires=">=3.8",
