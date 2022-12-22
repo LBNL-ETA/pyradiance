@@ -42,7 +42,7 @@ RADBINS = [
     'xform',
 ]
 
-RADCALS = [
+RADLIB = [
     'klems_full.cal',
     'perezlum.cal',
     'rayinit.cal',
@@ -130,11 +130,12 @@ class PyradianceBDistWheel(bdist_wheel):
             for dir_path, _, files in os.walk(_root):
                 for file in files:
                     from_path = os.path.join(dir_path, file)
-                    to_path = os.path.basename(file)
                     if Path(file).stem in RADBINS and Path(file).suffix != ".1":
+                        to_path = Path(file).stem
                         os.chmod(from_path, 0o755)
                         zip.write(from_path, f"pyradiance/bin/{to_path}")
-                    if Path(file).name in RADCALS:
+                    if Path(file).name in RADLIB:
+                        to_path = Path(file).name
                         zip.write(from_path, f"pyradiance/lib/{to_path}")
         os.remove(wheel_path)
         for whlfile in list(dist_dir.glob("*.whl")):
@@ -151,6 +152,7 @@ setup(
     name="pyradiance",
     author="LBNL",
     author_email="taoningwang@lbl.gov",
+    version="0.0.1a1",
     description="Wrapper for Radiance command-line tools",
     long_description=Path("README.md").read_text(encoding="utf-8"),
     long_description_content_type="text/markdown",
