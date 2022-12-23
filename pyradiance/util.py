@@ -9,11 +9,9 @@ import subprocess as sp
 import sys
 from typing import List, Optional, Sequence, Tuple, Union
 
-from .cal import cnt
 from .model import View, Scene, parse_primitive, Primitive
 from .param import SamplingParameters, parse_rtrace_args
 from .ot import getbbox, oconv
-from .rt import rpict, rtrace
 
 BINPATH = Path(__file__).parent / "bin"
 
@@ -255,108 +253,7 @@ def render(
     options.update_from_dict(argdict)
     if params is not None:
         options.update(params)
-
-    if nproc == 1:
-        # Use rpict instead
-        options.ps = 1
-        report = {"H": 10, "M": 5, "L": 1}[quality]
-        return rpict(
-            aview, octpath, xres=xres, yres=yres, report=report, options=options
-        )
-    else:
-        # Use rtrace
-        ambcache = True
-        if options.aa is not None:
-            if options.aa == 0:
-                ambcache = False
-        ambfile = options.af
-        _, xres, _, yres = (
-            vwrays(view=aview, xres=xres, yres=yres, pixeljitter=0.67, dimensions=True)
-            .decode()
-            .split()
-        )
-        xres, yres = int(xres), int(yres)
-        if options.ab and ambcache and (ambfile is not None):
-            # if quality != Levels.HIGH:
-            #     ords = cnt(xres, yres, shuffled=True)
-            #     pix = rtrace(
-            #         vwrays(
-            #             pixpos=ords,
-            #             xres=xres,
-            #             yres=yres,
-            #             view=aview,
-            #             outform="f",
-            #             pixeljitter=0.67,
-            #         ),
-            #         str(octpath),
-            #         nproc=nproc,
-            #         xres=xres,
-            #         yres=yres,
-            #         inform="f",
-            #         outform="a",
-            #         outspec="v",
-            #         options=options,
-            #     )
-            #     with tempfile.TemporaryDirectory() as tmpdir:
-            #         ordpath = Path(tmpdir) / "ords.txt"
-            #         with open(ordpath, "wb") as wtr:
-            #             wtr.write(ords)
-            #         shuffled_pixels = rlam(ordpath, strip_header(pix))
-            #     # Using Linux sort to sort pixels, assuming no windows users reach this point
-            #     sorted_pix = sp.run(
-            #         ["sort", "-k2rn", "-k1n"],
-            #         input=shuffled_pixels,
-            #         stdout=sp.PIPE,
-            #         check=True,
-            #     ).stdout
-            #     with open('temp.dat', 'wb') as wtr:
-            #         wtr.write(append_to_header(get_header(pix), f"VIEW= {' '.join(aview.args())}"))
-            #         wtr.write(sorted_pix)
-            #     return pvaluer(
-            #         append_to_header(get_header(pix), f"VIEW= {' '.join(aview.args())}")
-            #         + sorted_pix,
-            #         xres=xres,
-            #         yres=yres,
-            #     )
-            # overture run
-            oxres, oyres = xres // 6, yres // 6
-            opix = rtrace(
-                vwrays(
-                    pixpos=cnt(oxres, oyres, shuffled=True),
-                    xres=oxres,
-                    yres=oyres,
-                    view=aview,
-                    outform="f",
-                    pixeljitter=0,
-                ),
-                str(octpath),
-                nproc=nproc,
-                xres=oxres,
-                yres=oyres,
-                inform="f",
-                outform="f",
-                outspec="v",
-                options=options,
-            )
-            del opix
-
-        img = rtrace(
-            vwrays(
-                view=aview,
-                xres=xres,
-                yres=yres,
-                outform="f",
-                pixeljitter=0.67,
-            ),
-            str(octpath),
-            nproc=nproc,
-            inform="f",
-            xres=xres,
-            yres=yres,
-            outform="c",
-            options=options,
-        )
-        return append_to_header(img, f"VIEW= {' '.join(aview.args())}")
+    return rtpict(aview, octpath, nproc=nproc, xres=xres, yres=yres, params=options.args())
 
 
 def rfluxmtx(
@@ -431,6 +328,7 @@ def rmtxop(
 def rtpict(
     view: View,
     octree: Union[str, Path],
+    nproc: int = 1,
     outform: Optional[str] = None,
     outdir: Optional[str] = None,
     ref_depth: Optional[str] = None,
@@ -441,6 +339,7 @@ def rtpict(
     """Run rtpict command."""
     cmd = [str(BINPATH / "rtpict")]
     cmd.extend(view.args())
+    cmd.extend(["-n", str(nproc)])
     if outform is not None:
         if outdir is not None:
             cmd.extend([f"-o{outform}", str(outdir)])
