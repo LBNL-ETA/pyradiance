@@ -11,45 +11,64 @@ make Radiance easier to use and accessible to Python user.
 import logging
 import os
 
-from .api import (
-    build_scene,
-    gen_perez_sky,
+
+from .cal import (
+    cnt,
+)
+
+from .util import (
     get_header,
     get_image_dimensions,
+    rmtxop,
+)
+
+from .gen import (
     gendaymtx,
     gensky,
-    genwea,
-    obj2rad,
-    oconv,
-    rmtxop,
+)
+
+from .px import (
     pvalue,
     pvaluer,
     pcond,
     pfilt,
+)
+
+from .rt import (
+    build_scene,
+    oconv,
     render,
     rpict,
     rtrace,
 )
 
-from .data import model_cubical_office
+from .cv import (
+    obj2rad,
+)
 
-from .model import Sensor, Scene, View, Primitive
+from .model import (
+    Sensor, 
+    Scene, 
+    View, 
+    Primitive, 
+    parse_view_file, 
+    parse_primitive,
+)
 
-from .parameter import SamplingParameters
-
-from .parsers import parse_view_file, parse_primitive
+from .param import SamplingParameters
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 os.environ["RAYPATH"] = os.path.join(os.path.dirname(__file__), "lib")
+os.environ["PATH"] = (
+    os.path.join(os.path.dirname(__file__), "bin") + os.pathsep + os.environ["PATH"]
+)
 
 __all__ = [
-    "model_cubical_office",
+    "cnt",
     "build_scene",
-    "gen_perez_sky",
     "gendaymtx",
     "gensky",
-    "genwea",
     "get_header",
     "get_image_dimensions",
     "obj2rad",

@@ -1,16 +1,165 @@
 """
-This module contains all data parsing routines.
+pyradiance.parameter
+====================
+This module contains functions for generating simulation
+parameters for running radiance
 """
+
 import argparse
-import re
 from pathlib import Path
-import subprocess as sp
-from typing import List
-
-from .model import View, Primitive
+from typing import NamedTuple
 
 
-BIN_PATH = Path(__file__).parent / "bin"
+class Levels:
+    HIGH = "H"
+    MEDIUM = "M"
+    LOW = "L"
+
+
+class ColorPrimaries(NamedTuple):
+    xr: float
+    yr: float
+    xg: float
+    yg: float
+    xb: float
+    yb: float
+    xw: float
+    yw: float
+
+
+class IntArg:
+    def __set_name__(self, owner, name):
+        self.name = name
+
+    def __get__(self, obj, type=None) -> object:
+        return obj.__dict__.get(self.name)
+
+    def __set__(self, obj, value) -> None:
+        if not isinstance(value, int):
+            raise ValueError("ab has to be an integer")
+        self.value = value
+        obj.__dict__[self.name] = value
+
+
+class FloatArg:
+    def __set_name__(self, owner, name):
+        self.name = name
+
+    def __get__(self, obj, type=None) -> object:
+        return obj.__dict__.get(self.name)
+
+    def __set__(self, obj, value) -> None:
+        if not isinstance(value, (int, float)):
+            raise ValueError("Value has to be a int or float")
+        self.value = value
+        obj.__dict__[self.name] = value
+
+
+class Tuple3Arg:
+    def __set_name__(self, owner, name):
+        self.name = name
+
+    def __get__(self, obj, type=None) -> object:
+        return obj.__dict__.get(self.name)
+
+    def __set__(self, obj, value) -> None:
+        if not isinstance(value, tuple):
+            raise ValueError(f"{self.name} has to be a tuple")
+        if not all(isinstance(i, (int, float)) for i in value):
+            raise ValueError(f"{self.name} inside has to be a integer or float")
+        if len(value) != 3:
+            raise ValueError(f"{self.name} has to be a tuple of length 3")
+        self.value = value
+        obj.__dict__[self.name] = value
+
+
+class PathArg:
+    def __set_name__(self, owner, name):
+        self.name = name
+
+    def __get__(self, obj, type=None) -> object:
+        return obj.__dict__.get(self.name)
+
+    def __set__(self, obj, value) -> None:
+        if not isinstance(value, (str, Path)):
+            raise ValueError(f"{self.name} has to be a string or Path")
+        # if not Path(value).exists():
+        # raise ValueError(f"{self.name} does not exist")
+        self.value = value
+        obj.__dict__[self.name] = value
+
+
+class SamplingParameters:
+    aa = FloatArg()
+    ab = IntArg()
+    ad = IntArg()
+    ar = IntArg()
+    as_ = IntArg()
+    av = Tuple3Arg()
+    aw = IntArg()
+    af = PathArg()
+    dc = FloatArg()
+    dj = FloatArg()
+    dr = IntArg()
+    dp = IntArg()
+    ds = FloatArg()
+    dt = FloatArg()
+    lr = IntArg()
+    lw = FloatArg()
+    ms = FloatArg()
+    pa = FloatArg()
+    pj = FloatArg()
+    ps = IntArg()
+    pt = FloatArg()
+    ss = FloatArg()
+    st = FloatArg()
+
+    def args(self):
+        arglist = []
+        for key, value in self.__dict__.items():
+            if value is None:
+                continue
+            elif isinstance(value, tuple):
+                arglist.extend([f"-{key}", *map(str, value)])
+            elif key == "as_":
+                arglist.extend(["-as", str(value)])
+            else:
+                arglist.extend([f"-{key}", str(value)])
+        return arglist
+
+    def update_key(self, key, val):
+        if key == "av":
+            if isinstance(val, str):
+                val = tuple(map(float, val.strip().split(" ")))
+            elif isinstance(val, list):
+                val = tuple(val)
+        elif key == "af":
+            val = Path(val.strip())
+        elif key in ("ab", "ad", "ar", "as", "aw", "dr", "dp", "lr", "ps"):
+            val = int(val)
+        elif key == "as":
+            key += "_"
+        else:
+            val = float(val)
+        setattr(self, key, val)
+
+    def update_from_file(self, path: str):
+        with open(path, "r") as rdr:
+            params = rdr.readlines()
+        for param in params:
+            key, val = param[1:].split(" ", 1)
+            self.update_key(key, val)
+
+    def update_from_dict(self, params: dict):
+        [self.update_key(key, value) for key, value in params.items()]
+
+    def update(self, sp):
+        if not isinstance(sp, SamplingParameters):
+            raise ValueError("sp has to be a SamplingParameters")
+        for key, value in sp.__dict__.items():
+            if value is None:
+                continue
+            setattr(self, key, value)
 
 
 def add_ambient_args(parser):
@@ -136,130 +285,3 @@ def parse_sim_args(options: str) -> dict:
     args, _ = parser.parse_known_args(options.strip().split())
     odict = {k: v for k, v in vars(args).items() if v is not None}
     return odict
-
-
-def parse_rad_header(header_str: str) -> tuple:
-    """Parse a Radiance matrix file header.
-
-    Args:
-        header_str(str): header as string
-    Returns:
-        A tuple contain nrow, ncol, ncomp, datatype
-    Raises:
-        ValueError if any of NROWs NCOLS NCOMP FORMAT is not found.
-        (This is problematic as it can happen)
-    """
-    compiled = re.compile(
-        r" NROWS=(.*) | NCOLS=(.*) | NCOMP=(.*) | FORMAT=(.*) ", flags=re.X
-    )
-    matches = compiled.findall(header_str)
-    if len(matches) != 4:
-        raise ValueError("Can't find one of the header entries.")
-    nrow = int([mat[0] for mat in matches if mat[0] != ""][0])
-    ncol = int([mat[1] for mat in matches if mat[1] != ""][0])
-    ncomp = int([mat[2] for mat in matches if mat[2] != ""][0])
-    dtype = [mat[3] for mat in matches if mat[3] != ""][0].strip()
-    return nrow, ncol, ncomp, dtype
-
-
-def parse_vu(vu_str: str) -> View:
-    """Parse view string into a View object.
-
-    Args:
-        vu_str: view parameters as a string
-
-    Returns:
-        A view object
-    """
-
-    args_list = vu_str.strip().split()
-    vparser = argparse.ArgumentParser()
-    vparser.add_argument("-v", action="store", dest="vt")
-    vparser.add_argument("-vp", nargs=3, type=float)
-    vparser.add_argument("-vd", nargs=3, type=float)
-    vparser.add_argument("-vu", nargs=3, type=float)
-    vparser.add_argument("-vv", type=float)
-    vparser.add_argument("-vh", type=float)
-    vparser.add_argument("-vo", type=float)
-    vparser.add_argument("-va", type=float)
-    vparser.add_argument("-vs", type=float)
-    vparser.add_argument("-vl", type=float)
-    # vparser.add_argument("-x", type=int)
-    # vparser.add_argument("-y", type=int)
-    vparser.add_argument("-vf", type=argparse.FileType("r"))
-    args, _ = vparser.parse_known_args(args_list)
-    if args.vf is not None:
-        args, _ = vparser.parse_known_args(
-            args.vf.readline().strip().split(), namespace=args
-        )
-        args.vf.close()
-    if None in (args.vp, args.vd):
-        raise ValueError("Invalid view")
-    view = View(args.vp, args.vd)
-    if args.vt is not None:
-        view.vtype = args.vt[-1]
-    # if args.x is not None:
-    #     view.xres = args.x
-    # if args.y is not None:
-    #     view.yres = args.y
-    if args.vv is not None:
-        view.vert = args.vv
-    if args.vh is not None:
-        view.horiz = args.vh
-    if args.vo is not None:
-        view.vfore = args.vo
-    if args.va is not None:
-        view.vaft = args.va
-    if args.vs is not None:
-        view.hoff = args.vs
-    if args.vl is not None:
-        view.voff = args.vl
-    return view
-
-
-def parse_view_file(fpath) -> List[View]:
-    with open(fpath) as rdr:
-        vu_lines = rdr.readlines()
-    return [parse_vu(line) for line in vu_lines]
-
-
-def parse_primitive(pstr) -> List[Primitive]:
-    """Parse Radiance primitives inside a file path into a list of dictionary.
-    Args:
-        pstr: A string of Radiance primitives.
-
-    Returns:
-        list of primitives
-    """
-    res = []
-    tokens = re.sub(r"#.+?\n", "", pstr).strip().split()
-    tokens = iter(tokens)
-    for t in tokens:
-        modifier, ptype, identifier = t, next(tokens), next(tokens)
-        nsarg = next(tokens)
-        sarg = [next(tokens) for _ in range(int(nsarg))]
-        next(tokens)
-        nrarg = next(tokens)
-        rarg = [float(next(tokens)) for _ in range(int(nrarg))]
-        res.append(Primitive(modifier, ptype, identifier, sarg, rarg))
-    return res
-
-
-def parse_rad(fpath: str) -> List[Primitive]:
-    """Parse a Radiance file.
-
-    Args:
-        fpath: Path to the .rad file
-
-    Returns:
-        A list of primitives
-    """
-    with open(fpath) as rdr:
-        lines = rdr.readlines()
-    if any((l.startswith("!") for l in lines)):
-        lines = (
-            sp.run([str(BIN_PATH / "xform"), fpath], stdout=sp.PIPE)
-            .stdout.decode()
-            .splitlines()
-        )
-    return parse_primitive("\n".join(lines))
