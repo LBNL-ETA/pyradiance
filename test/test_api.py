@@ -18,3 +18,9 @@ def test_render():
     # scene = pr.load_scene(pr.cubical_office())
     # image = pr.render(scene)
     pass
+
+def test_rfluxmtx():
+    """Test the rfluxmtx function."""
+    # scene = pr.load_scene(pr.cubical_office())
+    # image = pr.rfluxmtx(scene)
+    pass

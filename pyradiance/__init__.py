@@ -65,14 +65,9 @@ from .util import (
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 os.environ["RAYPATH"] = os.path.join(os.path.dirname(__file__), "lib")
-if os.name == "nt":
-    os.environ["Path"] = (
-        os.path.join(os.path.dirname(__file__), "bin") + os.pathsep + os.environ["PATH"]
-    )
-else:
-    os.environ["PATH"] = (
-        os.path.join(os.path.dirname(__file__), "bin") + os.pathsep + os.environ["PATH"]
-    )
+os.environ["PATH"] = (
+    os.path.join(os.path.dirname(__file__), "bin") + os.pathsep + os.environ["PATH"]
+)
 
 __all__ = [
     "build_scene",
