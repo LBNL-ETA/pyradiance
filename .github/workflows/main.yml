@@ -106,6 +106,6 @@ jobs:
     - name: Install and test
       run: |
         pip install .
-        python -c "import os, pyradiance; print(os.environ)"
+        python -c "import os, pyradiance; print(os.environ); print(os.listdir(os.path.join(os.path.dirname(pyradiance.__file__), 'bin')))"
         pytest test
 
