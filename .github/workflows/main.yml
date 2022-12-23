@@ -39,7 +39,8 @@ jobs:
     - name: Install and test
       run: |
         pip install .
-        pytest test
+        cd test
+        pytest
 
 
   build_test_osx:
@@ -71,7 +72,8 @@ jobs:
     - name: Install and test
       run: |
         pip install .
-        pytest test
+        cd test
+        pytest
 
 
   build_test_windows:
@@ -106,5 +108,6 @@ jobs:
     - name: Install and test
       run: |
         pip install .
-        pytest test
+        cd test
+        pytest 
 
