@@ -177,6 +177,7 @@ def rtrace(
     Returns:
         A string of bytes representing the output of rtrace.
     """
+    # cmd = [str(BINPATH/"rtrace")]
     cmd = ["rtrace"]
     if version:
         cmd.append("-version")
