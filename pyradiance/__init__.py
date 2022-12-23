@@ -59,6 +59,7 @@ from .util import (
     get_header,
     get_image_dimensions,
     render,
+    rfluxmtx,
     rmtxop,
 )
 
@@ -83,6 +84,7 @@ __all__ = [
     "pcond",
     "pfilt",
     "render",
+    "rfluxmtx",
     "rlam",
     "rmtxop",
     "rpict",

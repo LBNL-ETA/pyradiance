@@ -263,7 +263,7 @@ def rfluxmtx(
     rays: Optional[List[List[float]]] = None,
     option: Optional[List[str]] = None,
     octree: Optional[Path] = None,
-    scene: Optional[Scene] = None,
+    scene: Optional[Sequence[str]] = None,
 ) -> bytes:
     """Run rfluxmtx command.
     Args:
@@ -294,10 +294,7 @@ def rfluxmtx(
     if octree is not None:
         cmd.extend(["-i", str(octree)])
     if scene is not None:
-        for path in scene.materials:
-            cmd.append(str(path))
-        for path in scene.surfaces:
-            cmd.append(str(path))
+        cmd.extend(scene)
     return sp.run(cmd, check=True, stdout=sp.PIPE, input=stdin).stdout
 
 

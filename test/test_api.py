@@ -1,7 +1,12 @@
 """
 Test pyradiance api
 """
+
 import pyradiance as pr
+import logging 
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 def test_import():
@@ -21,6 +26,8 @@ def test_render():
 
 def test_rfluxmtx():
     """Test the rfluxmtx function."""
-    # scene = pr.load_scene(pr.cubical_office())
-    # image = pr.rfluxmtx(scene)
-    pass
+    receiver = "./Resources/skyr4.rad"
+    rays = [[1.0, 1, 1, 0, 0, 1]]
+    scene = ("./Resources/materials.mat", "./Resources/floor.rad", "./Resources/ceiling.rad")
+    result = pr.rfluxmtx(receiver, rays=rays, scene=scene)
+    assert len(result) > 0
