@@ -1,12 +1,10 @@
+"""
+Radiance picture processing utilities.
+"""
+
 from pathlib import Path
 import subprocess as sp
-import sys
-import tempfile
 from typing import List, Optional, Union
-
-
-def histo():
-    pass
 
 
 def pcond(
@@ -147,17 +145,6 @@ def pfilt(
     else:
         raise TypeError("image should be a string, Path, or bytes.")
     return sp.run(cmd, input=stdin, stdout=sp.PIPE, check=True).stdout
-
-
-def phisto(*inp):
-    """Compute foveal histogram for picture set.
-    Translation of phisto.pl
-    """
-    minop = "L=$1*179;$1=if(L-1e-7,log10(L)-.01,-7)"
-    maxop = "$1=log10($1*179)+.01"
-    tmploc = tempfile.gettempdir()
-    if len(inp) == 0:
-        pfilt()
 
 
 def pvalue(

@@ -5,8 +5,10 @@ pyradiance.model
 This module defines model data structure.
 """
 
+import argparse
 import os
 from pathlib import Path
+import re
 from typing import List, Tuple
 from dataclasses import dataclass
 
@@ -203,26 +205,6 @@ def parse_primitive(pstr) -> List[Primitive]:
         rarg = [float(next(tokens)) for _ in range(int(nrarg))]
         res.append(Primitive(modifier, ptype, identifier, sarg, rarg))
     return res
-
-
-def parse_rad(fpath: str) -> List[Primitive]:
-    """Parse a Radiance file.
-
-    Args:
-        fpath: Path to the .rad file
-
-    Returns:
-        A list of primitives
-    """
-    with open(fpath) as rdr:
-        lines = rdr.readlines()
-    if any((l.startswith("!") for l in lines)):
-        lines = (
-            sp.run([str(BIN_PATH / "xform"), fpath], stdout=sp.PIPE)
-            .stdout.decode()
-            .splitlines()
-        )
-    return parse_primitive("\n".join(lines))
 
 
 def parse_vu(vu_str: str) -> View:

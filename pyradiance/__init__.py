@@ -14,17 +14,29 @@ import os
 
 from .cal import (
     cnt,
+    rlam,
 )
 
-from .util import (
-    get_header,
-    get_image_dimensions,
-    rmtxop,
+from .cv import (
+    obj2rad,
 )
 
 from .gen import (
     gendaymtx,
     gensky,
+)
+
+from .model import (
+    Sensor,
+    Scene,
+    View,
+    Primitive,
+    parse_view_file,
+    parse_primitive,
+)
+
+from .ot import (
+    oconv,
 )
 
 from .px import (
@@ -35,27 +47,20 @@ from .px import (
 )
 
 from .rt import (
-    build_scene,
-    oconv,
-    render,
     rpict,
     rtrace,
 )
 
-from .cv import (
-    obj2rad,
-)
-
-from .model import (
-    Sensor, 
-    Scene, 
-    View, 
-    Primitive, 
-    parse_view_file, 
-    parse_primitive,
-)
 
 from .param import SamplingParameters
+
+from .util import (
+    build_scene,
+    get_header,
+    get_image_dimensions,
+    render,
+    rmtxop,
+)
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
@@ -65,8 +70,8 @@ os.environ["PATH"] = (
 )
 
 __all__ = [
-    "cnt",
     "build_scene",
+    "cnt",
     "gendaymtx",
     "gensky",
     "get_header",
@@ -78,6 +83,7 @@ __all__ = [
     "pcond",
     "pfilt",
     "render",
+    "rlam",
     "rmtxop",
     "rpict",
     "rtrace",
