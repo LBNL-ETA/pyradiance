@@ -107,7 +107,7 @@ jobs:
 
     - name: Install and test
       run: |
-        pip install .
+        pip install -e .
         cd test
         pytest 
 

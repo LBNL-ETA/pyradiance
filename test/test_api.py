@@ -5,7 +5,6 @@ Test pyradiance api
 import pyradiance as pr
 import logging 
 
-
 LOGGER = logging.getLogger(__name__)
 
 
