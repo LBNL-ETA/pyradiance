@@ -295,7 +295,11 @@ def rfluxmtx(
         cmd.extend(["-i", str(octree)])
     if scene is not None:
         cmd.extend(scene)
-    return sp.run(cmd, check=True, stdout=sp.PIPE, input=stdin).stdout
+    shell = False
+    if os.name == "nt":
+        cmd = " ".join(cmd)
+        shell = True
+    return sp.run(cmd, check=True, shell=shell, stdout=sp.PIPE, input=stdin).stdout
 
 
 def rmtxop(
