@@ -105,11 +105,13 @@ jobs:
       with:
         path: ./dist/*.whl
 
-    - name: Install and test
+    - name: Install
+      run: pip install .
+
+    - name: Test
       run: |
-        pip install .
         set PATH=%PATH%;C:\hostedtoolcache\windows\Python\3.8.10\x64\lib\site-packages\pyradiance\bin
-        echo $PATH
+        echo %PATH%
         cd test
         python -c "import os, pyradiance; print(os.environ)"
         pytest 
