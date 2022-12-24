@@ -132,12 +132,12 @@ class PyradianceBDistWheel(bdist_wheel):
             for dir_path, _, files in os.walk(_root):
                 for file in files:
                     from_path = os.path.join(dir_path, file)
+                    to_path = Path(file).name
                     if Path(file).stem in RADBINS and Path(file).suffix != ".1":
-                        to_path = Path(file).stem
+                        # Include .exe in Windows builds
                         os.chmod(from_path, 0o755)
                         zip.write(from_path, f"pyradiance/bin/{to_path}")
                     if Path(file).name in RADLIB:
-                        to_path = Path(file).name
                         zip.write(from_path, f"pyradiance/lib/{to_path}")
         os.remove(wheel_path)
         for whlfile in list(dist_dir.glob("*.whl")):
