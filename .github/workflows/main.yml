@@ -109,7 +109,7 @@ jobs:
       run: |
         pip install .
         cd test
+        $Env:PATH += ";C:\hostedtoolcache\windows\Python\3.8.10\x64\lib\site-packages\pyradiance\bin"
         python -c "import os, pyradiance; print(os.environ)"
         pytest 
-      shell: cmd
 
