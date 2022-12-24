@@ -70,7 +70,7 @@ logging.getLogger(__name__).addHandler(logging.NullHandler())
 os.environ["RAYPATH"] = os.path.join(os.path.dirname(__file__), "lib")
 os.environ["PATH"] = str(BINPATH) + os.pathsep + os.environ["PATH"]
 if os.name == 'nt':
-    cmd = f'setx /M PATH "{str(BINPATH)}{os.pathsetp}%PATH%"'
+    cmd = f'setx /M PATH "{str(BINPATH)}{os.pathsep}%PATH%"'
     print(cmd)
     os.system(cmd)
 
