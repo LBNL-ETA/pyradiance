@@ -300,6 +300,7 @@ def rfluxmtx(
         cmd[0] = 'rfluxmtx'
         cmd = " ".join(cmd)
         shell = True
+        print(os.getenv('PATH'))
     return sp.run(cmd, check=True, shell=shell, stdout=sp.PIPE, input=stdin).stdout
 
 
