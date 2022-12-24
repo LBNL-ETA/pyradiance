@@ -110,6 +110,6 @@ jobs:
         pip install .
         cd test
         $Env:PATH += ";C:\hostedtoolcache\windows\Python\3.8.10\x64\lib\site-packages\pyradiance\bin"
+        Get-ChildItem Env:Path
         python -c "import os, pyradiance; print(os.environ)"
         pytest 
-
