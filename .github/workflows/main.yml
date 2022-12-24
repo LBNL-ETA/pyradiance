@@ -111,4 +111,5 @@ jobs:
         cd test
         python -c "import os, pyradiance; print(os.environ)"
         pytest 
+      shell: cmd
 
