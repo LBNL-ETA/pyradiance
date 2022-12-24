@@ -300,6 +300,7 @@ def rfluxmtx(
         # cmd = " ".join(cmd)
         shell = False
         print(os.getenv('PATH'))
+        print(os.listdir(os.path.join(os.path.dirname(__file__), 'bin')))
     return sp.run(cmd, check=True, shell=shell, stdout=sp.PIPE, input=stdin).stdout
 
 
