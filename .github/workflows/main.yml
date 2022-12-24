@@ -112,6 +112,7 @@ jobs:
       run: |
         set PATH=%PATH%;C:\hostedtoolcache\windows\Python\3.8.10\x64\lib\site-packages\pyradiance\bin
         echo %PATH%
+        rtrace -version
         cd test
         python -c "import os, pyradiance; print(os.environ)"
         pytest 
