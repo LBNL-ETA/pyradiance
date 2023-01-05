@@ -4,7 +4,7 @@ Radiance conversion routines.
 
 from pathlib import Path
 import subprocess as sp
-from typing import Optional
+from typing import Optional, Sequence
 
 
 BINPATH = Path(__file__).parent / "bin"
@@ -263,9 +263,6 @@ def bsdf2ttree(
             cmd.extend(["-f", file])
         cmd.append(inp[0])
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
-
-
-
 
 
 def pabopto2bsdf():
