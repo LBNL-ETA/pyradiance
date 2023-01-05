@@ -23,6 +23,7 @@ from .cv import (
 )
 
 from .gen import (
+    genbsdf,
     gendaymtx,
     gensky,
 )
@@ -32,7 +33,7 @@ from .model import (
     Scene,
     View,
     Primitive,
-    parse_view_file,
+    load_views,
     parse_primitive,
 )
 
@@ -48,6 +49,8 @@ from .px import (
 )
 
 from .rt import (
+    Modifier,
+    rcontrib,
     rpict,
     rtrace,
 )
@@ -62,10 +65,11 @@ from .util import (
     render,
     rfluxmtx,
     rmtxop,
+    wrapbsdf,
+    xform,
 )
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
-
 
 os.environ["RAYPATH"] = os.path.join(os.path.dirname(__file__), "lib")
 os.environ["PATH"] = str(BINPATH) + os.pathsep + os.environ["PATH"]
@@ -73,6 +77,7 @@ os.environ["PATH"] = str(BINPATH) + os.pathsep + os.environ["PATH"]
 __all__ = [
     "build_scene",
     "cnt",
+    "genbsdf",
     "gendaymtx",
     "gensky",
     "get_header",
@@ -83,17 +88,30 @@ __all__ = [
     "pvaluer",
     "pcond",
     "pfilt",
+    "rcontrib",
     "render",
     "rfluxmtx",
     "rlam",
     "rmtxop",
     "rpict",
     "rtrace",
+    "Modifier",
+    "Primitive",
+    "Scene",
+    "Sensor",
+    "SamplingParameters",
+    "View",
+    "load_views",
+    "parse_primitive",
+    "wrapbsdf",
+    "xform",
     "Scene",
     "Sensor",
     "View",
     "Primitive",
     "SamplingParameters",
-    "parse_view_file",
+    "load_views",
     "parse_primitive",
+    "wrapbsdf",
+    "xform",
 ]

@@ -134,7 +134,7 @@ class PyradianceBDistWheel(bdist_wheel):
                     from_path = os.path.join(dir_path, file)
                     to_path = Path(file).name
                     if Path(file).stem in RADBINS and Path(file).suffix != ".1":
-                        # Include .exe in Windows builds
+                        # Windows need .exe suffix
                         os.chmod(from_path, 0o755)
                         zip.write(from_path, f"pyradiance/bin/{to_path}")
                     if Path(file).name in RADLIB:

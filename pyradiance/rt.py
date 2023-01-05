@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 import subprocess as sp
 import sys
-from typing import List, Optional, Sequence, Union
+from typing import Optional, Sequence, Union
 
 
 BINPATH = Path(__file__).parent / "bin"
@@ -24,15 +24,15 @@ class Modifier:
     """
 
     modifier = None
-    modifier_path = None
+    modifier_path: Optional[str]= None
     calfile = None
     expression = None
     nbins = None
     binv = None
     param = None
-    xres = None
-    yres = None
-    output = None
+    xres: Optional[int] = None
+    yres: Optional[int] = None
+    output: Optional[str] = None
 
     def args(self):
         """Return modifier as a list of arguments."""
@@ -177,7 +177,7 @@ def rtrace(
     Returns:
         A string of bytes representing the output of rtrace.
     """
-    cmd = [str(BINPATH/"rtrace")]
+    cmd = [str(BINPATH / "rtrace")]
     if version:
         cmd.append("-version")
         return sp.run(cmd, check=True, stdout=sp.PIPE).stdout

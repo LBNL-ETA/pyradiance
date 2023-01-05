@@ -57,6 +57,57 @@ def build_scene(scene: Scene):
         wtr.write(oconv(*inp, stdin=stdin, warning=False, octree=moctname))
 
 
+def dctimestep(
+    *mtx, 
+    nstep: Optional[int] = None, 
+    header: bool = True, 
+    xres: Optional[int] = None, 
+    yres: Optional[int] =None, 
+    inform: Optional[str] =None, 
+    outform: Optional[str] =None, 
+    ospec: Optional[str] =None
+) -> Optional[bytes]:
+    """Call dctimestep to perform matrix multiplication.
+    Args:
+        mtx: input matrices
+        nstep: number of steps
+        header: include header
+        xres: x resolution
+        yres: y resolution
+        inform: input format
+        outform: output format
+        ospec: output specification
+    Returns:
+        bytes: output of dctimestep
+    """
+    _stdout = True
+    stdin = None
+    cmd = [str(BINPATH / "dctimestep")]
+    if isinstance(mtx[-1], bytes):
+        stdin = mtx[-1]
+        mtx = mtx[:-1]
+    if nstep:
+        cmd.extend(["-n", str(nstep)])
+    if not header:
+        cmd.append("-h")
+    if xres:
+        cmd.extend(["-x", str(xres)])
+    if yres:
+        cmd.extend(["-y", str(yres)])
+    if inform:
+        cmd.append(f"-i{inform}")
+    if outform:
+        cmd.extend(f"-o{outform}")
+    if ospec:
+        cmd.extend(["-o", ospec])
+        _stdout = False
+    cmd.extend(mtx)
+    result = sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
+    if _stdout:
+        return result
+    return None
+    
+
 def getinfo(
     *inputs: Union[str, Path, bytes],
     dimension_only: bool = False,
@@ -253,17 +304,18 @@ def render(
     options.update_from_dict(argdict)
     if params is not None:
         options.update(params)
-    return rtpict(aview, octpath, nproc=nproc, xres=xres, yres=yres, params=options.args())
+    return rtpict(
+        aview, octpath, nproc=nproc, xres=xres, yres=yres, params=options.args()
+    )
 
 
 def rfluxmtx(
     receiver: Union[str, Path],
-    view: Optional[View] = None,
     surface: Optional[Union[str, Path]] = None,
-    rays: Optional[List[List[float]]] = None,
-    option: Optional[List[str]] = None,
+    rays: Optional[bytes] = None,
+    params: Optional[Sequence[str]] = None,
     octree: Optional[Path] = None,
-    scene: Optional[Sequence[str]] = None,
+    scene: Optional[Sequence[Union[Path, str]]] = None,
 ) -> bytes:
     """Run rfluxmtx command.
     Args:
@@ -274,28 +326,19 @@ def rfluxmtx(
     Sender: stdin, polygon
     Receiver: surface with -o
     """
-    stdin = None
     cmd = [str(BINPATH / "rfluxmtx")]
-    if option:
-        cmd.extend(option)
+    if params:
+        cmd.extend(params)
     if surface is not None:
         cmd.append(str(surface))
     else:
         cmd.append("-")
-        if view is not None:
-            stdin = vwrays(view=view)
-        elif rays is not None:
-            stdin = (
-                "\n".join([" ".join([str(i) for i in row]) for row in rays])
-            ).encode()
-        else:
-            raise ValueError("Either view, surface or rays must be provided.")
     cmd.append(str(receiver))
     if octree is not None:
         cmd.extend(["-i", str(octree)])
     if scene is not None:
-        cmd.extend(scene)
-    return sp.run(cmd, check=True, stdout=sp.PIPE, input=stdin).stdout
+        cmd.extend([str(s) for s in scene])
+    return sp.run(cmd, check=True, stdout=sp.PIPE, input=rays).stdout
 
 
 def rmtxop(
@@ -366,14 +409,14 @@ def vwrays(
     pixpos: Optional[bytes] = None,
     unbuf: bool = False,
     outform: str = "a",
-    raycnt: int = 1,
-    pixeljitter: float = 0,
-    pixeldiameter: float = 0,
-    pixelaspect: float = 1,
+    ray_count: int = 1,
+    pixel_jitter: float = 0,
+    pixel_diameter: float = 0,
+    pixel_aspect: float = 1,
     xres: int = 512,
     yres: int = 512,
     dimensions: bool = False,
-    view: Optional[View] = None,
+    view: Optional[Sequence[str]] = None,
     pic: Optional[Path] = None,
     zbuf: Optional[Path] = None,
 ) -> bytes:
@@ -387,22 +430,16 @@ def vwrays(
         cmd.append("-u")
     if outform != "a":
         cmd.append(f"-f{outform}")
-    if raycnt != 1:
-        cmd.extend(["-c", str(raycnt)])
-    if pixeljitter != 0:
-        cmd.extend(["-pj", str(pixeljitter)])
-    if pixeldiameter != 0:
-        cmd.extend(["-pd", str(pixeldiameter)])
-    if pixelaspect != 1:
-        cmd.extend(["-pa", str(pixelaspect)])
+    cmd.extend(["-c", str(ray_count)])
+    cmd.extend(["-pj", str(pixel_jitter)])
+    cmd.extend(["-pd", str(pixel_diameter)])
+    cmd.extend(["-pa", str(pixel_aspect)])
+    cmd.extend(["-x", str(xres)])
+    cmd.extend(["-y", str(yres)])
     if dimensions:
         cmd.append("-d")
-    if xres != 512:
-        cmd.extend(["-x", str(xres)])
-    if yres != 512:
-        cmd.extend(["-y", str(yres)])
     if view is not None:
-        cmd.extend(view.args())
+        cmd.extend(view)
     elif pic is not None:
         cmd.append(str(pic))
         if zbuf is not None:
@@ -423,7 +460,7 @@ def vwright(
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
-def wrap_bsdf(
+def wrapbsdf(
     inp=None,
     enforce_window=False,
     comment=None,

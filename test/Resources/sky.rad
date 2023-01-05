@@ -1,0 +1,17 @@
+!gendaylit 3 21 10 -a 37 -o 122 -m 120 -W 800 100
+
+skyfunc glow skyglow
+0
+0
+4 1 1 1 0
+
+skyglow source skydome
+0
+0
+4 0 0 -1 180
+
+skyglow source groundplane
+0
+0
+4 0 0 1 180
+

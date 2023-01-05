@@ -3,10 +3,74 @@ Radiance generators and scene Manipulators
 """
 from pathlib import Path
 import subprocess as sp
-from typing import List, Optional
+from typing import List, Optional, Sequence
 
 
 BINPATH = Path(__file__).parent / "bin"
+
+
+def genbsdf(
+    *inp,
+    nsamp=1,
+    nproc=1,
+    params: Optional[Sequence[str]] = None,
+    enforce_window=False,
+    ttree_rank: Optional[int] = None,
+    ttree_res: Optional[int] = None,
+    color=False,
+    reciprocity=True,
+    recover_dir=None,
+    forward=False,
+    backward=True,
+    mgf=None,
+    geom=False,
+    geom_unit=None,
+    dim: Optional[Sequence[float]] = None,
+    **kwargs,
+):
+    """Run genBSDF to generate a BSDF file from a Radiance scene."""
+    cmd = [str(BINPATH / "genBSDF")]
+    if recover_dir is not None:
+        cmd += ["-recover", recover_dir]
+        return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
+    cmd += ["-n", str(nproc), "-c", str(nsamp)]
+    if params is not None:
+        cmd += ["-r", " ".join(params)]
+    if ttree_rank is not None:
+        if ttree_rank not in (3, 4):
+            raise ValueError("ttree_rank must be 3 or 4")
+        if ttree_res is None:
+            raise ValueError("ttree_res must be specified if ttree_rank is specified")
+        cmd += [f"-t{ttree_rank}", str(ttree_res)]
+    reciprocity = "+" if reciprocity else "-"
+    cmd.append(f"{reciprocity}a")
+    if geom:
+        if geom_unit is None:
+            raise ValueError("geom_unit must be specified if geom is True")
+        geom = "+" if geom else "-"
+        cmd += [f"{geom}geom", geom_unit]
+    forward = "+" if forward else "-"
+    cmd.append(f"{forward}f")
+    backward = "+" if backward else "-"
+    cmd.append(f"{backward}b")
+    mgf = "+" if mgf else "-"
+    cmd.append(f"{mgf}mgf")
+    color = "+" if color else "-"
+    cmd.append(f"{color}C")
+    if dim is not None:
+        cmd += ["-dim", *[str(d) for d in dim]]
+    if enforce_window:
+        cmd.append("-W")
+        required = set(("m", "n", "t"))
+        if set(kwargs).intersection(required) != required:
+            raise ValueError("enforce_window requires m, n, and t to be specified")
+    fields = []
+    for key in ("n", "m", "d", "c", "ef", "eb", "eo", "t", "h", "w"):
+        if key in kwargs:
+            fields.append(f"{key}={kwargs[key]}")
+    cmd += ["-s", ";".join(fields)]
+    cmd += inp
+    return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
 def gendaylit(
@@ -168,9 +232,9 @@ def gensky(
         str(dt.day),
         str(dt.hour + dt.minute / 60),
     ]
-    cmd += ["-a", latitude, "-o", longitude, "-m", timezone]
+    cmd += ["-a", str(latitude), "-o", str(longitude), "-m", str(timezone)]
     if year is not None:
-        cmd += ["-y", year]
+        cmd += ["-y", str(year)]
     if None not in (dirnorm, diffhor):
         cmd += ["-W", str(dirnorm), str(diffhor)]
     if None not in (dirhor, diffhor):

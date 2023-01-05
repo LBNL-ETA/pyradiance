@@ -27,6 +27,14 @@ def cnt(
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
+def rcalc():
+    pass
+
+
+def total():
+    pass
+
+
 def rlam(
     *inputs,
 ) -> bytes:
@@ -39,14 +47,14 @@ def rlam(
         bytes: output of rlam
     """
     cmd = [str(BINPATH / "rlam")]
-    stdin = []
+    stdins = []
     for inp in inputs:
         if isinstance(inp, (str, Path)):
             cmd.append(str(inp))
         elif isinstance(inp, bytes):
             cmd.append("-")
-            stdin.append(inp)
-    if len(stdin) > 1:
+            stdins.append(inp)
+    if len(stdins) > 1:
         raise ValueError("Only one stdin is allowed with rlam.")
-    stdin = stdin[0] if stdin else None
+    stdin = stdins[0] if stdins else None
     return sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
