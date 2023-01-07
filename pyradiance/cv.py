@@ -4,7 +4,7 @@ Radiance conversion routines.
 
 from pathlib import Path
 import subprocess as sp
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Union
 
 
 BINPATH = Path(__file__).parent / "bin"
@@ -17,7 +17,17 @@ def obj2rad(
     mapfile: Optional[str] = None,
     objname: Optional[str] = None,
 ) -> bytes:
-    """Convert a Wavefront .obj file to Radiance format."""
+    """Convert Wavefront .OBJ file to RADIANCE description.
+
+    Args:
+        inp: Path to OBJ file
+        quallist: Print a list of all the available quality settings.
+        flatten: Flatten the hierarchy of the input file.
+        mapfile: Path to a file containing a list of texture maps to be used.
+        objname: Name of the object to be created.
+    Returns:
+        The output of the command
+    """
     stdin = None
     cmd = [str(BINPATH / "obj2rad")]
     if quallist:
@@ -35,34 +45,37 @@ def obj2rad(
     return sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
 
 
-def pkgbsdf(*xml, frozen: bool = False, stdout: bool = False) -> Optional[bytes]:
-    """pacakge BSDFs provided as XML for Radiance
+def pkgbsdf(*xml: Union[str, Path], frozen: bool = False, stdout: bool = False) -> Optional[bytes]:
+    """Pacakge BSDFs provided as XML for Radiance.
+
     Args:
         xml: Path to XML files
         frozen: produce frozen octree instance for any detail geometry.
         stdout: print the output to stdout, only works for a single XML input.
-    Return:
+    Returns:
         The output of the command
     """
     cmd = [str(BINPATH / "pkgBSDF")]
     if frozen:
         cmd.append("-i")
     if stdout:
+        if len(xml) > 1:
+            raise ValueError("stdout only works for a single XML input.")
         cmd.append("-s")
-    cmd.extend(xml)
+    cmd.extend([str(i) for i in xml])
     result = sp.run(cmd, check=True, stdout=sp.PIPE).stdout
     if stdout:
         return result
 
 
 def mgf2rad(*inp, matfile=None, mult=None, dist=None):
-    """Convert Materials and Geometry Format file to Radiance description.
+    """Convert Materials and Geometry Format file to RADIANCE description.
     Args:
         inp: Path to MGF file
         matfile: Path to material file where the translated materials will be written.
         mult: multiplier for all the emission values
         dist: glow distance (in meters) for all emitting surfaces.
-    Return:
+    Returns:
         The output of the command
     """
     cmd = [str(BINPATH / "mgf2rad")]
@@ -91,7 +104,8 @@ def ies2rad(
     set_default_lamp_color: Optional[str] = None,
     multiply_factor: Optional[float] = None,
 ):
-    """Convert IES luminaire data to Radiance description.
+    """Convert IES luminaire data to RADIANCE description.
+
     Args:
         inp: Path to IES file
         libdir: Path to directory where the library files are located.
@@ -108,7 +122,7 @@ def ies2rad(
         set_default_lamp_color: set default lamp color according to the entry for lamp in the lookup table.
         multiply_factor: multiply all output quantities by this factor. This is the best way to scale
             fixture brightness for different lamps.
-    Return:
+    Returns:
         The output of the command
     """
     cmd = [str(BINPATH / "ies2rad")]
@@ -154,7 +168,8 @@ def bsdf2klems(
     expr: Optional[str] = None,
     file: Optional[str] = None,
 ):
-    """ Generate XML Klems matrix description of a BSDF.
+    """Generate XML Klems matrix description of a BSDF.
+
     Args:
         inp: Path to XML file
         spp: number of samples for each input-output patch pair, default=1024.
@@ -162,7 +177,7 @@ def bsdf2klems(
         quater: Generate instead a quater Klems basis XML.
         progress_bar: toggle to show progress bar.
         progress_bar_length: length of the progress bar, default=79 characters.
-        maxlobes: maximum number of lobes in any interpolated radial basis 
+        maxlobes: maximum number of lobes in any interpolated radial basis
             function (default=15000). Setting the value to 0 turns off this limit.
         forward: generate forward matrix (default=off).
         backward: generate backward matrixi (default=on).
@@ -201,7 +216,7 @@ def bsdf2klems(
     # sir input
     else:
         if maxlobes is not None:
-            cmd.extend(["-m", str(maxlobes)])   
+            cmd.extend(["-m", str(maxlobes)])
         cmd.extend(inp)
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
@@ -211,7 +226,7 @@ def bsdf2ttree(
     isotropic: bool = False,
     reciprocity_averaging: bool = True,
     resolution: int = 6,
-    percent_cull: Sequence[float] = (90),
+    percent_cull: Sequence[float] = [90],
     super_samples: int = 256,
     difference_threshold: float = 0.35,
     progress_bar: bool = False,
@@ -222,6 +237,27 @@ def bsdf2ttree(
     expr: Optional[str] = None,
     file: Optional[str] = None,
 ):
+    """Generate XML tensor tree description of a BSDF.
+
+    Args:
+        inp: Path to XML file
+        isotropic: Generate an isotropic ttree.
+        reciprocity_averaging: Use reciprocity averaging.
+        resolution: resolution of the ttree.
+        percent_cull: percent of the ttree to cull.
+        super_samples: number of samples for each input-output patch pair, default=1024.
+        difference_threshold: difference threshold for culling.
+        progress_bar: toggle to show progress bar.
+        progress_bar_length: length of the progress bar, default=79 characters.
+        maxlobes: maximum number of lobes in any interpolated radial basis
+            function (default=15000). Setting the value to 0 turns off this limit.
+        forward: generate forward matrix (default=off).
+        backward: generate backward matrixi (default=on).
+        expr: expression to evaluate.
+        file: file to write the output to
+    Returns:
+        The output of the command
+    """
     cmd = [str(BINPATH / "bsdf2ttree")]
     if not progress_bar:
         cmd.append("-p")
@@ -236,7 +272,9 @@ def bsdf2ttree(
         cmd.extend(["-l", str(maxlobes)])
         if percent_cull is not None:
             if len(percent_cull) not in (1, len(inp)):
-                raise ValueError("number of percent_cull should be 1 or equal to number of inputs.")
+                raise ValueError(
+                    "number of percent_cull should be 1 or equal to number of inputs."
+                )
             if len(percent_cull) == 1:
                 cmd.extend(["-t", str(percent_cull[0])])
             else:
@@ -265,7 +303,43 @@ def bsdf2ttree(
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
-def pabopto2bsdf():
-    pass
+def pabopto2bsdf(
+    *inp,
+    nproc: int = 1,
+    symmetry: Optional[str] = None,
+    angle: Optional[Union[float, str]] = None,
+    reverse=False,
+) -> bytes:
+    """Convert BSDF measurements to a scattering interpolant representation.
 
-
+    Args:
+        inp: pab-opto Mountain files, need two or more.
+        nproc: number of processors to use.
+        symmetry: BSDF symmetry, which is one of "isotropic", "quadrilateral", "bilateral",
+           "up", or "anisotropic".  Any of these may be abbreviated with as little as a
+           single letter, and case is ignored.
+        angle: cull scattered measurements that are nearer to grazing than the given angle
+           in degrees.  If the word "auto" (which can be abbreviated as 'a' or 'A') is
+           given instead of an angle, then the near-grazing angle will be determined by the
+           lowest incident angle measurement present in the input data.  This is sometimes
+           necessary to eliminate noise and edge effects that some measurements exhibit near grazing.
+        reverse: reverses the assumed sample orientation front-to-back, and is discussed below under
+            the "#intheta" header entry.
+    Returns:
+        The output of the command
+    """
+    cmd = [str(BINPATH / "pabopto2bsdf")]
+    if nproc > 1:
+        cmd.extend(["-n", str(nproc)])
+    if symmetry is not None:
+        if symmetry[0].lower() not in ("u", "b", "q", "i", "a"):
+            raise ValueError("symmetry should be one of u, b, q, i, a.")
+        cmd.extend(["-s", symmetry])
+    if angle is not None:
+        cmd.extend(["-g", str(angle)])
+    if reverse:
+        cmd.append("-t")
+    if not isinstance(inp, (str, Path)):
+        raise ValueError("input should be a string or a Path.")
+    cmd.extend([str(i) for i in inp])
+    return sp.run(cmd, check=True, stdout=sp.PIPE).stdout

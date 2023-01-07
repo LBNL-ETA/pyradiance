@@ -1,10 +1,7 @@
 """
-# Python interface for Radiance
-
 pyradiance is a Python interface for Radiance. It is a collection of Python
 modules that provide a high level interface to Radiance. It is designed to
 make Radiance easier to use and accessible to Python user.
-
 """
 
 
@@ -19,11 +16,18 @@ from .cal import (
 )
 
 from .cv import (
+    bsdf2klems,
+    bsdf2ttree,
+    ies2rad,
+    mgf2rad,
     obj2rad,
+    pabopto2bsdf,
+    pkgbsdf,
 )
 
 from .gen import (
     genbsdf,
+    gendaylit,
     gendaymtx,
     gensky,
 )
@@ -49,7 +53,7 @@ from .px import (
 )
 
 from .rt import (
-    Modifier,
+    RcModifier,
     rcontrib,
     rpict,
     rtrace,
@@ -59,9 +63,10 @@ from .rt import (
 from .param import SamplingParameters
 
 from .util import (
-    build_scene,
     get_header,
     get_image_dimensions,
+    rcode_depth,
+    rcode_norm,
     render,
     rfluxmtx,
     rmtxop,
@@ -75,19 +80,27 @@ os.environ["RAYPATH"] = os.path.join(os.path.dirname(__file__), "lib")
 os.environ["PATH"] = str(BINPATH) + os.pathsep + os.environ["PATH"]
 
 __all__ = [
-    "build_scene",
+    "bsdf2klems",
+    "bsdf2ttree",
     "cnt",
     "genbsdf",
+    "gendaylit",
     "gendaymtx",
     "gensky",
     "get_header",
     "get_image_dimensions",
+    "ies2rad",
+    "mgf2rad",
     "obj2rad",
     "oconv",
+    "pabopto2bsdf",
+    "pkgbsdf",
     "pvalue",
     "pvaluer",
     "pcond",
     "pfilt",
+    "rcode_depth",
+    "rcode_norm",
     "rcontrib",
     "render",
     "rfluxmtx",
@@ -95,7 +108,7 @@ __all__ = [
     "rmtxop",
     "rpict",
     "rtrace",
-    "Modifier",
+    "RcModifier",
     "Primitive",
     "Scene",
     "Sensor",

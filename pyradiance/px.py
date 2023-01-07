@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess as sp
 from typing import List, Optional, Union
 
+BINPATH = Path(__file__).parent / "bin"
 
 def pcond(
     hdr: Path,
@@ -51,7 +52,7 @@ def pcond(
         bytes: output of pcond
     """
     stdin = None
-    cmd = ["pcond"]
+    cmd = [str(BINPATH / "pcond")]
     if human:
         cmd.append("-h")
     else:
@@ -97,27 +98,50 @@ def pfilt(
     image: Union[str, Path, bytes],
     xres: Optional[str] = None,
     yres: Optional[str] = None,
-    pixel_aspect: Optional[float] = 0,
+    pixel_aspect: float = 0,
+    pa_correct: bool = False,
     exposure: Optional[float] = 0,
     lamp: Optional[str] = None,
     lampdat: Optional[str] = None,
     one_pass: bool = False,
     gaussian_filter_radius: Optional[float] = None,
     limitfrac: Optional[float] = None,
-    hot_threshold: Optional[float] = None,
-    star_points: Optional[int] = None,
-    star_spread: Optional[float] = None,
+    hot_threshold: float = 100,
+    star_points: int = 0,
+    star_spread: float = 0.0001,
     average_hot: bool = False,
 ) -> bytes:
-    """filter a Radiance picture."""
+    """filter a Radiance picture.
+    By default, it uses two passes on the input, using a box filter.
+
+    Args:
+        image: input image
+        xres: horizontal resolution
+        yres: vertical resolution
+        pixel_aspect: pixel aspect ratio
+        exposure: exposure value
+        lamp: lamp file
+        lampdat: lamp data file
+        one_pass: use one pass filter
+        gaussian_filter_radius: gaussian filter radius
+        limitfrac: limit fraction
+        hot_threshold: Set intensity considered 'hot', default 100 watts/sr/m2
+        star_points: Number of points on a start pattern.
+        star_spread: star pattern spread
+        average_hot: average hot spots
+    Returns:
+        bytes: output of pfilt
+    """
     stdin = None
-    cmd = ["pfilt"]
+    cmd = [str(BINPATH / "pfilt")]
     if xres:
         cmd.extend(["-x", xres])
     if yres:
         cmd.extend(["-y", yres])
     if pixel_aspect:
         cmd.extend(["-p", str(pixel_aspect)])
+    if pa_correct:
+        cmd.append("-c")
     if exposure:
         cmd.extend(["-e", str(exposure)])
     if lamp:
@@ -130,11 +154,11 @@ def pfilt(
         cmd.extend(["-r", str(gaussian_filter_radius)])
     if limitfrac:
         cmd.extend(["-m", str(limitfrac)])
-    if hot_threshold:
+    if hot_threshold != 100:
         cmd.extend(["-h", str(hot_threshold)])
     if star_points:
         cmd.extend(["-n", str(star_points)])
-    if star_spread:
+    if star_spread != 0.0001:
         cmd.extend(["-s", str(star_spread)])
     if average_hot:
         cmd.append("-a")
@@ -163,7 +187,10 @@ def pvalue(
     brightness: bool = False,
     outprimary: Optional[str] = None,
 ) -> bytes:
-    """Run Radiance pvalue tool.
+    """convert RADIANCE picture to/from alternate formats
+    Pvalue converts the pixels of a RADIANCE picture to or from another format.
+    In the default mode, pixels are sent to the standard output, one per line,
+    in the following ascii format: xpos ypos red  green     blue
 
     Args:
         pic: hdr file path. Either path or stdin is used, path takes precedence.
@@ -183,7 +210,7 @@ def pvalue(
     Returns:
         bytes: output of pvalue
     """
-    cmd = ["pvalue"]
+    cmd = [str(BINPATH / "pvalue")]
     if unique:
         cmd.append("-u")
     if original:
@@ -271,3 +298,122 @@ def pvaluer(
     elif isinstance(pic, bytes):
         stdin = pic
     return sp.run(cmd, check=True, stdout=sp.PIPE, input=stdin).stdout
+
+
+def ra_tiff(
+    inp,
+    out: Optional[str] = None,
+    gamma: float = 2.2,
+    greyscale: bool = False,
+    lzw: bool = False,
+    sgilog: bool = False,
+    sgilog24: bool = False,
+    ieee32: bool = False,
+    primary: bool = False,
+    exposure: int = 0,
+    reverse: bool = False,
+    xyze: bool = False,
+) -> Optional[bytes]:
+    """ra_tiff - convert RADIANCE picture to/from a TIFF color 
+    or greyscale image
+    
+    Args:
+        inp: Path or bytes to input picture file.
+        out: Path to output file, required when output is a TIFF file.
+        gamma: Gamma value for the output image. Default is 2.2.
+        greyscale: Set to True to convert to greyscale. Default is False.
+        lzw: Set to True to use LZW compression. Default is False.
+        sgilog: Set to True to use SGI log compression. Default is False.
+        sgilog24: Set to True to use SGI log 24 compression. Default is False.
+        ieee32: Set to True to use IEEE 32-bit floating point compression.
+        primary: Set to True to use 16-bit/primary output. Default is False.
+        reverse: Set to True to invoke a reverse conversion, from a TIFF
+            to a RADIANCE picture. Default is False.
+        xyze: Set to True to use XYZE output when invoking a reverse 
+            conversion. Default is False.
+    Returns:
+        bytes: output of ra_tiff
+    """
+    cmd = [str(BINPATH / "ra_tiff")]
+    if reverse:
+        if isinstance(inp, bytes):
+            raise ValueError("Input should be a file when input is TIFF.")
+        cmd.append("-r")
+        if xyze:
+            cmd.append("-e")
+        if gamma:
+            cmd.extend(["-g", str(gamma)])
+        if exposure:
+            cmd.extend(["-e", str(exposure)])
+    else: 
+        if out is None:
+            raise ValueError("Output should be specified when input is a RADIANCE picture.")
+        if lzw:
+            cmd.append("-z")
+        elif sgilog:
+            cmd.append("-L")
+        elif sgilog24:
+            cmd.append("-l")
+        elif ieee32:
+            cmd.append("-f")
+        elif primary:
+            cmd.append("-w")
+        if greyscale:
+            cmd.append("-b")
+        if gamma:
+            cmd.extend(["-g", str(gamma)])
+        if exposure:
+            cmd.extend(["-e", str(exposure)])
+    stdin = None
+    if isinstance(inp, (Path, str)):
+        cmd.append(str(inp))
+    elif isinstance(inp, bytes):
+        stdin = inp
+        cmd.append('-')
+    pout = sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
+    if out is None:
+        return pout
+    return
+
+
+def ra_ppm(
+    inp,
+    gamma: float = 2.2,
+    greyscale: bool = False,
+    reverse: bool = False,
+    exposure: int = 0,
+    ascii: bool = False,
+    outscale: int = 255,
+) -> bytes:
+    """convert RADIANCE picture to/from a Poskanzer Portable Pixmap
+
+    Args:
+        inp: Path or bytes to input picture file.
+        gamma: Gamma value for the output image. Default is 2.2.
+        reverse: Set to True to invoke a reverse conversion, from a PPM
+            to a RADIANCE picture. Default is False.
+        exposure: Exposure value for the output image. Default is 0.
+        ascii: Set to True to use ASCII Pixmap output. Default is False.
+        outscale: Output scale value. Default is 255.
+    Returns:
+        bytes: output of ra_ppm
+    """
+    cmd = [str(BINPATH / "ra_ppm")]
+    if reverse:
+        cmd.append("-r")
+    if gamma:
+        cmd.extend(["-g", str(gamma)])
+    if greyscale:
+        cmd.append("-b")
+    if exposure:
+        cmd.extend(["-e", str(exposure)])
+    if ascii:
+        cmd.append("-a")
+    if outscale != 255:
+        cmd.extend(["-s", str(outscale)])
+    stdin = None
+    if isinstance(inp, (Path, str)):
+        cmd.append(str(inp))
+    elif isinstance(inp, bytes):
+        stdin = inp
+    return sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout

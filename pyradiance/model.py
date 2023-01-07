@@ -12,6 +12,7 @@ from pathlib import Path
 import re
 from typing import Dict, List, Sequence, Tuple, Union
 
+from .ot import oconv
 
 @dataclass
 class Primitive:
@@ -23,9 +24,8 @@ class Primitive:
         modifier: modifier, which primitive modifies this one
         ptype: primitive type
         identifier: identifier, name of this primitive
-        str_arg: string argument
-        real_arg: real argument
-        int_arg: integer argument, not used in Radiance (default="0")
+        strarg: string arguments
+        realarg: real arguments
     """
 
     modifier: str
@@ -64,6 +64,20 @@ class ViewType:
 
 @dataclass(eq=True, frozen=True)
 class View:
+    """Radiance View.
+
+    Attributes:
+        vtype: view type
+        position: view position
+        direction: view direction
+        vup: view up
+        horiz: horizontal field of view
+        vert: vertical field of view
+        vfore: view fore
+        vaft: view aft
+        hoff: horizontal offset
+        voff: vertical offset
+    """
     position: Tuple[float, float, float]
     direction: Tuple[float, float, float]
     vtype: str = ViewType.VT_PER
@@ -106,6 +120,17 @@ class Sensor:
 
 
 class Scene:
+    """Radiance Scene.
+
+    Attributes:
+        sid: scene id
+        materials: materials
+        surfaces: surfaces
+        views: views
+        sensors: sensors
+        sources: sources
+        changed: changed flag
+    """
 
     __slots__ = (
         "sid",
@@ -119,6 +144,10 @@ class Scene:
     )
 
     def __init__(self, sid: str):
+        """
+        Args:
+            sid: scene id
+        """
         self.sid = sid
         self.materials: Dict[str, str] = {}
         self.surfaces: Dict[str, str] = {}
@@ -177,6 +206,32 @@ class Scene:
 
     def add_sensor(self, sensor: Sequence[float]):
         self.sensors.append(sensor)
+
+    def _build(self):
+        stdin = None
+        mstdin = [str(mat) for mat in self.materials.values() if isinstance(mat, Primitive)]
+        inp = [mat for mat in self.materials.values() if isinstance(mat, str)]
+        if mstdin:
+            stdin = "".join(mstdin).encode()
+        moctname = f"{self.sid}mat.oct"
+        with open(moctname, "wb") as wtr:
+            wtr.write(oconv(*inp, warning=False, stdin=stdin))
+        sstdin = [str(srf) for srf in self.surfaces.values() if isinstance(srf, Primitive)]
+        sstdin.extend(
+            [str(src) for src in self.sources.values() if isinstance(src, Primitive)]
+        )
+        inp = [path for path in self.surfaces.values() if isinstance(path, str)]
+        inp.extend([path for path in self.sources.values() if isinstance(path, str)])
+        if sstdin:
+            stdin = "".join(sstdin).encode()
+        with open(f"{self.sid}.oct", "wb") as wtr:
+            wtr.write(oconv(*inp, stdin=stdin, warning=False, octree=moctname))
+
+    def build(self):
+        """Build scene."""
+        if self.changed:
+            self._build()
+            self.changed = False
 
 
 def parse_primitive(pstr) -> List[Primitive]:

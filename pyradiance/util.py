@@ -9,63 +9,52 @@ import subprocess as sp
 import sys
 from typing import List, Optional, Sequence, Tuple, Union
 
-from .model import View, Scene, parse_primitive, Primitive
+from .model import View, parse_primitive, Primitive
 from .param import SamplingParameters, parse_rtrace_args
-from .ot import getbbox, oconv
+from .ot import getbbox
 
 BINPATH = Path(__file__).parent / "bin"
 
 
-def append_to_header(inp: bytes, appendage: str) -> bytes:
-    """Use getinfo to append a line to the header of a Radiance file.
-    Args:
-        inp: input file
-        appendage: line to append
-    Returns:
-        bytes: output of getinfo
-    """
-    return getinfo(inp, append=appendage)
-
-
-def build_scene(scene: Scene):
-    """Build and write the scene octree file.
-    to the current working directory.
-    """
-    if not scene.changed:
-        print("Scene has not changed since last build.")
-        return
-    scene.changed = False
-    stdin = None
-    mstdin = [
-        str(mat) for mat in scene.materials.values() if isinstance(mat, Primitive)
-    ]
-    inp = [mat for mat in scene.materials.values() if isinstance(mat, str)]
-    if mstdin:
-        stdin = "".join(mstdin).encode()
-    moctname = f"{scene.sid}mat.oct"
-    with open(moctname, "wb") as wtr:
-        wtr.write(oconv(*inp, warning=False, stdin=stdin))
-    sstdin = [str(srf) for srf in scene.surfaces.values() if isinstance(srf, Primitive)]
-    sstdin.extend(
-        [str(src) for src in scene.sources.values() if isinstance(src, Primitive)]
-    )
-    inp = [path for path in scene.surfaces.values() if isinstance(path, str)]
-    inp.extend([path for path in scene.sources.values() if isinstance(path, str)])
-    if sstdin:
-        stdin = "".join(sstdin).encode()
-    with open(f"{scene.sid}.oct", "wb") as wtr:
-        wtr.write(oconv(*inp, stdin=stdin, warning=False, octree=moctname))
+# def build_scene(scene: Scene):
+#     """Build and write the scene octree file.
+#     to the current working directory.
+#     """
+#     if not scene.changed:
+#         print("Scene has not changed since last build.")
+#         return
+#     scene.changed = False
+#     stdin = None
+#     mstdin = [
+#         str(mat) for mat in scene.materials.values() if isinstance(mat, Primitive)
+#     ]
+#     inp = [mat for mat in scene.materials.values() if isinstance(mat, str)]
+#     if mstdin:
+#         stdin = "".join(mstdin).encode()
+#     moctname = f"{scene.sid}mat.oct"
+#     with open(moctname, "wb") as wtr:
+#         wtr.write(oconv(*inp, warning=False, stdin=stdin))
+#     sstdin = [str(srf) for srf in scene.surfaces.values() if isinstance(srf, Primitive)]
+#     sstdin.extend(
+#         [str(src) for src in scene.sources.values() if isinstance(src, Primitive)]
+#     )
+#     inp = [path for path in scene.surfaces.values() if isinstance(path, str)]
+#     inp.extend([path for path in scene.sources.values() if isinstance(path, str)])
+#     if sstdin:
+#         stdin = "".join(sstdin).encode()
+#     with open(f"{scene.sid}.oct", "wb") as wtr:
+#         wtr.write(oconv(*inp, stdin=stdin, warning=False, octree=moctname))
 
 
 def dctimestep(
-    *mtx, 
-    nstep: Optional[int] = None, 
-    header: bool = True, 
-    xres: Optional[int] = None, 
-    yres: Optional[int] =None, 
-    inform: Optional[str] =None, 
-    outform: Optional[str] =None, 
-    ospec: Optional[str] =None
+    *mtx,
+    nstep: Optional[int] = None,
+    header: bool = True,
+    xres: Optional[int] = None,
+    yres: Optional[int] = None,
+    inform: Optional[str] = None,
+    outform: Optional[str] = None,
+    ospec: Optional[str] = None,
 ) -> Optional[bytes]:
     """Call dctimestep to perform matrix multiplication.
     Args:
@@ -106,7 +95,7 @@ def dctimestep(
     if _stdout:
         return result
     return None
-    
+
 
 def getinfo(
     *inputs: Union[str, Path, bytes],
@@ -202,6 +191,189 @@ def read_rad(fpath: str) -> List[Primitive]:
     return parse_primitive("\n".join(lines))
 
 
+def rcode_depth(
+    inp: Union[str, Path, bytes],
+    ref_depth: str = "1.0",
+    inheader: bool = True,
+    outheader: bool = True,
+    inresolution: bool = True,
+    outresolution: bool = True,
+    xres: Optional[int] = None,
+    yres: Optional[int] = None,
+    inform: str = "a",
+    outform: str = "a",
+    decode: bool = False,
+    compute_intersection: bool = False,
+    per_point: bool = False,
+    depth_file: Optional[str] = None,
+    flush: bool = False,
+) -> bytes:
+    """Encode/decode 16-bit depth map.
+    
+    Args:
+        inp: input file or bytes
+        ref_depth: reference distance, can be follow by /unit.
+        inheader: Set to False to not expect header on input
+        outheader: Set to False to not include header on output
+        inresolution: Set to False to not expect resolution on input
+        outresolution: Set to False to not include resolution on output
+        xres: x resolution
+        yres: y resolution
+        inform: input format
+        outform: output format when decoding
+        decode: Set to True to decode instead
+        compute_intersection: Set to True to compute intersection instead
+        per_point: Set to True to compute per point instead of per pixel
+        depth_file: depth file
+        flush: Set to True to flush output
+    Returns:
+        bytes: output of rcode_depth
+    """
+    cmd = [str(BINPATH / "rcode_depth")]
+    if decode or compute_intersection:
+        if decode:
+            cmd.append("-r")
+        elif compute_intersection:
+            cmd.append("-p")
+        if per_point:
+            cmd.append("-i")
+        else:
+            if not inheader:
+                cmd.append("-hi")
+            if not outheader:
+                cmd.append("-ho")
+            if not inresolution:
+                cmd.append("-Hi")
+            if not outresolution:
+                cmd.append("-Ho")
+        if flush:
+            cmd.append("-u")
+        if outform != 'a':
+            if outform not in ("d", "f"):
+                raise ValueError("outform must be 'd' or 'f'")
+            cmd.append(f"-f{outform}")
+        if per_point and (depth_file is None):
+            raise ValueError("depth_file must be set when per_point is True")
+        if per_point and (not isinstance(inp, bytes)):
+            raise TypeError("inp(pixel coordinates) must be bytes when per_point is True")
+        if depth_file is not None:
+            cmd.append(depth_file)
+    else:
+        if ref_depth:
+            cmd.extend(["-d", ref_depth])
+        if not inheader:
+            cmd.append("-hi")
+        if not outheader:
+            cmd.append("-ho")
+        if not inresolution:
+            cmd.append("-Hi")
+        if not outresolution:
+            cmd.append("-Ho")
+        if xres:
+            cmd.extend(["-x", str(xres)])
+        if yres:
+            cmd.extend(["-y", str(yres)])
+        if inform != "a":
+            if inform not in ("d", "f"):
+                raise ValueError("inform must be 'd' or 'f'")
+            cmd.append(f"-f{inform}")
+    stdin = None
+    if isinstance(inp, bytes):
+        stdin = inp
+    elif isinstance(inp, (str, Path)):
+        cmd.append(str(inp))
+    else:
+        raise TypeError("inp must be a string, Path, or bytes")
+    return sp.run(cmd, stdout=sp.PIPE, input=stdin, check=True).stdout
+
+
+def rcode_norm(
+    inp, 
+    inheader: bool = True,
+    outheader: bool = True,
+    inresolution: bool = True,
+    outresolution: bool = True,
+    xres: Optional[int] = None,
+    yres: Optional[int] = None,
+    inform: str = "a",
+    outform: str = "a",
+    decode: bool = False,
+    per_point: bool = False,
+    norm_file: Optional[str] = None,
+    flush: bool = False,
+) -> bytes:
+    """Encode/decode 32-bit surface normal map.
+
+    Args:
+        inp: input file or bytes
+        inheader: Set to False to not expect header on input
+        outheader: Set to False to not include header on output
+        inresolution: Set to False to not expect resolution on input
+        outresolution: Set to False to not include resolution on output
+        xres: x resolution
+        yres: y resolution
+        inform: input format
+        outform: output format when decoding
+        decode: Set to True to decode instead
+        per_point: Set to True to compute per point instead of per pixel
+        flush: Set to True to flush output
+    Returns:
+        bytes: output of rcode_norm
+    """
+    cmd = [str(BINPATH / "rcode_norm")]
+    if decode:
+        cmd.append("-r")
+        if not inheader:
+            cmd.append("-hi")
+        if not outheader:
+            cmd.append("-ho")
+        if per_point:
+            cmd.append("-i")
+        else:
+            if not inresolution:
+                cmd.append("-Hi")
+            if not outresolution:
+                cmd.append("-Ho")
+        if flush:
+            cmd.append("-u")
+        if outform != 'a':
+            if outform not in ("d", "f"):
+                raise ValueError("outform must be 'd' or 'f'")
+            cmd.append(f"-f{outform}")
+        if per_point and (norm_file is None):
+            raise ValueError("norm_file must be set when per_point is True")
+        if per_point and (not isinstance(inp, bytes)):
+            raise TypeError("inp(pixel coordinates) must be bytes when per_point is True")
+        if norm_file is not None:
+            cmd.append(norm_file)
+        
+    else:
+        if not inheader:
+            cmd.append("-hi")
+        if not outheader:
+            cmd.append("-ho")
+        if not inresolution:
+            cmd.append("-Hi")
+        if not outresolution:
+            cmd.append("-Ho")
+        if xres:
+            cmd.extend(["-x", str(xres)])
+        if yres:
+            cmd.extend(["-y", str(yres)])
+        if inform != "a":
+            if inform not in ("d", "f"):
+                raise ValueError("inform must be 'd' or 'f'")
+            cmd.append(f"-f{inform}")
+    stdin = None
+    if isinstance(inp, bytes):
+        stdin = inp
+    elif isinstance(inp, (str, Path)):
+        cmd.append(str(inp))
+    else:
+        raise TypeError("inp must be a string, Path, or bytes")
+    return sp.run(cmd, stdout=sp.PIPE, input=stdin, check=True).stdout
+
+
 def render(
     scene,
     view: Optional[View] = None,
@@ -278,18 +450,16 @@ def render(
         l.strip()
         for l in rad(os.devnull, dryrun=True, varstr=radvars).decode().splitlines()
     ]
+    _sidx = 0
     if radcmds[0].startswith("oconv"):
         print("rebuilding octree...")
         with open(octpath, "wb") as wtr:
             sp.run(shlex.split(radcmds[0].split(">", 1)[0]), check=True, stdout=wtr)
-        argdict = parse_rtrace_args(radcmds[1])
-    elif radcmds[0].startswith("rpict"):
-        argdict = parse_rtrace_args(radcmds[0])
-    elif radcmds[0].startswith("rm"):
+        _sidx = 1
+    elif radcmds[0].startswith(("rm", "del")):
         sp.run(shlex.split(radcmds[0]), check=True)
-        argdict = parse_rtrace_args(radcmds[1])
-    else:
-        raise ValueError("rpict command not found.")
+        _sidx = 1
+    argdict = parse_rtrace_args(" ".join(radcmds[_sidx:]))
 
     options = SamplingParameters()
     options.dt = 0.05

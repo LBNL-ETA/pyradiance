@@ -15,21 +15,29 @@ BINPATH = Path(__file__).parent / "bin"
 
 
 @dataclass
-class Modifier:
+class RcModifier:
     """Modifier for rcontrib command.
 
-    Args:
-        modifier: Modifier name.
-        value: Modifier value.
+    Attributes:
+        modifier: Modifier name, mutually exclusive with modifier_path.
+        modifier_path: Path to modifier file, mutually exclusive with modifier.
+        calfile: Calc file path.
+        expression: Expressions.
+        nbins: Number of bins, can be expression.
+        binv: Bin value.
+        param: Parameter.
+        xres: X resolution.
+        yres: Y resolution.
+        output: Output file.
     """
 
-    modifier = None
-    modifier_path: Optional[str]= None
-    calfile = None
-    expression = None
-    nbins = None
-    binv = None
-    param = None
+    modifier: Optional[str] = None
+    modifier_path: Optional[str] = None
+    calfile: Optional[str] = None
+    expression: Optional[str] = None
+    nbins: Optional[str] = None
+    binv: Optional[str] = None
+    param: Optional[str] = None
     xres: Optional[int] = None
     yres: Optional[int] = None
     output: Optional[str] = None
@@ -65,21 +73,25 @@ class Modifier:
 def rcontrib(
     inp: bytes,
     octree: Union[Path, str],
-    modifiers: Sequence[Modifier],
+    modifiers: Sequence[RcModifier],
     nproc=1,
     yres=None,
     inform=None,
     outform=None,
     params: Optional[Sequence[str]] = None,
 ) -> bytes:
-    """
-    Needs a wrapper for options.
-    grouped by modifiers
-    -n -V -c [ -fo | -r ]
-    -e  -f
-    -x -y -o -p -b -bn { -m | -M }
-    [rtrace option]
-    octree
+    """Run rcontrib command.
+    Args:
+        inp: A bytes object.
+        octree: A path to octree file.
+        modifiers: A list of RcModifier objects.
+        nproc: Number of processes.
+        yres: Y resolution.
+        inform: Input format.
+        outform: Output format.
+        params: A list of additional parameters.
+    Returns:
+        A bytes object.
     """
     cmd = [str(BINPATH / "rcontrib")]
     if nproc > 1 and sys.platform != "win32":
@@ -109,7 +121,11 @@ def rpict(
     Args:
         view: A view object.
         octree: A path to octree file.
-        options: A SamplingParameters object.
+        xres: X resolution.
+        yres: Y resolution.
+        report: Report.
+        report_file: Report file.
+        params: A list of additional parameters.
     Returns:
         A bytes object.
     """

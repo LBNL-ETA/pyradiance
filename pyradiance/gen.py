@@ -1,37 +1,63 @@
 """
 Radiance generators and scene Manipulators
 """
+from datetime import datetime
 from pathlib import Path
 import subprocess as sp
-from typing import List, Optional, Sequence
+from typing import List, Optional, Sequence, Union
 
 
 BINPATH = Path(__file__).parent / "bin"
 
 
 def genbsdf(
-    *inp,
-    nsamp=1,
-    nproc=1,
+    *inp: Union[str, Path],
+    nsamp: int = 1,
+    nproc: int = 1,
     params: Optional[Sequence[str]] = None,
     enforce_window=False,
     ttree_rank: Optional[int] = None,
     ttree_res: Optional[int] = None,
-    color=False,
-    reciprocity=True,
-    recover_dir=None,
-    forward=False,
-    backward=True,
-    mgf=None,
-    geom=False,
-    geom_unit=None,
+    color: bool = False,
+    reciprocity: bool = True,
+    recover_dir: Optional[Union[str, Path]] = None,
+    forward: bool = False,
+    backward: bool = True,
+    mgf: Optional[Union[str, Path]] = None,
+    geom: bool = False,
+    geom_unit: Optional[str] = None,
     dim: Optional[Sequence[float]] = None,
     **kwargs,
-):
-    """Run genBSDF to generate a BSDF file from a Radiance scene."""
+) -> bytes:
+    """Generate BSDF description from Radiance or MGF input
+
+    Examples:
+        >>> genbsdf('material.mat', 'blinds.rad', nsamp=50, nproc=4)
+
+    Args:
+        inp: Input files. This can be a list of files or a single string with
+        nsamp: Number of samples to generate. Default is 1.
+        nproc: Number of processors to use. Default is 1.
+        params: A list of parameters to pass to genBSDF.
+        enforce_window: Set to True to enforce the window. Default is False.
+        ttree_rank: Tensor tree rank, 3 for isotropic and 4 for anisotropic BSDF.
+        ttree_res: Tensor tree BSDF resolution, e.g., 5 6 7.
+        color: Set to True to generate color BSDF. Default is False.
+        reciprocity: Set to False to disable reciprocity. Default is True.
+        recover_dir: Set to a path to recover from a previous run.
+        forward: Set to True to generate forward BSDF. Default is False.
+        backward: Set to True to generate backward BSDF. Default is True.
+        mgf: Set to a path to a MGF file to use.
+        geom: Set to True to generate geometry BSDF. Default is False.
+        geom_unit: Set to a unit to use for geometry BSDF.
+        dim: Set to a list of 6 numbers to use for geometry BSDF.
+        kwargs: Additional parameters to pass to genBSDF.
+    Returns:
+        str: Output of genBSDF.
+    """
     cmd = [str(BINPATH / "genBSDF")]
     if recover_dir is not None:
-        cmd += ["-recover", recover_dir]
+        cmd += ["-recover", str(recover_dir)]
         return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
     cmd += ["-n", str(nproc), "-c", str(nsamp)]
     if params is not None:
@@ -42,21 +68,21 @@ def genbsdf(
         if ttree_res is None:
             raise ValueError("ttree_res must be specified if ttree_rank is specified")
         cmd += [f"-t{ttree_rank}", str(ttree_res)]
-    reciprocity = "+" if reciprocity else "-"
-    cmd.append(f"{reciprocity}a")
+    reciprocity_sign = "+" if reciprocity else "-"
+    cmd.append(f"{reciprocity_sign}a")
     if geom:
         if geom_unit is None:
             raise ValueError("geom_unit must be specified if geom is True")
-        geom = "+" if geom else "-"
-        cmd += [f"{geom}geom", geom_unit]
-    forward = "+" if forward else "-"
-    cmd.append(f"{forward}f")
-    backward = "+" if backward else "-"
-    cmd.append(f"{backward}b")
+        geom_sign = "+" if geom else "-"
+        cmd += [f"{geom_sign}geom", geom_unit]
+    forward_sign = "+" if forward else "-"
+    cmd.append(f"{forward_sign}f")
+    backward_sign = "+" if backward else "-"
+    cmd.append(f"{backward_sign}b")
     mgf = "+" if mgf else "-"
     cmd.append(f"{mgf}mgf")
-    color = "+" if color else "-"
-    cmd.append(f"{color}C")
+    color_sign = "+" if color else "-"
+    cmd.append(f"{color_sign}C")
     if dim is not None:
         cmd += ["-dim", *[str(d) for d in dim]]
     if enforce_window:
@@ -69,12 +95,12 @@ def genbsdf(
         if key in kwargs:
             fields.append(f"{key}={kwargs[key]}")
     cmd += ["-s", ";".join(fields)]
-    cmd += inp
+    cmd.extend([str(i) for i in inp])
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
 def gendaylit(
-    dt,
+    dt: datetime,
     latitude: float,
     longitude: float,
     timezone: int,
@@ -90,10 +116,11 @@ def gendaylit(
     grefl: Optional[float] = None,
     interval: Optional[int] = None,
 ) -> bytes:
-    """Generate sky from Perez all-weather model.
+    """Generates a RADIANCE description of the daylight sources using 
+    Perez models for direct and diffuse components.
 
     Args:
-        dt: datetime object
+        dt: python datetime object
         latitude: latitude
         longitude: longitude
         timezone: timezone
@@ -141,7 +168,7 @@ def gendaylit(
 
 
 def gendaymtx(
-    weather_data,
+    weather_data: Union[str, Path, bytes],
     verbose: bool = False,
     header: bool = False,
     average: bool = False,
@@ -159,13 +186,27 @@ def gendaymtx(
     solar_radiance: bool = False,
     mfactor: int = 1,
 ):
-    """
-    Use gendaymtx to generate a daylight matrix.
-    gendaymtx [ -v ][ -h ][ -A ][ -d|-s|-n ][ -u ][ -D sunfile [ -M sunmods ]][ -r deg ][ -m N ][ -g r g b ][ -c r g b ][ -o{f|d} ][ -O{0|1} ] [ tape.wea ]
+    """Generate an annual Perez sky matrix from a weather tape.
 
     Args:
         weather_data: weather data
-        mf: multiplication factor
+        mfactor: multiplication factor
+        verbose: verbose
+        header: header
+        average: average
+        sun_only: sun only
+        sky_only: sky only
+        sun_file: sun file
+        sun_mods: sun mods
+        daylight_hours_only: daylight hours only
+        dryrun: dryrun
+        sky_color: sky color
+        ground_color: ground color
+        rotate: rotate
+        outform: outform
+        onesun: onesun
+        solar_radiance: solar radiance
+
     Returns:
         bytes: output of gendaymtx
     """
@@ -213,34 +254,91 @@ def gendaymtx(
 
 
 def gensky(
-    dt,
-    latitude: float,
-    longitude: float,
-    timezone: int,
+    dt: Optional[datetime] = None,
+    latitude: Optional[float] = None,
+    longitude: Optional[float] = None,
+    timezone: Optional[int] = None,
+    altitude: Optional[float] = None,
+    azimuth: Optional[float] = None,
     year: Optional[int] = None,
-    dirnorm: Optional[float] = None,
-    diffhor: Optional[float] = None,
-    dirhor: Optional[float] = None,
-    dirnormp: Optional[float] = None,
-    diffhorp: Optional[float] = None,
-    solar: bool = False,
-) -> str:
-    """Generate sky from Perez all-weather model."""
-    cmd = [
-        str(BINPATH / "gensky"),
-        str(dt.month),
-        str(dt.day),
-        str(dt.hour + dt.minute / 60),
-    ]
-    cmd += ["-a", str(latitude), "-o", str(longitude), "-m", str(timezone)]
-    if year is not None:
-        cmd += ["-y", str(year)]
-    if None not in (dirnorm, diffhor):
-        cmd += ["-W", str(dirnorm), str(diffhor)]
-    if None not in (dirhor, diffhor):
-        cmd += ["-G", str(dirhor), str(diffhor)]
-    if None not in (dirnormp, diffhorp):
-        cmd += ["-L", str(dirnormp), str(diffhorp)]
-    if solar:
-        cmd += ["-O", "1"]
-    return sp.run(cmd, stdout=sp.PIPE, check=True).stdout.decode().strip()
+    sunny_with_sun: bool = False,
+    sunny_without_sun: bool = False,
+    cloudy: bool = False,
+    intermediate_with_sun: bool = False,
+    intermediate_without_sun: bool = False,
+    uniform: bool = False,
+    ground_reflectance: Optional[float] = None,
+    zenith_brightness: Optional[float] = None,
+    horizontal_brightness: Optional[float] = None,
+    solar_radiance: Optional[float] = None,
+    horizontal_direct_irradiance: Optional[float] = None,
+    turbidity: Optional[float] = None,
+
+) -> bytes:
+    """Generate a RADIANCE description of the sky.
+
+    Args:
+        dt: datetime object, mutally exclusive with altitude and azimuth
+        latitude: latitude, only apply if dt is not None
+        longitude: longitude, only apply if dt is not None
+        timezone: timezone, only apply if dt is not None
+        altitude: solar altitude, mutally exclusive with dt
+        azimuth: solar azimuth, mutally exclusive with dt
+        year: year, only apply if dt is not None
+        sunny_with_sun: sunny with sun
+        sunny_without_sun: sunny without sun
+        cloudy: CIE overcast sky
+        intermediate_with_sun: intermediate with sun
+        intermediate_without_sun: intermediate without sun
+        uniform: uniform sky
+        ground_reflectance: ground reflectance
+        zenith_brightness: zenith brightness in watts/steradian/meter^2
+        horizontal_brightness: horizontal brightness in watts/metere^2
+        solar_radiance: solar radiance in watts/steradian/meter^2
+        horizontal_direct_irradiance: horizontal direct irradiance in watts/meter^2
+        turbidity: turbidity factor
+    Returns:
+        str: output of gensky
+    """
+    cmd = [str(BINPATH / "gensky")]
+    if dt is not None:
+        cmd.append(str(dt.month))
+        cmd.append(str(dt.day))
+        cmd.append(str(dt.hour + dt.minute / 60))
+        if latitude is not None:
+            cmd.extend(["-a", str(latitude)])
+        if longitude is not None:
+            cmd.extend(["-o", str(longitude)])
+        if timezone is not None:
+            cmd.extend(["-m", str(timezone)])
+        if year is not None:
+            cmd += ["-y", str(year)]
+    elif None not in (altitude, azimuth):
+        cmd.extend(["-ang", str(altitude), str(azimuth)])
+    else:
+        raise ValueError("Must provide either dt or altitude and azimuth")
+    if sunny_with_sun:
+        cmd.append("+s")
+    elif sunny_without_sun:
+        cmd.append("-s")
+    elif cloudy:
+        cmd.append("-c")
+    elif intermediate_with_sun:
+        cmd.append("+i")
+    elif intermediate_without_sun:
+        cmd.append("-i")
+    elif uniform:
+        cmd.append("-u")
+    if ground_reflectance is not None:
+        cmd.extend(["-g", str(ground_reflectance)])
+    if zenith_brightness is not None:
+        cmd.extend(["-b", str(zenith_brightness)])
+    elif horizontal_brightness is not None:
+        cmd.extend(["-B", str(horizontal_brightness)])
+    if solar_radiance is not None:
+        cmd.extend(["-r", str(solar_radiance)])
+    elif horizontal_direct_irradiance is not None:
+        cmd.extend(["-R", str(horizontal_direct_irradiance)])
+    if turbidity is not None:
+        cmd.extend(["-t", str(turbidity)])
+    return sp.run(cmd, stdout=sp.PIPE, check=True).stdout

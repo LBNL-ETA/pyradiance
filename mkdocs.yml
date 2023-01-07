@@ -1,0 +1,52 @@
+site_name: Pyradiance Docs
+repo_url: http://github.com/LBNL-ETA/pyradiance/
+
+theme:
+  name: "material"
+  palette:
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+      primary: white
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+      primary: black
+  font:
+    text: OpenSans
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - def_list
+
+plugins:
+  - search
+  - autorefs
+  - mkdocstrings:
+      custom_templates: templates
+      default_handler: python
+      handlers:
+        python:
+          options:
+            show_source: false
+            show_root_heading: true
+
+nav:
+  - Home: "../"
+  - tutorials.md
+  - How-To Guides: how-to-guides.md
+  - reference.md
