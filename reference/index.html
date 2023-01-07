@@ -1,0 +1,5475 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../how-to-guides/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.2">
+    
+    
+      
+        <title>Reference - Pyradiance Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.f56500e0.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.2505c338.min.css">
+      
+      
+
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=OpenSans:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"OpenSans";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#pyradiance" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Pyradiance Docs" class="md-header__button md-logo" aria-label="Pyradiance Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Pyradiance Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Reference
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      <form class="md-header__option" data-md-component="palette">
+        
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent=""  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+          
+            <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+            </label>
+          
+        
+          
+          <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent=""  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+          
+            <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+            </label>
+          
+        
+      </form>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="http://github.com/LBNL-ETA/pyradiance/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Pyradiance Docs" class="md-nav__button md-logo" aria-label="Pyradiance Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    Pyradiance Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="http://github.com/LBNL-ETA/pyradiance/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        Home
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/" class="md-nav__link">
+        Quickstart
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../how-to-guides/" class="md-nav__link">
+        How-To Guides
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Reference
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#pyradiance" class="md-nav__link">
+    pyradiance
+  </a>
+  
+    <nav class="md-nav" aria-label="pyradiance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.Primitive" class="md-nav__link">
+    Primitive
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.RcModifier" class="md-nav__link">
+    RcModifier
+  </a>
+  
+    <nav class="md-nav" aria-label="RcModifier">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.rt.RcModifier.args" class="md-nav__link">
+    args()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.Scene" class="md-nav__link">
+    Scene
+  </a>
+  
+    <nav class="md-nav" aria-label="Scene">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.model.Scene.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.model.Scene.build" class="md-nav__link">
+    build()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.View" class="md-nav__link">
+    View
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.bsdf2klems" class="md-nav__link">
+    bsdf2klems()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.bsdf2ttree" class="md-nav__link">
+    bsdf2ttree()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.cnt" class="md-nav__link">
+    cnt()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.genbsdf" class="md-nav__link">
+    genbsdf()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.gendaylit" class="md-nav__link">
+    gendaylit()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.gendaymtx" class="md-nav__link">
+    gendaymtx()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.gensky" class="md-nav__link">
+    gensky()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.get_header" class="md-nav__link">
+    get_header()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.get_image_dimensions" class="md-nav__link">
+    get_image_dimensions()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.ies2rad" class="md-nav__link">
+    ies2rad()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.load_views" class="md-nav__link">
+    load_views()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.mgf2rad" class="md-nav__link">
+    mgf2rad()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.obj2rad" class="md-nav__link">
+    obj2rad()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.oconv" class="md-nav__link">
+    oconv()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.pabopto2bsdf" class="md-nav__link">
+    pabopto2bsdf()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.parse_primitive" class="md-nav__link">
+    parse_primitive()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.pcond" class="md-nav__link">
+    pcond()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.pfilt" class="md-nav__link">
+    pfilt()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.pkgbsdf" class="md-nav__link">
+    pkgbsdf()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.pvalue" class="md-nav__link">
+    pvalue()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.pvaluer" class="md-nav__link">
+    pvaluer()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.rcode_depth" class="md-nav__link">
+    rcode_depth()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.rcode_norm" class="md-nav__link">
+    rcode_norm()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.rcontrib" class="md-nav__link">
+    rcontrib()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.render" class="md-nav__link">
+    render()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.rfluxmtx" class="md-nav__link">
+    rfluxmtx()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.rlam" class="md-nav__link">
+    rlam()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.rmtxop" class="md-nav__link">
+    rmtxop()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.rpict" class="md-nav__link">
+    rpict()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.rtrace" class="md-nav__link">
+    rtrace()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.wrapbsdf" class="md-nav__link">
+    wrapbsdf()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#pyradiance" class="md-nav__link">
+    pyradiance
+  </a>
+  
+    <nav class="md-nav" aria-label="pyradiance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.Primitive" class="md-nav__link">
+    Primitive
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.RcModifier" class="md-nav__link">
+    RcModifier
+  </a>
+  
+    <nav class="md-nav" aria-label="RcModifier">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.rt.RcModifier.args" class="md-nav__link">
+    args()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.Scene" class="md-nav__link">
+    Scene
+  </a>
+  
+    <nav class="md-nav" aria-label="Scene">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.model.Scene.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.model.Scene.build" class="md-nav__link">
+    build()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.View" class="md-nav__link">
+    View
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.bsdf2klems" class="md-nav__link">
+    bsdf2klems()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.bsdf2ttree" class="md-nav__link">
+    bsdf2ttree()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.cnt" class="md-nav__link">
+    cnt()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.genbsdf" class="md-nav__link">
+    genbsdf()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.gendaylit" class="md-nav__link">
+    gendaylit()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.gendaymtx" class="md-nav__link">
+    gendaymtx()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.gensky" class="md-nav__link">
+    gensky()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.get_header" class="md-nav__link">
+    get_header()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.get_image_dimensions" class="md-nav__link">
+    get_image_dimensions()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.ies2rad" class="md-nav__link">
+    ies2rad()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.load_views" class="md-nav__link">
+    load_views()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.mgf2rad" class="md-nav__link">
+    mgf2rad()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.obj2rad" class="md-nav__link">
+    obj2rad()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.oconv" class="md-nav__link">
+    oconv()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.pabopto2bsdf" class="md-nav__link">
+    pabopto2bsdf()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.parse_primitive" class="md-nav__link">
+    parse_primitive()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.pcond" class="md-nav__link">
+    pcond()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.pfilt" class="md-nav__link">
+    pfilt()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.pkgbsdf" class="md-nav__link">
+    pkgbsdf()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.pvalue" class="md-nav__link">
+    pvalue()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.pvaluer" class="md-nav__link">
+    pvaluer()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.rcode_depth" class="md-nav__link">
+    rcode_depth()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.rcode_norm" class="md-nav__link">
+    rcode_norm()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.rcontrib" class="md-nav__link">
+    rcontrib()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.render" class="md-nav__link">
+    render()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.rfluxmtx" class="md-nav__link">
+    rfluxmtx()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.rlam" class="md-nav__link">
+    rlam()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.rmtxop" class="md-nav__link">
+    rmtxop()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.rpict" class="md-nav__link">
+    rpict()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.rtrace" class="md-nav__link">
+    rtrace()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.wrapbsdf" class="md-nav__link">
+    wrapbsdf()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+
+  <h1>Reference</h1>
+
+<div class="doc doc-object doc-module">
+
+
+
+<h2 id="pyradiance" class="doc doc-heading">
+          <code>pyradiance</code>
+
+
+</h2>
+
+  <div class="doc doc-contents first">
+  
+      <p>pyradiance is a Python interface for Radiance. It is a collection of Python
+modules that provide a high level interface to Radiance. It is designed to
+make Radiance easier to use and accessible to Python user.</p>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="pyradiance.Primitive" class="doc doc-heading">
+        <code>Primitive</code>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+
+  
+      <p>Radiance Primitive.</p>
+<p>Attributes one-to-one mapped from Radiance.</p>
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>modifier</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>modifier, which primitive modifies this one</p></td>
+        </tr>
+        <tr>
+          <td><code>ptype</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>primitive type</p></td>
+        </tr>
+        <tr>
+          <td><code>identifier</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>identifier, name of this primitive</p></td>
+        </tr>
+        <tr>
+          <td><code>strarg</code></td>
+          <td>
+                <code><span title="typing.Sequence">Sequence</span>[str]</code>
+          </td>
+          <td><p>string arguments</p></td>
+        </tr>
+        <tr>
+          <td><code>realarg</code></td>
+          <td>
+                <code><span title="typing.Sequence">Sequence</span>[float]</code>
+          </td>
+          <td><p>real arguments</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="pyradiance.RcModifier" class="doc doc-heading">
+        <code>RcModifier</code>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+
+  
+      <p>Modifier for rcontrib command.</p>
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>modifier</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>Modifier name, mutually exclusive with modifier_path.</p></td>
+        </tr>
+        <tr>
+          <td><code>modifier_path</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>Path to modifier file, mutually exclusive with modifier.</p></td>
+        </tr>
+        <tr>
+          <td><code>calfile</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>Calc file path.</p></td>
+        </tr>
+        <tr>
+          <td><code>expression</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>Expressions.</p></td>
+        </tr>
+        <tr>
+          <td><code>nbins</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>Number of bins, can be expression.</p></td>
+        </tr>
+        <tr>
+          <td><code>binv</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>Bin value.</p></td>
+        </tr>
+        <tr>
+          <td><code>param</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>Parameter.</p></td>
+        </tr>
+        <tr>
+          <td><code>xres</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>X resolution.</p></td>
+        </tr>
+        <tr>
+          <td><code>yres</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>Y resolution.</p></td>
+        </tr>
+        <tr>
+          <td><code>output</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>Output file.</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h4 id="pyradiance.rt.RcModifier.args" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">args</span><span class="p">()</span></code>
+
+</h4>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Return modifier as a list of arguments.</p>
+
+  </div>
+
+</div>
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="pyradiance.Scene" class="doc doc-heading">
+        <code>Scene</code>
+
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+
+  
+      <p>Radiance Scene.</p>
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>sid</code></td>
+          <td>
+          </td>
+          <td><p>scene id</p></td>
+        </tr>
+        <tr>
+          <td><code>materials</code></td>
+          <td>
+                <code><span title="typing.Dict">Dict</span>[str, str]</code>
+          </td>
+          <td><p>materials</p></td>
+        </tr>
+        <tr>
+          <td><code>surfaces</code></td>
+          <td>
+                <code><span title="typing.Dict">Dict</span>[str, str]</code>
+          </td>
+          <td><p>surfaces</p></td>
+        </tr>
+        <tr>
+          <td><code>views</code></td>
+          <td>
+                <code><span title="typing.List">List</span>[<a class="autorefs autorefs-internal" title="pyradiance.model.View" href="#pyradiance.View">View</a>]</code>
+          </td>
+          <td><p>views</p></td>
+        </tr>
+        <tr>
+          <td><code>sensors</code></td>
+          <td>
+                <code><span title="typing.List">List</span>[<span title="typing.Sequence">Sequence</span>[float]]</code>
+          </td>
+          <td><p>sensors</p></td>
+        </tr>
+        <tr>
+          <td><code>sources</code></td>
+          <td>
+                <code><span title="typing.Dict">Dict</span>[str, str]</code>
+          </td>
+          <td><p>sources</p></td>
+        </tr>
+        <tr>
+          <td><code>changed</code></td>
+          <td>
+          </td>
+          <td><p>changed flag</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h4 id="pyradiance.model.Scene.__init__" class="doc doc-heading">
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">sid</span><span class="p">)</span></code>
+
+</h4>
+
+
+  <div class="doc doc-contents ">
+  
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>sid</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>scene id</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h4 id="pyradiance.model.Scene.build" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">build</span><span class="p">()</span></code>
+
+</h4>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Build scene.</p>
+
+  </div>
+
+</div>
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="pyradiance.View" class="doc doc-heading">
+        <code>View</code>
+
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+
+  
+      <p>Radiance View.</p>
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>vtype</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>view type</p></td>
+        </tr>
+        <tr>
+          <td><code>position</code></td>
+          <td>
+                <code><span title="typing.Tuple">Tuple</span>[float, float, float]</code>
+          </td>
+          <td><p>view position</p></td>
+        </tr>
+        <tr>
+          <td><code>direction</code></td>
+          <td>
+                <code><span title="typing.Tuple">Tuple</span>[float, float, float]</code>
+          </td>
+          <td><p>view direction</p></td>
+        </tr>
+        <tr>
+          <td><code>vup</code></td>
+          <td>
+                <code><span title="typing.Tuple">Tuple</span>[float, float, float]</code>
+          </td>
+          <td><p>view up</p></td>
+        </tr>
+        <tr>
+          <td><code>horiz</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td><p>horizontal field of view</p></td>
+        </tr>
+        <tr>
+          <td><code>vert</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td><p>vertical field of view</p></td>
+        </tr>
+        <tr>
+          <td><code>vfore</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td><p>view fore</p></td>
+        </tr>
+        <tr>
+          <td><code>vaft</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td><p>view aft</p></td>
+        </tr>
+        <tr>
+          <td><code>hoff</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td><p>horizontal offset</p></td>
+        </tr>
+        <tr>
+          <td><code>voff</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td><p>vertical offset</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.bsdf2klems" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">bsdf2klems</span><span class="p">(</span><span class="o">*</span><span class="n">inp</span><span class="p">,</span> <span class="n">spp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">half</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">quater</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">progress_bar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">progress_bar_length</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">maxlobes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">forward</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">backward</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Generate XML Klems matrix description of a BSDF.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>inp</code></td>
+          <td>
+          </td>
+          <td><p>Path to XML file</p></td>
+          <td>
+                <code>()</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>spp</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>number of samples for each input-output patch pair, default=1024.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>half</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Generate instead a half Klems basis XML.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>quater</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Generate instead a quater Klems basis XML.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>progress_bar</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>toggle to show progress bar.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>progress_bar_length</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>length of the progress bar, default=79 characters.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>maxlobes</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>maximum number of lobes in any interpolated radial basis
+function (default=15000). Setting the value to 0 turns off this limit.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>forward</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>generate forward matrix (default=off).</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>backward</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>generate backward matrixi (default=on).</p></td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>expr</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>expression to evaluate.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>file</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>file to write the output to</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+          </td>
+          <td><p>The output of the command</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.bsdf2ttree" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">bsdf2ttree</span><span class="p">(</span><span class="o">*</span><span class="n">inp</span><span class="p">,</span> <span class="n">isotropic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">reciprocity_averaging</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">percent_cull</span><span class="o">=</span><span class="p">[</span><span class="mi">90</span><span class="p">],</span> <span class="n">super_samples</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">difference_threshold</span><span class="o">=</span><span class="mf">0.35</span><span class="p">,</span> <span class="n">progress_bar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">progress_bar_length</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">maxlobes</span><span class="o">=</span><span class="mi">15000</span><span class="p">,</span> <span class="n">forward</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">backward</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Generate XML tensor tree description of a BSDF.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>inp</code></td>
+          <td>
+          </td>
+          <td><p>Path to XML file</p></td>
+          <td>
+                <code>()</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>isotropic</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Generate an isotropic ttree.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>reciprocity_averaging</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Use reciprocity averaging.</p></td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>resolution</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td><p>resolution of the ttree.</p></td>
+          <td>
+                <code>6</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>percent_cull</code></td>
+          <td>
+                <code><span title="typing.Sequence">Sequence</span>[float]</code>
+          </td>
+          <td><p>percent of the ttree to cull.</p></td>
+          <td>
+                <code>[90]</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>super_samples</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td><p>number of samples for each input-output patch pair, default=1024.</p></td>
+          <td>
+                <code>256</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>difference_threshold</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td><p>difference threshold for culling.</p></td>
+          <td>
+                <code>0.35</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>progress_bar</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>toggle to show progress bar.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>progress_bar_length</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>length of the progress bar, default=79 characters.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>maxlobes</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td><p>maximum number of lobes in any interpolated radial basis
+function (default=15000). Setting the value to 0 turns off this limit.</p></td>
+          <td>
+                <code>15000</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>forward</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>generate forward matrix (default=off).</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>backward</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>generate backward matrixi (default=on).</p></td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>expr</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>expression to evaluate.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>file</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>file to write the output to</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+          </td>
+          <td><p>The output of the command</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.cnt" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">cnt</span><span class="p">(</span><span class="o">*</span><span class="n">dims</span><span class="p">,</span> <span class="n">shuffled</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Index counter.</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">cnt</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="go">b&#39;0 0\n0 1\n0 2\n1 0\n1 1\n1 2\n&#39;</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">cnt</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">shuffled</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="go">b&#39;1 2\n0 1\n1 0\n0 2\n1 1\n0 0\n&#39;</span>
+</code></pre></div>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>dims</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td><p>list of dimensions</p></td>
+          <td>
+                <code>()</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>shuffled</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>if True, the output will be shuffled</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>bytes</code></td>          <td>
+                <code>bytes</code>
+          </td>
+          <td><p>output of cnt</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.genbsdf" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">genbsdf</span><span class="p">(</span><span class="o">*</span><span class="n">inp</span><span class="p">,</span> <span class="n">nsamp</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">nproc</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">enforce_window</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ttree_rank</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ttree_res</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">reciprocity</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">recover_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">forward</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">backward</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">mgf</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">geom</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">geom_unit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Generate BSDF description from Radiance or MGF input</p>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">genbsdf</span><span class="p">(</span><span class="s1">&#39;material.mat&#39;</span><span class="p">,</span> <span class="s1">&#39;blinds.rad&#39;</span><span class="p">,</span> <span class="n">nsamp</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">nproc</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+</code></pre></div>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>inp</code></td>
+          <td>
+                <code><span title="typing.Union">Union</span>[str, <span title="pathlib.Path">Path</span>]</code>
+          </td>
+          <td><p>Input files. This can be a list of files or a single string with</p></td>
+          <td>
+                <code>()</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>nsamp</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td><p>Number of samples to generate. Default is 1.</p></td>
+          <td>
+                <code>1</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>nproc</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td><p>Number of processors to use. Default is 1.</p></td>
+          <td>
+                <code>1</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>params</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.Sequence">Sequence</span>[str]]</code>
+          </td>
+          <td><p>A list of parameters to pass to genBSDF.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>enforce_window</code></td>
+          <td>
+          </td>
+          <td><p>Set to True to enforce the window. Default is False.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>ttree_rank</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>Tensor tree rank, 3 for isotropic and 4 for anisotropic BSDF.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>ttree_res</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>Tensor tree BSDF resolution, e.g., 5 6 7.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>color</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to True to generate color BSDF. Default is False.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>reciprocity</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to False to disable reciprocity. Default is True.</p></td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>recover_dir</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.Union">Union</span>[str, <span title="pathlib.Path">Path</span>]]</code>
+          </td>
+          <td><p>Set to a path to recover from a previous run.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>forward</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to True to generate forward BSDF. Default is False.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>backward</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to True to generate backward BSDF. Default is True.</p></td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>mgf</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.Union">Union</span>[str, <span title="pathlib.Path">Path</span>]]</code>
+          </td>
+          <td><p>Set to a path to a MGF file to use.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>geom</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to True to generate geometry BSDF. Default is False.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>geom_unit</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>Set to a unit to use for geometry BSDF.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>dim</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.Sequence">Sequence</span>[float]]</code>
+          </td>
+          <td><p>Set to a list of 6 numbers to use for geometry BSDF.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>kwargs</code></td>
+          <td>
+          </td>
+          <td><p>Additional parameters to pass to genBSDF.</p></td>
+          <td>
+                <code>{}</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>str</code></td>          <td>
+                <code>bytes</code>
+          </td>
+          <td><p>Output of genBSDF.</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.gendaylit" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">gendaylit</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="n">latitude</span><span class="p">,</span> <span class="n">longitude</span><span class="p">,</span> <span class="n">timezone</span><span class="p">,</span> <span class="n">year</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dirnorm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">diffhor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dirhor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dirnorm_illum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">diffhor_illum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">solar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sky_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">grefl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interval</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Generates a RADIANCE description of the daylight sources using 
+Perez models for direct and diffuse components.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>dt</code></td>
+          <td>
+                <code><span title="datetime.datetime">datetime</span></code>
+          </td>
+          <td><p>python datetime object</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>latitude</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td><p>latitude</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>longitude</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td><p>longitude</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>timezone</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td><p>timezone</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>year</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>year</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>dirnorm</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[float]</code>
+          </td>
+          <td><p>direct normal irradiance</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>diffhor</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[float]</code>
+          </td>
+          <td><p>diffuse horizontal irradiance</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>dirhor</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[float]</code>
+          </td>
+          <td><p>direct horizontal irradiance, either this or dirnorm</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>dirnormp</code></td>
+          <td>
+          </td>
+          <td><p>direct normal illuminance</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>diffhorp</code></td>
+          <td>
+          </td>
+          <td><p>diffuse horizontal illuminance</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>solar</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>if True, include solar position</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>str</code></td>          <td>
+                <code>bytes</code>
+          </td>
+          <td><p>output of gendaylit</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.gendaymtx" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">gendaymtx</span><span class="p">(</span><span class="n">weather_data</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">average</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sun_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sky_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sun_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sun_mods</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">daylight_hours_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dryrun</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sky_color</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ground_color</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rotate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">outform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">onesun</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">solar_radiance</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">mfactor</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Generate an annual Perez sky matrix from a weather tape.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>weather_data</code></td>
+          <td>
+                <code><span title="typing.Union">Union</span>[str, <span title="pathlib.Path">Path</span>, bytes]</code>
+          </td>
+          <td><p>weather data</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>mfactor</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td><p>multiplication factor</p></td>
+          <td>
+                <code>1</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>verbose</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>verbose</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>header</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>header</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>average</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>average</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>sun_only</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>sun only</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>sky_only</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>sky only</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>sun_file</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>sun file</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>sun_mods</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>sun mods</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>daylight_hours_only</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>daylight hours only</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>dryrun</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>dryrun</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>sky_color</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.List">List</span>[float]]</code>
+          </td>
+          <td><p>sky color</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>ground_color</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.List">List</span>[float]]</code>
+          </td>
+          <td><p>ground color</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>rotate</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[float]</code>
+          </td>
+          <td><p>rotate</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>outform</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>outform</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>onesun</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>onesun</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>solar_radiance</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>solar radiance</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>bytes</code></td>          <td>
+          </td>
+          <td><p>output of gendaymtx</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.gensky" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">gensky</span><span class="p">(</span><span class="n">dt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">latitude</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">longitude</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timezone</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">altitude</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">azimuth</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">year</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sunny_with_sun</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sunny_without_sun</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cloudy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">intermediate_with_sun</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">intermediate_without_sun</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">uniform</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ground_reflectance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">zenith_brightness</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">horizontal_brightness</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">solar_radiance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">horizontal_direct_irradiance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">turbidity</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Generate a RADIANCE description of the sky.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>dt</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="datetime.datetime">datetime</span>]</code>
+          </td>
+          <td><p>datetime object, mutally exclusive with altitude and azimuth</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>latitude</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[float]</code>
+          </td>
+          <td><p>latitude, only apply if dt is not None</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>longitude</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[float]</code>
+          </td>
+          <td><p>longitude, only apply if dt is not None</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>timezone</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>timezone, only apply if dt is not None</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>altitude</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[float]</code>
+          </td>
+          <td><p>solar altitude, mutally exclusive with dt</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>azimuth</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[float]</code>
+          </td>
+          <td><p>solar azimuth, mutally exclusive with dt</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>year</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>year, only apply if dt is not None</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>sunny_with_sun</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>sunny with sun</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>sunny_without_sun</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>sunny without sun</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>cloudy</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>CIE overcast sky</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>intermediate_with_sun</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>intermediate with sun</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>intermediate_without_sun</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>intermediate without sun</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>uniform</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>uniform sky</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>ground_reflectance</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[float]</code>
+          </td>
+          <td><p>ground reflectance</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>zenith_brightness</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[float]</code>
+          </td>
+          <td><p>zenith brightness in watts/steradian/meter^2</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>horizontal_brightness</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[float]</code>
+          </td>
+          <td><p>horizontal brightness in watts/metere^2</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>solar_radiance</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[float]</code>
+          </td>
+          <td><p>solar radiance in watts/steradian/meter^2</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>horizontal_direct_irradiance</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[float]</code>
+          </td>
+          <td><p>horizontal direct irradiance in watts/meter^2</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>turbidity</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[float]</code>
+          </td>
+          <td><p>turbidity factor</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>str</code></td>          <td>
+                <code>bytes</code>
+          </td>
+          <td><p>output of gensky</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.get_header" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">get_header</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">dimension</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Get header information from a Radiance file.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>inp</code></td>
+          <td>
+          </td>
+          <td><p>input file or bytes</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>bytes</code></td>          <td>
+                <code>bytes</code>
+          </td>
+          <td><p>header</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.get_image_dimensions" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">get_image_dimensions</span><span class="p">(</span><span class="n">image</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Get the dimensions of an image.</p>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.ies2rad" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">ies2rad</span><span class="p">(</span><span class="o">*</span><span class="n">inp</span><span class="p">,</span> <span class="n">libdir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">prefdir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">outname</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">instancing_geometry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">lampdat</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lamp_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lamp_color</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">set_default_lamp_color</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">multiply_factor</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Convert IES luminaire data to RADIANCE description.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>inp</code></td>
+          <td>
+          </td>
+          <td><p>Path to IES file</p></td>
+          <td>
+                <code>()</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>libdir</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>Path to directory where the library files are located.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>outname</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>Output file name root.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>stdout</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Print the output to stdout.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>units</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>Set the units of the output file.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>rad</code></td>
+          <td>
+          </td>
+          <td><p>ignore the crude geometry given by the IES input file and use instead an illum sphere with radius rad.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>instancing_geometry</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>compile MGF detail geometry into a separate octree and create a single
+instance referencing it.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>lampdat</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>map lamp name to xy chromaticity and lumen depreciation data.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>lamp_type</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>lamp type.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>lamp_color</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>set lamp color to red green blue if lamp type is unknown.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>set_default_lamp_color</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>set default lamp color according to the entry for lamp in the lookup table.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>multiply_factor</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[float]</code>
+          </td>
+          <td><p>multiply all output quantities by this factor. This is the best way to scale
+fixture brightness for different lamps.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+          </td>
+          <td><p>The output of the command</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.load_views" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">load_views</span><span class="p">(</span><span class="n">file</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Load views from a file.
+One view per line.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>file</code></td>
+          <td>
+                <code><span title="typing.Union">Union</span>[str, <span title="pathlib.Path">Path</span>]</code>
+          </td>
+          <td><p>A file path to a view file.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code><span title="typing.List">List</span>[<a class="autorefs autorefs-internal" title="pyradiance.model.View" href="#pyradiance.View">View</a>]</code>
+          </td>
+          <td><p>A view object.</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.mgf2rad" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">mgf2rad</span><span class="p">(</span><span class="o">*</span><span class="n">inp</span><span class="p">,</span> <span class="n">matfile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mult</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dist</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Convert Materials and Geometry Format file to RADIANCE description.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>inp</code></td>
+          <td>
+          </td>
+          <td><p>Path to MGF file</p></td>
+          <td>
+                <code>()</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>matfile</code></td>
+          <td>
+          </td>
+          <td><p>Path to material file where the translated materials will be written.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>mult</code></td>
+          <td>
+          </td>
+          <td><p>multiplier for all the emission values</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>dist</code></td>
+          <td>
+          </td>
+          <td><p>glow distance (in meters) for all emitting surfaces.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+          </td>
+          <td><p>The output of the command</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.obj2rad" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">obj2rad</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">quallist</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">flatten</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">mapfile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">objname</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Convert Wavefront .OBJ file to RADIANCE description.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>inp</code></td>
+          <td>
+          </td>
+          <td><p>Path to OBJ file</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>quallist</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Print a list of all the available quality settings.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>flatten</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Flatten the hierarchy of the input file.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>mapfile</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>Path to a file containing a list of texture maps to be used.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>objname</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>Name of the object to be created.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code>bytes</code>
+          </td>
+          <td><p>The output of the command</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.oconv" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">oconv</span><span class="p">(</span><span class="o">*</span><span class="n">paths</span><span class="p">,</span> <span class="n">warning</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stdin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">octree</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Run Radiance oconv tool to build an octree.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>paths</code></td>
+          <td>
+          </td>
+          <td><p>list of Radiance files</p></td>
+          <td>
+                <code>()</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>warning</code></td>
+          <td>
+          </td>
+          <td><p>if False, warnings will be suppressed</p></td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>stdin</code></td>
+          <td>
+          </td>
+          <td><p>if not None, stdin will be used</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>frozen</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>if True, the octree will be frozen</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>octree</code></td>
+          <td>
+          </td>
+          <td><p>if provided, the resulting octree incorporate existing one</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>bytes</code></td>          <td>
+                <code>bytes</code>
+          </td>
+          <td><p>output of oconv</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.pabopto2bsdf" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">pabopto2bsdf</span><span class="p">(</span><span class="o">*</span><span class="n">inp</span><span class="p">,</span> <span class="n">nproc</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">symmetry</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">angle</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Convert BSDF measurements to a scattering interpolant representation.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>inp</code></td>
+          <td>
+          </td>
+          <td><p>pab-opto Mountain files, need two or more.</p></td>
+          <td>
+                <code>()</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>nproc</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td><p>number of processors to use.</p></td>
+          <td>
+                <code>1</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>symmetry</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>BSDF symmetry, which is one of "isotropic", "quadrilateral", "bilateral",
+"up", or "anisotropic".  Any of these may be abbreviated with as little as a
+single letter, and case is ignored.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>angle</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.Union">Union</span>[float, str]]</code>
+          </td>
+          <td><p>cull scattered measurements that are nearer to grazing than the given angle
+in degrees.  If the word "auto" (which can be abbreviated as 'a' or 'A') is
+given instead of an angle, then the near-grazing angle will be determined by the
+lowest incident angle measurement present in the input data.  This is sometimes
+necessary to eliminate noise and edge effects that some measurements exhibit near grazing.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>reverse</code></td>
+          <td>
+          </td>
+          <td><p>reverses the assumed sample orientation front-to-back, and is discussed below under
+the "#intheta" header entry.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code>bytes</code>
+          </td>
+          <td><p>The output of the command</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.parse_primitive" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">parse_primitive</span><span class="p">(</span><span class="n">pstr</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Parse Radiance primitives inside a file path into a list of dictionary.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>pstr</code></td>
+          <td>
+          </td>
+          <td><p>A string of Radiance primitives.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code><span title="typing.List">List</span>[<a class="autorefs autorefs-internal" title="pyradiance.model.Primitive" href="#pyradiance.Primitive">Primitive</a>]</code>
+          </td>
+          <td><p>list of primitives</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.pcond" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">pcond</span><span class="p">(</span><span class="n">hdr</span><span class="p">,</span> <span class="n">human</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">acuity</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">veiling</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sense</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">closs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">center_weighted</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">linear</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fixfrac</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">fixpoints</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">histo</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">expval</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">ldmax</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span> <span class="n">lddyn</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span> <span class="n">primaries</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">macbeth</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">mapfile</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Condition a Radiance picture.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>hdr</code></td>
+          <td>
+                <code><span title="pathlib.Path">Path</span></code>
+          </td>
+          <td><p>input hdr</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>human</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Mimic human visual response. This is the same as turning on all acuity,
+veiling, sensitivity, and color loss.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>acuity</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Defocus darker region.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>veiling</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Add veiling glare.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>sense</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Use human contrast sensitivity, simulating eye internal scattering.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>center_weighted</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Use center-weighted average for acuity and veiling.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>linear</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Use a linear reponse function instead of the standard dynamic range
+compression. This preseves the extremas.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>fixfrac</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td><p>Fixation fraction for acuity and veiling.</p></td>
+          <td>
+                <code>0.0</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>histo</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>Histogram file for acuity and veiling.</p></td>
+          <td>
+                <code>&#39;&#39;</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>expval</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>Exposure value for acuity and veiling.</p></td>
+          <td>
+                <code>&#39;&#39;</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>ldmax</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td><p>Maximum luminance for acuity and veiling.</p></td>
+          <td>
+                <code>100.0</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>lddyn</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td><p>Luminance dynamic range for acuity and veiling.</p></td>
+          <td>
+                <code>100.0</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>primaries</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.List">List</span>[float]]</code>
+          </td>
+          <td><p>Color primaries for color loss.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>macbeth</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>Macbeth chart file for color loss.</p></td>
+          <td>
+                <code>&#39;&#39;</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>mapfile</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>Color map file for color loss.</p></td>
+          <td>
+                <code>&#39;&#39;</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>bytes</code></td>          <td>
+                <code>bytes</code>
+          </td>
+          <td><p>output of pcond</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.pfilt" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">pfilt</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">xres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pixel_aspect</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">pa_correct</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">exposure</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">lamp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lampdat</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">one_pass</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">gaussian_filter_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">limitfrac</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hot_threshold</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">star_points</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">star_spread</span><span class="o">=</span><span class="mf">0.0001</span><span class="p">,</span> <span class="n">average_hot</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>filter a Radiance picture.
+By default, it uses two passes on the input, using a box filter.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>image</code></td>
+          <td>
+                <code><span title="typing.Union">Union</span>[str, <span title="pathlib.Path">Path</span>, bytes]</code>
+          </td>
+          <td><p>input image</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>xres</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>horizontal resolution</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>yres</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>vertical resolution</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>pixel_aspect</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td><p>pixel aspect ratio</p></td>
+          <td>
+                <code>0</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>exposure</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[float]</code>
+          </td>
+          <td><p>exposure value</p></td>
+          <td>
+                <code>0</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>lamp</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>lamp file</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>lampdat</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>lamp data file</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>one_pass</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>use one pass filter</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>gaussian_filter_radius</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[float]</code>
+          </td>
+          <td><p>gaussian filter radius</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>limitfrac</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[float]</code>
+          </td>
+          <td><p>limit fraction</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>hot_threshold</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td><p>Set intensity considered 'hot', default 100 watts/sr/m2</p></td>
+          <td>
+                <code>100</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>star_points</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td><p>Number of points on a start pattern.</p></td>
+          <td>
+                <code>0</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>star_spread</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td><p>star pattern spread</p></td>
+          <td>
+                <code>0.0001</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>average_hot</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>average hot spots</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>bytes</code></td>          <td>
+                <code>bytes</code>
+          </td>
+          <td><p>output of pfilt</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.pkgbsdf" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">pkgbsdf</span><span class="p">(</span><span class="o">*</span><span class="n">xml</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Pacakge BSDFs provided as XML for Radiance.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>xml</code></td>
+          <td>
+                <code><span title="typing.Union">Union</span>[str, <span title="pathlib.Path">Path</span>]</code>
+          </td>
+          <td><p>Path to XML files</p></td>
+          <td>
+                <code>()</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>frozen</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>produce frozen octree instance for any detail geometry.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>stdout</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>print the output to stdout, only works for a single XML input.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[bytes]</code>
+          </td>
+          <td><p>The output of the command</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.pvalue" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">pvalue</span><span class="p">(</span><span class="n">pic</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">original</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">resstr</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">skip</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">exposure</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">dataonly</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">outform</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">reverse_rgb</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">interleaving</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">brightness</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">outprimary</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>convert RADIANCE picture to/from alternate formats
+Pvalue converts the pixels of a RADIANCE picture to or from another format.
+In the default mode, pixels are sent to the standard output, one per line,
+in the following ascii format: xpos ypos red  green     blue</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>pic</code></td>
+          <td>
+                <code><span title="typing.Union">Union</span>[<span title="pathlib.Path">Path</span>, str, bytes]</code>
+          </td>
+          <td><p>hdr file path. Either path or stdin is used, path takes precedence.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>unique</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>if True, only unique values will be returned</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>original</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>if True, print original values, before exposure compensation</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>header</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>if True, header will be returned</p></td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>resstr</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>if True, resolution string will be returned</p></td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>skip</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td><p>number of bytes to skip</p></td>
+          <td>
+                <code>0</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>exposure</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td><p>exposure value</p></td>
+          <td>
+                <code>0</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>gamma</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td><p>gamma value</p></td>
+          <td>
+                <code>1.0</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>dataonly</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>if True, only data will be returned</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>outform</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>output data format</p></td>
+          <td>
+                <code>&#39;&#39;</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>reverse_rgb</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>if True, RGB values will be reversed</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>interleaving</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>if True, interleaving will be used</p></td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>brightness</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>if True, only brightness will be returned</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>outprimary</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>output color primaries</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>bytes</code></td>          <td>
+                <code>bytes</code>
+          </td>
+          <td><p>output of pvalue</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.pvaluer" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">pvaluer</span><span class="p">(</span><span class="n">pic</span><span class="p">,</span> <span class="n">xres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">inpformat</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">resstr</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dataonly</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">primaries</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pxyz</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Run Radiance pvalue tools reverse mode:
+constructing a image from pixel values.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>pic</code></td>
+          <td>
+                <code><span title="typing.Union">Union</span>[<span title="pathlib.Path">Path</span>, str, bytes]</code>
+          </td>
+          <td><p>Path to Radiance picture file or bytes of the picture file.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>xres</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>Number of columns in the picture file.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>yres</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>Number of rows in the picture file.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>inpformat</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>Radiance picture file format. Default is "a" for ascii.</p></td>
+          <td>
+                <code>&#39;a&#39;</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>header</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to True if the picture file has a header. Default is False.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>primaries</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.List">List</span>[float]]</code>
+          </td>
+          <td><p>List of primaries for XYZ calculation. Default is None.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>pxyz</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to True to calculate XYZ values. Default is False.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code>bytes</code>
+          </td>
+          <td><p>Bytes of the pvalue output (Radiance .</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.rcode_depth" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">rcode_depth</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">ref_depth</span><span class="o">=</span><span class="s1">&#39;1.0&#39;</span><span class="p">,</span> <span class="n">inheader</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">outheader</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inresolution</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">outresolution</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">xres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">inform</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">outform</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">decode</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">compute_intersection</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">per_point</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">depth_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Encode/decode 16-bit depth map.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>inp</code></td>
+          <td>
+                <code><span title="typing.Union">Union</span>[str, <span title="pathlib.Path">Path</span>, bytes]</code>
+          </td>
+          <td><p>input file or bytes</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>ref_depth</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>reference distance, can be follow by /unit.</p></td>
+          <td>
+                <code>&#39;1.0&#39;</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>inheader</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to False to not expect header on input</p></td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>outheader</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to False to not include header on output</p></td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>inresolution</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to False to not expect resolution on input</p></td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>outresolution</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to False to not include resolution on output</p></td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>xres</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>x resolution</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>yres</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>y resolution</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>inform</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>input format</p></td>
+          <td>
+                <code>&#39;a&#39;</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>outform</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>output format when decoding</p></td>
+          <td>
+                <code>&#39;a&#39;</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>decode</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to True to decode instead</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>compute_intersection</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to True to compute intersection instead</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>per_point</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to True to compute per point instead of per pixel</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>depth_file</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>depth file</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>flush</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to True to flush output</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>bytes</code></td>          <td>
+                <code>bytes</code>
+          </td>
+          <td><p>output of rcode_depth</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.rcode_norm" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">rcode_norm</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">inheader</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">outheader</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inresolution</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">outresolution</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">xres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">inform</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">outform</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">decode</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">per_point</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">norm_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Encode/decode 32-bit surface normal map.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>inp</code></td>
+          <td>
+          </td>
+          <td><p>input file or bytes</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>inheader</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to False to not expect header on input</p></td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>outheader</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to False to not include header on output</p></td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>inresolution</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to False to not expect resolution on input</p></td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>outresolution</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to False to not include resolution on output</p></td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>xres</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>x resolution</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>yres</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>y resolution</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>inform</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>input format</p></td>
+          <td>
+                <code>&#39;a&#39;</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>outform</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>output format when decoding</p></td>
+          <td>
+                <code>&#39;a&#39;</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>decode</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to True to decode instead</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>per_point</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to True to compute per point instead of per pixel</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>flush</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to True to flush output</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>bytes</code></td>          <td>
+                <code>bytes</code>
+          </td>
+          <td><p>output of rcode_norm</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.rcontrib" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">rcontrib</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">octree</span><span class="p">,</span> <span class="n">modifiers</span><span class="p">,</span> <span class="n">nproc</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">yres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">inform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">outform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Run rcontrib command.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>inp</code></td>
+          <td>
+                <code>bytes</code>
+          </td>
+          <td><p>A bytes object.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>octree</code></td>
+          <td>
+                <code><span title="typing.Union">Union</span>[<span title="pathlib.Path">Path</span>, str]</code>
+          </td>
+          <td><p>A path to octree file.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>modifiers</code></td>
+          <td>
+                <code><span title="typing.Sequence">Sequence</span>[<a class="autorefs autorefs-internal" title="pyradiance.rt.RcModifier" href="#pyradiance.RcModifier">RcModifier</a>]</code>
+          </td>
+          <td><p>A list of RcModifier objects.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>nproc</code></td>
+          <td>
+          </td>
+          <td><p>Number of processes.</p></td>
+          <td>
+                <code>1</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>yres</code></td>
+          <td>
+          </td>
+          <td><p>Y resolution.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>inform</code></td>
+          <td>
+          </td>
+          <td><p>Input format.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>outform</code></td>
+          <td>
+          </td>
+          <td><p>Output format.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>params</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.Sequence">Sequence</span>[str]]</code>
+          </td>
+          <td><p>A list of additional parameters.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code>bytes</code>
+          </td>
+          <td><p>A bytes object.</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.render" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">render</span><span class="p">(</span><span class="n">scene</span><span class="p">,</span> <span class="n">view</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">quality</span><span class="o">=</span><span class="s1">&#39;Medium&#39;</span><span class="p">,</span> <span class="n">variability</span><span class="o">=</span><span class="s1">&#39;Medium&#39;</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s1">&#39;Medium&#39;</span><span class="p">,</span> <span class="n">nproc</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ambbounce</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ambcache</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Render a scene.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>scene</code></td>
+          <td>
+          </td>
+          <td><p>Scene object.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>quality</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>Quality level.</p></td>
+          <td>
+                <code>&#39;Medium&#39;</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>variability</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>Variability level.</p></td>
+          <td>
+                <code>&#39;Medium&#39;</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>detail</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>Detail level.</p></td>
+          <td>
+                <code>&#39;Medium&#39;</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>nproc</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td><p>Number of processes to use.</p></td>
+          <td>
+                <code>1</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>ambbounce</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>Number of ambient bounces.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>ambcache</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Use ambient cache.</p></td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>params</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="pyradiance.param.SamplingParameters">SamplingParameters</span>]</code>
+          </td>
+          <td><p>Sampling parameters.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code>bytes</code>
+          </td>
+          <td><p>tuple[bytes, int, int]: output of render, width, height</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.rfluxmtx" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">rfluxmtx</span><span class="p">(</span><span class="n">receiver</span><span class="p">,</span> <span class="n">surface</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rays</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">octree</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scene</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Run rfluxmtx command.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>scene</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.Sequence">Sequence</span>[<span title="typing.Union">Union</span>[<span title="pathlib.Path">Path</span>, str]]]</code>
+          </td>
+          <td><p>A Scene object.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>sender</code></td>
+          <td>
+          </td>
+          <td><p>A Sender.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>receiver</code></td>
+          <td>
+                <code><span title="typing.Union">Union</span>[str, <span title="pathlib.Path">Path</span>]</code>
+          </td>
+          <td><p>A Radiance SensorGrid.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>option</code></td>
+          <td>
+          </td>
+          <td><p>Radiance parameters for rfluxmtx command as a list of strings.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+      <p>Sender: stdin, polygon
+Receiver: surface with -o</p>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.rlam" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">rlam</span><span class="p">(</span><span class="o">*</span><span class="n">inputs</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Laminate records from multiple files.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>inputs</code></td>
+          <td>
+          </td>
+          <td><p>list of input files or bytes. There can</p></td>
+          <td>
+                <code>()</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>bytes</code></td>          <td>
+                <code>bytes</code>
+          </td>
+          <td><p>output of rlam</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.rmtxop" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">rmtxop</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">outform</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">transpose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">reflectance</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Run rmtxop command.</p>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.rpict" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">rpict</span><span class="p">(</span><span class="n">view</span><span class="p">,</span> <span class="n">octree</span><span class="p">,</span> <span class="n">xres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">report</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">report_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Get rpict command.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>view</code></td>
+          <td>
+          </td>
+          <td><p>A view object.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>octree</code></td>
+          <td>
+          </td>
+          <td><p>A path to octree file.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>xres</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>X resolution.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>yres</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>Y resolution.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>report</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td><p>Report.</p></td>
+          <td>
+                <code>0</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>report_file</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="pathlib.Path">Path</span>]</code>
+          </td>
+          <td><p>Report file.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>params</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.Sequence">Sequence</span>[str]]</code>
+          </td>
+          <td><p>A list of additional parameters.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code>bytes</code>
+          </td>
+          <td><p>A bytes object.</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.rtrace" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">rtrace</span><span class="p">(</span><span class="n">rays</span><span class="p">,</span> <span class="n">octree</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inform</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">outform</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">irradiance</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">irradiance_lambertian</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">outspec</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">trace_exclude</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">trace_include</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">trace_exclude_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">trace_include_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">uncorrelated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">xres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nproc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">report</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Run rtrace.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>rays</code></td>
+          <td>
+          </td>
+          <td><p>A string of bytes representing the input rays.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>octree</code></td>
+          <td>
+          </td>
+          <td><p>Path to octree file.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>header</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>A boolean to indicate if the header should be included in the output.</p></td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>inform</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>Input format. Default is 'a'.</p></td>
+          <td>
+                <code>&#39;a&#39;</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>outform</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>Output format. Default is 'a'.</p></td>
+          <td>
+                <code>&#39;a&#39;</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>irradiance</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>A boolean to indicate if irradiance should be calculated.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>irradiance_lambertian</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>A boolean to indicate if irradiance should be calculated
+using Lambertian assumption.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>outspec</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>Output specification. Default is None.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>trace_exclude</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>A string of space separated material
+names to exclude from the trace.</p></td>
+          <td>
+                <code>&#39;&#39;</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>trace_include</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>A string of space separated material
+names to include in the trace.</p></td>
+          <td>
+                <code>&#39;&#39;</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>trace_exclude_file</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.Union">Union</span>[str, <span title="pathlib.Path">Path</span>]]</code>
+          </td>
+          <td><p>Path to a file containing
+material names to exclude from the trace.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>trace_include_file</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.Union">Union</span>[str, <span title="pathlib.Path">Path</span>]]</code>
+          </td>
+          <td><p>Path to a file containing
+material names to include in the trace.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>uncorrelated</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>A boolean to indicate if uncorrelated sampling should be used.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>xres</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>X resolution of the output image.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>yres</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>Y resolution of the output image.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>nproc</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>Number of processors to use.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>options</code></td>
+          <td>
+          </td>
+          <td><p>A SamplingParameters object.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code>bytes</code>
+          </td>
+          <td><p>A string of bytes representing the output of rtrace.</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.wrapbsdf" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">wrapbsdf</span><span class="p">(</span><span class="n">inp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">enforce_window</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">comment</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">correct_solid_angle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tf</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tb</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rf</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rb</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">spectr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">unlink</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">geometry</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Wrap BSDF.</p>
+
+  </div>
+
+</div>
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.12658920.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.5cf534bf.min.js"></script>
+      
+    
+  </body>
+</html>
