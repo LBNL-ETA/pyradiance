@@ -11,7 +11,7 @@ BINPATH = Path(__file__).parent / "bin"
 
 
 def obj2rad(
-    inp,
+    inp: Union[bytes, str, Path],
     quallist: bool = False,
     flatten: bool = False,
     mapfile: Optional[str] = None,
@@ -21,12 +21,16 @@ def obj2rad(
 
     Args:
         inp: Path to OBJ file
-        quallist: Print a list of all the available quality settings.
-        flatten: Flatten the hierarchy of the input file.
-        mapfile: Path to a file containing a list of texture maps to be used.
-        objname: Name of the object to be created.
+        quallist: Produce a list of qualifiers from which to construct a 
+            mapping for the given .OBJ file.
+        flatten: Flatten all faces, effectively ignoring vertex normal information.
+        mapfile: Mapping rules files for assigning material names for the surfaces.
+        objname: Specify the name of this object, though it will be overriden by any
+           "o" statements in the input file.  If this option is absent, and there 
+           are no "o" statements, obj2rad will attempt to name surfaces based 
+           on their group associations.
     Returns:
-        The output of the command
+        The converted RADIANCE scene description in bytes
     """
     stdin = None
     cmd = [str(BINPATH / "obj2rad")]
@@ -90,7 +94,7 @@ def mgf2rad(*inp, matfile=None, mult=None, dist=None):
 
 
 def ies2rad(
-    *inp,
+    *inp: Union[str, Path],
     libdir: Optional[str] = None,
     prefdir: Optional[str] = None,
     outname: Optional[str] = None,
@@ -152,7 +156,8 @@ def ies2rad(
         cmd.extend(["-u", set_default_lamp_color])
     if multiply_factor is not None:
         cmd.extend(["-m", str(multiply_factor)])
-    cmd.extend(inp)
+    cmd.extend([str(i) for i in inp])
+    return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
 def bsdf2klems(
@@ -256,7 +261,7 @@ def bsdf2ttree(
         expr: expression to evaluate.
         file: file to write the output to
     Returns:
-        The output of the command
+        Tensor tree BSDF XML in bytes
     """
     cmd = [str(BINPATH / "bsdf2ttree")]
     if not progress_bar:
@@ -326,7 +331,7 @@ def pabopto2bsdf(
         reverse: reverses the assumed sample orientation front-to-back, and is discussed below under
             the "#intheta" header entry.
     Returns:
-        The output of the command
+        SIR data in bytes
     """
     cmd = [str(BINPATH / "pabopto2bsdf")]
     if nproc > 1:

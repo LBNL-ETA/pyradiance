@@ -20,9 +20,9 @@ class RcModifier:
 
     Attributes:
         modifier: Modifier name, mutually exclusive with modifier_path.
-        modifier_path: Path to modifier file, mutually exclusive with modifier.
+        modifier_path: File with modifier names, mutually exclusive with modifier.
         calfile: Calc file path.
-        expression: Expressions.
+        expression: Variable and function expressions.
         nbins: Number of bins, can be expression.
         binv: Bin value.
         param: Parameter.
@@ -74,10 +74,11 @@ def rcontrib(
     inp: bytes,
     octree: Union[Path, str],
     modifiers: Sequence[RcModifier],
-    nproc=1,
-    yres=None,
-    inform=None,
-    outform=None,
+    nproc: int = 1,
+    yres: Optional[int] = None,
+    inform: Optional[str] = None,
+    outform: Optional[str] = None,
+    report: int = 0,
     params: Optional[Sequence[str]] = None,
 ) -> bytes:
     """Run rcontrib command.
@@ -102,6 +103,8 @@ def rcontrib(
         cmd.extend(mod.args())
     if yres is not None:
         cmd.extend(["-y", str(yres)])
+        if report:
+            cmd.extend(["-t", str(report)])
     if params is not None:
         cmd.extend(params)
     cmd.append(str(octree))
@@ -109,8 +112,8 @@ def rcontrib(
 
 
 def rpict(
-    view,
-    octree,
+    view: Sequence[str],
+    octree: Union[Path, str],
     xres: Optional[int] = None,
     yres: Optional[int] = None,
     report: float = 0,
@@ -119,7 +122,7 @@ def rpict(
 ) -> bytes:
     """Get rpict command.
     Args:
-        view: A view object.
+        view: A list of view parameters in strings.
         octree: A path to octree file.
         xres: X resolution.
         yres: Y resolution.
@@ -130,7 +133,7 @@ def rpict(
         A bytes object.
     """
     cmd = [str(BINPATH / "rpict")]
-    cmd.extend(view.args())
+    cmd.extend(view)
     if report:
         cmd.extend(["-t", str(report)])
     if report_file:
@@ -146,8 +149,8 @@ def rpict(
 
 
 def rtrace(
-    rays,
-    octree,
+    rays: bytes,
+    octree: Union[Path, str],
     header: bool = True,
     inform: str = "a",
     outform: str = "a",

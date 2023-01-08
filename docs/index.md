@@ -3,8 +3,9 @@
 # Getting Started
 
 Pyradiance is a Python wrapper to the validated 
-RADIANCE ray-tracing system that mimics closely the RADIANCE CLI. 
-See [Reference](reference) for a complete list of supported RADIANCE functions.
+[RADIANCE](https://github.com/LBNL-ETA/Radiance/tree/master) ray-tracing system 
+that mimics closely the RADIANCE CLI. See [Reference](reference) for a complete 
+list of supported RADIANCE functions.
 
 ## Installation
 

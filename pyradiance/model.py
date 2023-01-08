@@ -234,7 +234,7 @@ class Scene:
             self.changed = False
 
 
-def parse_primitive(pstr) -> List[Primitive]:
+def parse_primitive(pstr: str) -> List[Primitive]:
     """Parse Radiance primitives inside a file path into a list of dictionary.
     Args:
         pstr: A string of Radiance primitives.
