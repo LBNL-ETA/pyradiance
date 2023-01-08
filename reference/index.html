@@ -1103,7 +1103,7 @@ make Radiance easier to use and accessible to Python user.</p>
           <td>
                 <code><span title="typing.Optional">Optional</span>[str]</code>
           </td>
-          <td><p>Path to modifier file, mutually exclusive with modifier.</p></td>
+          <td><p>File with modifier names, mutually exclusive with modifier.</p></td>
         </tr>
         <tr>
           <td><code>calfile</code></td>
@@ -1117,7 +1117,7 @@ make Radiance easier to use and accessible to Python user.</p>
           <td>
                 <code><span title="typing.Optional">Optional</span>[str]</code>
           </td>
-          <td><p>Expressions.</p></td>
+          <td><p>Variable and function expressions.</p></td>
         </tr>
         <tr>
           <td><code>nbins</code></td>
@@ -1826,7 +1826,7 @@ function (default=15000). Setting the value to 0 turns off this limit.</p></td>
         <tr>
           <td>
           </td>
-          <td><p>The output of the command</p></td>
+          <td><p>Tensor tree BSDF XML in bytes</p></td>
         </tr>
     </tbody>
   </table>
@@ -2857,6 +2857,7 @@ Perez models for direct and diffuse components.</p>
         <tr>
           <td><code>inp</code></td>
           <td>
+                <code><span title="typing.Union">Union</span>[str, <span title="pathlib.Path">Path</span>]</code>
           </td>
           <td><p>Path to IES file</p></td>
           <td>
@@ -3172,6 +3173,7 @@ One view per line.</p>
         <tr>
           <td><code>inp</code></td>
           <td>
+                <code><span title="typing.Union">Union</span>[bytes, str, <span title="pathlib.Path">Path</span>]</code>
           </td>
           <td><p>Path to OBJ file</p></td>
           <td>
@@ -3183,7 +3185,8 @@ One view per line.</p>
           <td>
                 <code>bool</code>
           </td>
-          <td><p>Print a list of all the available quality settings.</p></td>
+          <td><p>Produce a list of qualifiers from which to construct a 
+mapping for the given .OBJ file.</p></td>
           <td>
                 <code>False</code>
           </td>
@@ -3193,7 +3196,7 @@ One view per line.</p>
           <td>
                 <code>bool</code>
           </td>
-          <td><p>Flatten the hierarchy of the input file.</p></td>
+          <td><p>Flatten all faces, effectively ignoring vertex normal information.</p></td>
           <td>
                 <code>False</code>
           </td>
@@ -3203,7 +3206,7 @@ One view per line.</p>
           <td>
                 <code><span title="typing.Optional">Optional</span>[str]</code>
           </td>
-          <td><p>Path to a file containing a list of texture maps to be used.</p></td>
+          <td><p>Mapping rules files for assigning material names for the surfaces.</p></td>
           <td>
                 <code>None</code>
           </td>
@@ -3213,7 +3216,10 @@ One view per line.</p>
           <td>
                 <code><span title="typing.Optional">Optional</span>[str]</code>
           </td>
-          <td><p>Name of the object to be created.</p></td>
+          <td><p>Specify the name of this object, though it will be overriden by any
+"o" statements in the input file.  If this option is absent, and there 
+are no "o" statements, obj2rad will attempt to name surfaces based 
+on their group associations.</p></td>
           <td>
                 <code>None</code>
           </td>
@@ -3234,7 +3240,7 @@ One view per line.</p>
           <td>
                 <code>bytes</code>
           </td>
-          <td><p>The output of the command</p></td>
+          <td><p>The converted RADIANCE scene description in bytes</p></td>
         </tr>
     </tbody>
   </table>
@@ -3435,7 +3441,7 @@ the "#intheta" header entry.</p></td>
           <td>
                 <code>bytes</code>
           </td>
-          <td><p>The output of the command</p></td>
+          <td><p>SIR data in bytes</p></td>
         </tr>
     </tbody>
   </table>
@@ -3472,6 +3478,7 @@ the "#intheta" header entry.</p></td>
         <tr>
           <td><code>pstr</code></td>
           <td>
+                <code>str</code>
           </td>
           <td><p>A string of Radiance primitives.</p></td>
           <td>
@@ -4664,7 +4671,7 @@ constructing a image from pixel values.</p>
 
 
 <h3 id="pyradiance.rcontrib" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">rcontrib</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">octree</span><span class="p">,</span> <span class="n">modifiers</span><span class="p">,</span> <span class="n">nproc</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">yres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">inform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">outform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">rcontrib</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">octree</span><span class="p">,</span> <span class="n">modifiers</span><span class="p">,</span> <span class="n">nproc</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">yres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">inform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">outform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">report</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 </h3>
 
@@ -4717,6 +4724,7 @@ constructing a image from pixel values.</p>
         <tr>
           <td><code>nproc</code></td>
           <td>
+                <code>int</code>
           </td>
           <td><p>Number of processes.</p></td>
           <td>
@@ -4726,6 +4734,7 @@ constructing a image from pixel values.</p>
         <tr>
           <td><code>yres</code></td>
           <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
           </td>
           <td><p>Y resolution.</p></td>
           <td>
@@ -4735,6 +4744,7 @@ constructing a image from pixel values.</p>
         <tr>
           <td><code>inform</code></td>
           <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
           </td>
           <td><p>Input format.</p></td>
           <td>
@@ -4744,6 +4754,7 @@ constructing a image from pixel values.</p>
         <tr>
           <td><code>outform</code></td>
           <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
           </td>
           <td><p>Output format.</p></td>
           <td>
@@ -5091,8 +5102,9 @@ Receiver: surface with -o</p>
         <tr>
           <td><code>view</code></td>
           <td>
+                <code><span title="typing.Sequence">Sequence</span>[str]</code>
           </td>
-          <td><p>A view object.</p></td>
+          <td><p>A list of view parameters in strings.</p></td>
           <td>
               <em>required</em>
           </td>
@@ -5100,6 +5112,7 @@ Receiver: surface with -o</p>
         <tr>
           <td><code>octree</code></td>
           <td>
+                <code><span title="typing.Union">Union</span>[<span title="pathlib.Path">Path</span>, str]</code>
           </td>
           <td><p>A path to octree file.</p></td>
           <td>
@@ -5209,6 +5222,7 @@ Receiver: surface with -o</p>
         <tr>
           <td><code>rays</code></td>
           <td>
+                <code>bytes</code>
           </td>
           <td><p>A string of bytes representing the input rays.</p></td>
           <td>
@@ -5218,6 +5232,7 @@ Receiver: surface with -o</p>
         <tr>
           <td><code>octree</code></td>
           <td>
+                <code><span title="typing.Union">Union</span>[<span title="pathlib.Path">Path</span>, str]</code>
           </td>
           <td><p>Path to octree file.</p></td>
           <td>
