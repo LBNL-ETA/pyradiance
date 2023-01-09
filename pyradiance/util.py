@@ -535,6 +535,49 @@ def rmtxop(
     return sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
 
 
+def rsensor(
+    sensor: Sequence[Union[str, Path]],
+    sensor_view: Optional[Sequence[Union[str, Path]]] = None,
+    direct_ray: Optional[Sequence[int]] = None,
+    ray_count: Optional[Sequence[int]] = None,
+    octree: Optional[Union[str, Path]] = None,
+    nproc: int = 1,
+    params: Optional[Sequence[str]] = None,
+) -> bytes:
+    """Compute sensor signal from a RADIANCE scene
+
+    Args:
+        sensor: Sensor file
+        sensor_view: Sensor view file
+        direct_ray: The number of rays sent to each light source per sensor
+        ray_count: The number of ray samples sent at random
+        octree: Octree file
+        nproc: Number of processors to use
+        params: Additional parameters for rsensor command
+    Returns:
+        Output of rsensor command
+    """
+    cmd = [str(BINPATH / "rsensor")]
+
+    for i, sf in enumerate(sensor):
+        if ray_count is not None:
+            cmd.extend(["-rd", str(ray_count[i])])
+        if None not in (direct_ray, octree):
+            cmd.extend(["-dn", str(direct_ray[i])])
+        if sensor_view is not None:
+            cmd.append(str(sensor_view[i]))
+        cmd.append(str(sf))
+    if octree:
+        if nproc > 1:
+            cmd.extend(["-n", str(nproc)])
+        if params:
+            cmd.extend(params)
+        cmd.append(str(octree))
+    else:
+        cmd.append(".")
+    return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
+
+
 def rtpict(
     view: View,
     octree: Union[str, Path],
@@ -545,8 +588,21 @@ def rtpict(
     xres: Optional[int] = None,
     yres: Optional[int] = None,
     params: Optional[Sequence[str]] = None,
-):
-    """Run rtpict command."""
+) -> Optional[bytes]:
+    """Run rtpict command.
+    Args:
+        view: A View object.
+        octree: Path to octree file.
+        nproc: Number of processors to use.
+        outform: Output format. Default is "i".
+        outdir: Output directory. Default is current directory.
+        ref_depth: Maximum number of reflections. Default is 5.
+        xres: Horizontal resolution. Default is 512.
+        yres: Vertical resolution. Default is 512.
+        params: Radiance parameters for rtpict command as a list of strings.
+    Returns:
+        Rendered image as output or None if output to directory
+    """
     cmd = [str(BINPATH / "rtpict")]
     cmd.extend(view.args())
     cmd.extend(["-n", str(nproc)])
@@ -562,7 +618,9 @@ def rtpict(
     if params:
         cmd.extend(params)
     cmd.append(str(octree))
-    return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
+    proc = sp.run(cmd, check=True, stdout=sp.PIPE)
+    if not outdir:
+        return proc.stdout
 
 
 def strip_header(inp) -> bytes:
@@ -688,7 +746,7 @@ def xform(
     translate: Optional[Tuple[float, float, float]] = None,
     expand_cmd: bool = True,
     iprefix: Optional[str] = None,
-    mprefix: Optional[str] = None,
+    modifier: Optional[str] = None,
     invert: bool = False,
     rotatex: Optional[float] = None,
     rotatey: Optional[float] = None,
@@ -697,16 +755,39 @@ def xform(
     mirrorx: bool = False,
     mirrory: bool = False,
     mirrorz: bool = False,
-    iterate: Optional[int] = None,
 ) -> bytes:
+    """Transform a RADIANCE scene description
+
+    Notes:
+        Iterate and arrays are not supported.
+
+    Args:
+        inp: Input file or string
+        translate: Translation vector
+        expand_cmd: Set to True to expand command
+        iprefix: Prefix identifier
+        mprefix: Set surface modifier to this name
+        invert: Invert surface normal
+        rotatex: Rotate the scene degrees about the x axis.  
+            A positive rotation corresponds to
+        rotatey: Rotate the scene degrees about the y axis.  
+        rotatez: Rotate the scene degrees about the z axis.
+        scale: Scale the scene by this factor
+        mirrorx: Mirror the scene about the yz plane.
+        mirrory: Mirror the scene about the xz plane.
+        mirrorz: Mirror the scene about the xy plane.
+    Returns:
+        The transformed scene description in bytes
+
+    """
     stdin = None
     cmd = [str(BINPATH / "xform")]
     if not expand_cmd:
         cmd.append("-c")
     if iprefix:
         cmd.extend(["-n", iprefix])
-    if mprefix:
-        cmd.extend(["-m", mprefix])
+    if modifier:
+        cmd.extend(["-m", modifier])
     if invert:
         cmd.append("-I")
     if rotatex:
@@ -723,8 +804,6 @@ def xform(
         cmd.append("-my")
     if mirrorz:
         cmd.append("-mz")
-    if iterate:
-        cmd.extend(["-i", str(iterate)])
     if translate is not None:
         cmd.extend(["-t", *(str(v) for v in translate)])
     if isinstance(inp, bytes):
