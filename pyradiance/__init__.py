@@ -23,6 +23,7 @@ from .cv import (
     obj2rad,
     pabopto2bsdf,
     pkgbsdf,
+    robjutil,
 )
 
 from .gen import (
@@ -30,6 +31,7 @@ from .gen import (
     gendaylit,
     gendaymtx,
     gensky,
+    mkillum,
 )
 
 from .model import (
@@ -63,13 +65,17 @@ from .rt import (
 from .param import SamplingParameters
 
 from .util import (
+    dctimestep,
     get_header,
     get_image_dimensions,
+    read_rad,
     rcode_depth,
     rcode_norm,
     render,
     rfluxmtx,
     rmtxop,
+    rtpict,
+    rsensor,
     wrapbsdf,
     xform,
 )
@@ -83,6 +89,7 @@ __all__ = [
     "bsdf2klems",
     "bsdf2ttree",
     "cnt",
+    "dctimestep",
     "genbsdf",
     "gendaylit",
     "gendaymtx",
@@ -91,6 +98,7 @@ __all__ = [
     "get_image_dimensions",
     "ies2rad",
     "mgf2rad",
+    "mkillum",
     "obj2rad",
     "oconv",
     "pabopto2bsdf",
@@ -102,11 +110,15 @@ __all__ = [
     "rcode_depth",
     "rcode_norm",
     "rcontrib",
+    "read_rad",
     "render",
     "rfluxmtx",
     "rlam",
     "rmtxop",
+    "robjutil",
     "rpict",
+    "rsensor",
+    "rtpict",
     "rtrace",
     "RcModifier",
     "Primitive",
