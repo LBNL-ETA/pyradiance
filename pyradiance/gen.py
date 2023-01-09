@@ -342,3 +342,28 @@ def gensky(
     if turbidity is not None:
         cmd.extend(["-t", str(turbidity)])
     return sp.run(cmd, stdout=sp.PIPE, check=True).stdout
+
+
+def mkillum(
+    inp: bytes,
+    octree: Union[str, Path],
+    nproc: int = 1,
+    params: Optional[Sequence[str]] = None,
+) -> bytes: 
+    """Compute illum sources for a RADIANCE scene
+
+    Args:
+        inp: input file content as bytes
+        octree: octree file
+        nproc: number of processes
+        params: additional parameters
+    Returns:
+        Output of mkillum in bytes
+    """
+    cmd = [str(BINPATH / "mkillum")] 
+    if nproc:
+        cmd.extend(["-n", str(nproc)])
+    if params:
+        cmd.extend(params)
+    cmd.append(str(octree))
+    return sp.run(cmd, input=inp, stdout=sp.PIPE, check=True).stdout
