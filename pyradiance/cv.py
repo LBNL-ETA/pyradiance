@@ -72,6 +72,73 @@ def pkgbsdf(*xml: Union[str, Path], frozen: bool = False, stdout: bool = False) 
         return result
 
 
+def robjutil(
+    inp: Union[str, Path],
+    radout: bool = False,
+    verbose: bool = False,
+    remove_texture_coordinates: bool = False,
+    remove_surface_normal: bool = False,
+    remove_surface_by_modifier: Optional[Sequence[str]] = None,
+    keep_surface_by_modifier: Optional[Sequence[str]] = None,
+    remove_surface_by_group: Optional[Sequence[str]] = None,
+    keep_surface_by_group: Optional[Sequence[str]] = None,
+    epsilon: Optional[float] = None,
+    triangulate: bool = False,
+    transform: Optional[str] = None,
+) -> bytes:
+    """Operate on Wavefront .OBJ file
+
+    Args:
+        inp: Input .OBJ file path
+        radout: Output RADIANCE scene description
+        verbose: Set to True to turn on verbosity
+        remove_texture_coordinates: Remove texture coordinates from the output
+        remove_surface_normal: Remove surface normal from the output
+        remove_surface_by_modifier: Remove surfaces by modifier, mutually
+            exclusive with keep_surface_by_modifier
+        keep_surface_by_modifier: Keep surfaces by modifier, mutually 
+            exclusive with remove_surface_by_modifier
+        remove_surface_by_group: Remove surfaces by group/object, mutually 
+            exclusive with keep_surface_by_group
+        keep_surface_by_group: Keep surfaces by group/object, mutually 
+            exclusive with remove_surface_by_group
+        epsilon: Coalesce vertices that are within the given epsilon
+        triangulate: Turns all faces with 4 or more sides into triangles
+        transform: Transform the input, using xform CLI syntax.
+    Returns:
+        The output of the command
+    """
+    cmd = [str(BINPATH / "robjutil")]
+    if radout:
+        cmd.append("+r")
+    if verbose:
+        cmd.append("+v")
+    if remove_texture_coordinates:
+        cmd.append("-t")
+    if remove_surface_normal:
+        cmd.append("-n")
+    if remove_surface_by_modifier is not None:
+        for m in remove_surface_by_modifier:
+            cmd.extend(["-m", m])
+    elif keep_surface_by_modifier is not None:
+        for m in keep_surface_by_modifier:
+            cmd.extend(["+m", m])
+    if remove_surface_by_group is not None:
+        for g in remove_surface_by_group:
+            cmd.extend(["-g", g])
+    elif keep_surface_by_group is not None:
+        for g in keep_surface_by_group:
+            cmd.extend(["+g", g])
+    if epsilon is not None:
+        cmd.extend(["-c", str(epsilon)])
+    if triangulate:
+        cmd.append("+T")
+    if transform is not None:
+        cmd.extend(["-x", transform])
+    cmd.append(str(inp))
+    return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
+
+
 def mgf2rad(*inp, matfile=None, mult=None, dist=None):
     """Convert Materials and Geometry Format file to RADIANCE description.
     Args:
