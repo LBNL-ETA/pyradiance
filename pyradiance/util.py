@@ -101,11 +101,23 @@ def getinfo(
     *inputs: Union[str, Path, bytes],
     dimension_only: bool = False,
     dimension: bool = False,
+    strip_header: bool = False,
     replace: str = "",
     append: str = "",
     command: str = "",
 ) -> bytes:
-    """Get header information from a Radiance file."""
+    """Get header information from a Radiance file.
+    Args:
+        inputs: input file or bytes
+        dimension_only: return only the dimension
+        dimension: return the dimension
+        strip_header: strip header from the output
+        replace: replace the header with this string
+        append: append this string to the header
+        command: command to use to get the header
+    Returns:
+        getinfo output
+    """
     stdin = None
     cmd = [str(BINPATH / "getinfo")]
     if dimension_only:
@@ -120,6 +132,8 @@ def getinfo(
         cmd.extend(["-c", command])
     if len(inputs) == 1 and isinstance(inputs[0], bytes):
         stdin = inputs[0]
+        if strip_header:
+            cmd.append('-')
     else:
         if any(isinstance(i, bytes) for i in inputs):
             raise TypeError("All inputs must be str or Path if one is")
@@ -128,7 +142,12 @@ def getinfo(
 
 
 def get_image_dimensions(image: Union[str, Path, bytes]) -> Tuple[int, int]:
-    """Get the dimensions of an image."""
+    """Get the dimensions of an image.
+    Args:
+        image: image file or bytes
+    Returns:
+        Tuple[int, int]: width and height
+    """
     output = getinfo(image, dimension_only=True).decode().split()
     return int(output[3]), int(output[1])
 
@@ -160,8 +179,19 @@ def rad(
     update: bool = False,
     silent: bool = False,
     varstr: Optional[List[str]] = None,
-    cwd: Optional[Union[str, Path]] = None,
 ) -> bytes:
+    """Render a RADIANCE scene
+
+    Args:
+        inp: input file or bytes
+        dryrun: print the command instead of running it
+        update: update the scene
+        silent: suppress output
+        varstr: list of variables to set
+        cwd: working directory
+    Returns:
+        bytes: output of rad
+    """
     cmd = [str(BINPATH / "rad")]
     if dryrun:
         cmd.append("-n")
@@ -172,7 +202,7 @@ def rad(
     cmd.append(str(inp))
     if varstr is not None:
         cmd.extend(varstr)
-    return sp.run(cmd, cwd=cwd, stdout=sp.PIPE, check=True).stdout
+    return sp.run(cmd, stdout=sp.PIPE, check=True).stdout
 
 
 def read_rad(fpath: str) -> List[Primitive]:
@@ -703,8 +733,26 @@ def wrapbsdf(
     unit=None,
     geometry=None,
     **kwargs,
-):
-    """Wrap BSDF."""
+) -> bytes:
+    """Wrap BSDF.
+    Args:
+        inp: Input file. Default is stdin.
+        enforce_window: Enforce window convention. Default is False.
+        comment: Comment. Default is None.
+        correct_solid_angle: Correct solid angle. Default is False.
+        basis: Basis. Default is None.
+        tf: Front transmittance. Default is None.
+        tb: Back transmittance. Default is None.
+        rf: Front reflectance. Default is None.
+        rb: Back reflectance. Default is None.
+        spectr: Spectral data. Default is None.
+        unlink: Unlink. Default is False.
+        unit: Unit. Default is None.
+        geometry: Geometry. Default is None.
+        **kwargs: Additional arguments for Window tags such as n, m, t...
+    Returns:
+        Wrapped BSDF.
+    """
     cmd = [str(BINPATH / "wrapBSDF")]
     if enforce_window:
         cmd.append("-W")

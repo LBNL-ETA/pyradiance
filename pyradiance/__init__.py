@@ -8,7 +8,6 @@ make Radiance easier to use and accessible to Python user.
 import logging
 import os
 
-
 from .cal import (
     BINPATH,
     cnt,
@@ -61,13 +60,13 @@ from .rt import (
     rtrace,
 )
 
-
 from .param import SamplingParameters
 
 from .util import (
     dctimestep,
     get_header,
     get_image_dimensions,
+    getinfo,
     read_rad,
     rcode_depth,
     rcode_norm,
@@ -76,6 +75,7 @@ from .util import (
     rmtxop,
     rtpict,
     rsensor,
+    vwrays,
     wrapbsdf,
     xform,
 )
@@ -96,6 +96,7 @@ __all__ = [
     "gensky",
     "get_header",
     "get_image_dimensions",
+    "getinfo",
     "ies2rad",
     "mgf2rad",
     "mkillum",
@@ -137,6 +138,7 @@ __all__ = [
     "SamplingParameters",
     "load_views",
     "parse_primitive",
+    "vwrays",
     "wrapbsdf",
     "xform",
 ]
