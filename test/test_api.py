@@ -1,7 +1,7 @@
 """
 Test pyradiance api
 """
-
+from datetime import datetime
 import pyradiance as pr
 import logging 
 
@@ -11,6 +11,11 @@ LOGGER = logging.getLogger(__name__)
 def test_install():
     radiance_version = pr.rtrace(None, None, version=True)
     assert radiance_version != ""
+
+
+def test_gendaylit():
+    res = pr.gendaylit(datetime(2022, 2, 1, 12), 37, 122, 120, dirnorm=800, diffhor=100)
+    assert res != b""
 
 
 def test_load_scene():
