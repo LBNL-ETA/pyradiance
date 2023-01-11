@@ -121,10 +121,10 @@ def gendaylit(
 
     Args:
         dt: python datetime object
-        latitude: latitude
-        longitude: longitude
-        timezone: timezone
-        year: year
+        latitude: latitude in degrees
+        longitude: longitude in degrees
+        timezone: standard meridian timezone, e.g., 120 for PST
+        year: Need to set it explicitly, won't use year in datetime object
         dirnorm: direct normal irradiance
         diffhor: diffuse horizontal irradiance
         dirhor: direct horizontal irradiance, either this or dirnorm
@@ -170,7 +170,7 @@ def gendaylit(
 def gendaymtx(
     weather_data: Union[str, Path, bytes],
     verbose: bool = False,
-    header: bool = False,
+    header: bool = True,
     average: bool = False,
     sun_only: bool = False,
     sky_only: bool = False,
@@ -244,7 +244,6 @@ def gendaymtx(
     if outform is not None:
         cmd.append(f"-o{outform}")
     if isinstance(weather_data, bytes):
-        cmd.append("-")
         stdin = weather_data
     elif isinstance(weather_data, (str, Path)):
         cmd.append(str(weather_data))
