@@ -721,15 +721,15 @@ def vwright(
 def wrapbsdf(
     inp=None,
     enforce_window=False,
-    comment=None,
+    comment: Optional[str] = None,
     correct_solid_angle=False,
-    basis=None,
-    tf=None,
-    tb=None,
-    rf=None,
-    rb=None,
-    spectr=None,
-    unlink=False,
+    basis: Optional[str] = None,
+    tf: Optional[Union[str, Path]] = None,
+    tb: Optional[Union[str, Path]] = None,
+    rf: Optional[Union[str, Path]] = None,
+    rb: Optional[Union[str, Path]] = None,
+    spectr: Optional[str] = None,
+    unlink: bool = False,
     unit=None,
     geometry=None,
     **kwargs,
@@ -761,13 +761,13 @@ def wrapbsdf(
     if basis:
         cmd.extend(["-a", basis])
     if tf:
-        cmd.extend(["-tf", tf])
+        cmd.extend(["-tf", str(tf)])
     if tb:
-        cmd.extend(["-tb", tb])
+        cmd.extend(["-tb", str(tb)])
     if rf:
-        cmd.extend(["-rf", rf])
+        cmd.extend(["-rf", str(rf)])
     if rb:
-        cmd.extend(["-rb", rb])
+        cmd.extend(["-rb", str(rb)])
     if spectr:
         cmd.extend(["-s", spectr])
     if unlink:
@@ -785,7 +785,7 @@ def wrapbsdf(
             fields.append(f"{key}={kwargs[key]}")
     cmd.extend(["-f", ";".join(fields)])
     if inp is not None:
-        cmd.append(inp)
+        cmd.append(str(inp))
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
