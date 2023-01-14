@@ -82,7 +82,7 @@ from .util import (
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-os.environ["RAYPATH"] = os.path.join(os.path.dirname(__file__), "lib")
+os.environ["RAYPATH"] = "." + os.pathsep + os.path.join(os.path.dirname(__file__), "lib")
 os.environ["PATH"] = str(BINPATH) + os.pathsep + os.environ["PATH"]
 
 __all__ = [
