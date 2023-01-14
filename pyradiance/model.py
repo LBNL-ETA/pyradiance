@@ -14,6 +14,7 @@ from typing import Dict, List, Sequence, Tuple, Union
 
 from .ot import oconv
 
+
 @dataclass
 class Primitive:
     """Radiance Primitive.
@@ -31,26 +32,17 @@ class Primitive:
     modifier: str
     ptype: str
     identifier: str
-    strarg: Sequence[str]
-    realarg: Sequence[float]
-
-    def __repr__(self) -> str:
-        output = (
-            f"{self.modifier}, {self.ptype}, "
-            f"{self.identifier}, {len(self.strarg)} {self.strarg}, "
-            f"0, {len(self.realarg)} {self.realarg})"
-        )
-        return output
+    sargs: Sequence[str]
+    fargs: Sequence[float]
 
     def __str__(self) -> str:
-        output = (
+        return (
             f"{self.modifier} {self.ptype} {self.identifier}\n"
-            f"{len(self.strarg)} {' '.join(self.strarg)}\n"
+            f"{len(self.sargs)} {' '.join(self.sargs)}\n"
             "0\n"
-            f"{len(self.realarg)} "
-            f"{str(self.realarg)[1:-1].replace(',', '')}\n"
+            f"{len(self.fargs)} "
+            f"{str(self.fargs)[1:-1].replace(',', '')}\n"
         )
-        return output
 
 
 class ViewType:
