@@ -12,7 +12,7 @@ pip install pyradiance
 Radiance binaries and libraries came included with pyradiance. You don't need
 to separately install Radiance for pyradiance to work.
 
-## [Documentation]("https://lbnl-eta.github.io/pyradiance")
+## [Documentation](https://lbnl-eta.github.io/pyradiance)
 
 ## Copyright Notice
 
