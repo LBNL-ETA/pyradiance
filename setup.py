@@ -7,7 +7,9 @@ from pathlib import Path
 from typing import Dict
 
 import requests
-from setuptools import setup
+from setuptools import setup, Extension
+
+from distutils.command.build_ext import build_ext as build_ext_orig
 
 from auditwheel.wheeltools import InWheel
 from wheel.bdist_wheel import bdist_wheel
@@ -299,6 +301,31 @@ class PyradianceBDistWheel(bdist_wheel):
         shutil.rmtree(radiance_dir)
         
 
+class CTypesExtension(Extension):
+    pass
+
+
+class build_ext(build_ext_orig):
+    def build_extension(self, ext):
+        self._ctypes = isinstance(ext, CTypesExtension)
+        with open("Radiance/src/rt/VERSION", "r") as f:
+            version = f.read().strip()
+        with open("Radiance/src/rt/Version.c", "w") as wtr:
+            wtr.write(f'char VersionID[] = "{version}";')
+        return super().build_extension(ext)
+
+    def get_export_symbols(self, ext):
+        if self._ctypes:
+            print(ext.export_symbols)
+            return ext.export_symbols
+        return super().get_export_symbols(ext)
+
+    def get_ext_filename(self, ext_name):
+        if self._ctypes:
+            return ext_name + ".so"
+        return super().get_ext_filename(ext_name)
+
+
 setup(
     name="pyradiance",
     author="LBNL",
@@ -320,5 +347,129 @@ setup(
         "Operating System :: OS Independent",
     ],
     python_requires=">=3.8",
-    cmdclass={"bdist_wheel": PyradianceBDistWheel},
+    ext_modules=[
+        CTypesExtension(
+            name="libraycalls",  
+            include_dirs=["Radiance/src/common", "Radiance/src/rt"],
+            sources=[
+                "Radiance/src/common/bsdf.c",
+                "Radiance/src/common/bsdf_t.c",
+                "Radiance/src/common/bsdf_m.c",
+                "Radiance/src/common/ccolor.c",
+                "Radiance/src/common/disk2square.c",
+                "Radiance/src/common/ezxml.c",
+                "Radiance/src/common/fvect.c",
+                "Radiance/src/common/header.c",
+                "Radiance/src/common/hilbert.c",
+                "Radiance/src/common/quit.c",
+                "Radiance/src/common/image.c",
+                "Radiance/src/common/urand.c",
+                "Radiance/src/common/words.c",
+                "Radiance/src/common/wordfile.c",
+                "Radiance/src/common/resolu.c",
+                "Radiance/src/common/tcos.c",
+                "Radiance/src/common/badarg.c",
+                "Radiance/src/common/bmalloc.c",
+                "Radiance/src/common/dircode.c",
+                "Radiance/src/common/objset.c",
+                "Radiance/src/common/eputs.c",
+                "Radiance/src/common/error.c",
+                "Radiance/src/common/ccyrgb.c",
+                "Radiance/src/common/spec_rgb.c",
+                "Radiance/src/common/calexpr.c",
+                "Radiance/src/common/calfunc.c",
+                "Radiance/src/common/caldefn.c",
+                "Radiance/src/common/ealloc.c",
+                "Radiance/src/common/fgetval.c",
+                "Radiance/src/common/fputword.c",
+                "Radiance/src/common/color.c",
+                "Radiance/src/common/cone.c",
+                "Radiance/src/common/face.c",
+                "Radiance/src/common/font.c",
+                "Radiance/src/common/instance.c",
+                "Radiance/src/common/mesh.c",
+                "Radiance/src/common/readobj.c",
+                "Radiance/src/common/fgetline.c",
+                "Radiance/src/common/fgetword.c",
+                "Radiance/src/common/readfargs.c",
+                "Radiance/src/common/savqstr.c",
+                "Radiance/src/common/savestr.c",
+                "Radiance/src/common/xf.c",
+                "Radiance/src/common/getpath.c",
+                "Radiance/src/common/gethomedir.c",
+                "Radiance/src/common/getlibpath.c",
+                "Radiance/src/common/portio.c",
+                "Radiance/src/common/octree.c",
+                "Radiance/src/common/modobject.c",
+                "Radiance/src/common/loadbsdf.c",
+                "Radiance/src/common/lookup.c",
+                "Radiance/src/common/mat4.c",
+                "Radiance/src/common/multisamp.c",
+                "Radiance/src/common/tmesh.c",
+                "Radiance/src/common/otypes.c",
+                "Radiance/src/common/zeroes.c",
+                "Radiance/src/common/readmesh.c",
+                "Radiance/src/common/readoct.c",
+                "Radiance/src/common/sceneio.c",
+                "Radiance/src/common/wputs.c",
+                "Radiance/src/common/tmap16bit.c",
+                "Radiance/src/common/tmapcolrs.c",
+                "Radiance/src/common/tonemap.c",
+                "Radiance/src/rt/noise3.c",
+                "Radiance/src/rt/fprism.c",
+                "Radiance/src/rt/t_data.c",
+                "Radiance/src/rt/t_func.c",
+                "Radiance/src/rt/pmapray.c",
+                "Radiance/src/rt/p_data.c",
+                "Radiance/src/rt/p_func.c",
+                "Radiance/src/rt/pmaptype.c",
+                "Radiance/src/rt/sphere.c",
+                "Radiance/src/rt/m_alias.c",
+                "Radiance/src/rt/aniso.c",
+                "Radiance/src/rt/ashikhmin.c",
+                "Radiance/src/rt/m_clip.c",
+                "Radiance/src/rt/dielectric.c",
+                "Radiance/src/rt/m_mirror.c",
+                "Radiance/src/rt/m_mist.c",
+                "Radiance/src/rt/normal.c",
+                "Radiance/src/rt/virtuals.c",
+                "Radiance/src/rt/mx_data.c",
+                "Radiance/src/rt/mx_func.c",
+                "Radiance/src/rt/o_cone.c",
+                "Radiance/src/rt/o_face.c",
+                "Radiance/src/rt/o_instance.c",
+                "Radiance/src/rt/o_mesh.c",
+                "Radiance/src/rt/pmapio.c",
+                "Radiance/src/rt/pmapopt.c",
+                "Radiance/src/rt/ambio.c",
+                "Radiance/src/rt/pmapsrc.c",
+                "Radiance/src/rt/pmutil.c",
+                "Radiance/src/rt/pmapbias.c",
+                "Radiance/src/rt/pmapdata.c",
+                "Radiance/src/rt/pmaprand.c",
+                "Radiance/src/rt/pmapparm.c",
+                "Radiance/src/rt/srcobstr.c",
+                "Radiance/src/rt/func.c",
+                "Radiance/src/rt/freeobjmem.c",
+                "Radiance/src/rt/raytrace.c",
+                "Radiance/src/rt/source.c",
+                "Radiance/src/rt/srcsupp.c",
+                "Radiance/src/rt/srcsamp.c",
+                "Radiance/src/rt/raycalls.c",
+                "Radiance/src/rt/initotypes.c",
+                "Radiance/src/rt/text.c",
+                "Radiance/src/rt/m_brdf.c",
+                "Radiance/src/rt/m_bsdf.c",
+                "Radiance/src/rt/glass.c",
+                "Radiance/src/rt/data.c",
+                "Radiance/src/rt/m_direct.c",
+                "Radiance/src/rt/ambcomp.c",
+                "Radiance/src/rt/ambient.c",
+                "Radiance/src/rt/Version.c",
+                "Radiance/src/rt/pmapamb.c",
+                "Radiance/src/rt/renderopts.c",
+                ], 
+        ),
+    ],
+    cmdclass={"build_ext": build_ext, "bdist_wheel": PyradianceBDistWheel},
 )
