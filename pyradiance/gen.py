@@ -116,7 +116,7 @@ def gendaylit(
     grefl: Optional[float] = None,
     interval: Optional[int] = None,
 ) -> bytes:
-    """Generates a RADIANCE description of the daylight sources using 
+    """Generates a RADIANCE description of the daylight sources using
     Perez models for direct and diffuse components.
 
     Args:
@@ -272,7 +272,6 @@ def gensky(
     solar_radiance: Optional[float] = None,
     horizontal_direct_irradiance: Optional[float] = None,
     turbidity: Optional[float] = None,
-
 ) -> bytes:
     """Generate a RADIANCE description of the sky.
 
@@ -348,7 +347,7 @@ def mkillum(
     octree: Union[str, Path],
     nproc: int = 1,
     params: Optional[Sequence[str]] = None,
-) -> bytes: 
+) -> bytes:
     """Compute illum sources for a RADIANCE scene
 
     Args:
@@ -359,7 +358,7 @@ def mkillum(
     Returns:
         Output of mkillum in bytes
     """
-    cmd = [str(BINPATH / "mkillum")] 
+    cmd = [str(BINPATH / "mkillum")]
     if nproc:
         cmd.extend(["-n", str(nproc)])
     if params:
