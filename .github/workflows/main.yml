@@ -110,7 +110,9 @@ jobs:
         path: ./dist/*.whl
 
     - name: Install
-      run: pip install .
+      run: |
+        git submodule add -b master --force https://github.com/LBNL-ETA/Radiance
+        pip install .
 
     - name: Test
       run: |
