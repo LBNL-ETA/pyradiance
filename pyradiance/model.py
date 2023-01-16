@@ -159,6 +159,18 @@ class Scene:
         """Scene sources."""
         return self._sources
 
+    @property
+    def views(self):
+        return self._views
+
+    @property
+    def sensors(self):
+        return self._sensors
+
+    @property
+    def changed(self):
+        return self._changed
+
     def _add(self, obj, target):
         if isinstance(obj, Primitive):
             getattr(self, target)[obj.identifier] = obj
