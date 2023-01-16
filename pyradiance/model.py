@@ -25,8 +25,8 @@ class Primitive:
         modifier: modifier, which primitive modifies this one
         ptype: primitive type
         identifier: identifier, name of this primitive
-        strarg: string arguments
-        realarg: real arguments
+        sargs: string arguments
+        fargs: real arguments
     """
 
     modifier: str
@@ -112,27 +112,16 @@ class Sensor:
 
 
 class Scene:
-    """Radiance Scene.
-
-    Attributes:
-        sid: scene id
-        materials: materials
-        surfaces: surfaces
-        views: views
-        sensors: sensors
-        sources: sources
-        changed: changed flag
-    """
+    """Radiance Scene."""
 
     __slots__ = (
-        "sid",
-        "surfaces",
-        "materials",
-        "sources",
-        "views",
-        "sensors",
-        "changed",
-        "windows",
+        "_sid",
+        "_surfaces",
+        "_materials",
+        "_sources",
+        "_views",
+        "_sensors",
+        "_changed",
     )
 
     def __init__(self, sid: str):
@@ -140,14 +129,35 @@ class Scene:
         Args:
             sid: scene id
         """
-        self.sid = sid
-        self.materials: Dict[str, str] = {}
-        self.surfaces: Dict[str, str] = {}
-        self.views: List[View] = []
-        self.sensors: List[Sequence[float]] = []
-        self.sources: Dict[str, str] = {}
-        self.changed = True
-        self.windows: Dict[str, str] = {}
+        if len(sid) < 0:
+            raise ValueError("Scene id must be at least one character long")
+        self._sid = sid
+        self._materials: Dict[str, str] = {}
+        self._surfaces: Dict[str, str] = {}
+        self._views: List[View] = []
+        self._sensors: List[Sequence[float]] = []
+        self._sources: Dict[str, str] = {}
+        self._changed = True
+
+    @property
+    def sid(self) -> str:
+        """Scene id."""
+        return self._sid
+
+    @property
+    def materials(self):
+        """Scene materials."""
+        return self._materials
+
+    @property
+    def surfaces(self):
+        """Scene surfaces."""
+        return self._surfaces
+
+    @property
+    def sources(self):
+        """Scene sources."""
+        return self._sources
 
     def _add(self, obj, target):
         if isinstance(obj, Primitive):
@@ -158,7 +168,7 @@ class Scene:
             getattr(self, target)[obj] = str(obj)
         else:
             raise TypeError("Unsupported type: ", type(obj))
-        self.changed = True
+        self._changed = True
 
     def _remove(self, obj, target):
         if isinstance(obj, Primitive):
@@ -167,37 +177,65 @@ class Scene:
             del getattr(self, target)[obj]
         else:
             raise TypeError("Unsupported type: ", type(obj))
-        self.changed = True
+        self._changed = True
 
-    def add_material(self, material):
+    def add_material(self, material: Union[str, Path, Primitive]):
+        """Add material to the scene.
+        Args:
+            material: material to be added
+        """
         self._add(material, "materials")
 
-    def remove_material(self, material):
+    def remove_material(self, material: Union[str, Path, Primitive]):
+        """Remove material from the scene.
+        Args:
+            material: material to be removed
+        """
         self._remove(material, "materials")
 
-    def add_surface(self, surface):
+    def add_surface(self, surface: Union[str, Path, Primitive]):
+        """Add surface to the scene.
+        Args:
+            surface: surface to be added
+        """
         self._add(surface, "surfaces")
 
-    def remove_surface(self, surface):
+    def remove_surface(self, surface: Union[str, Path, Primitive]):
+        """Remove surface from the scene.
+        Args:
+            surface: surface to be removed
+        """
         self._remove(surface, "surfaces")
 
-    def add_source(self, source):
+    def add_source(self, source: Union[str, Path, Primitive]):
+        """Add source to the scene.
+        Args:
+            source: source to be added
+        """
         self._add(source, "sources")
 
-    def remove_source(self, source):
+    def remove_source(self, source: Union[str, Path, Primitive]):
+        """Remove source from the scene.
+        Args:
+            source: source to be removed
+        """
         self._remove(source, "sources")
 
-    def add_window(self, window):
-        self._add(window, "windows")
-
-    def remove_window(self, window):
-        self._remove(window, "windows")
-
-    def add_view(self, view):
-        self.views.append(view)
+    def add_view(self, view: View):
+        """Add view to the scene.
+        Args:
+            view: view to be added
+        """
+        self._views.append(view)
 
     def add_sensor(self, sensor: Sequence[float]):
-        self.sensors.append(sensor)
+        """Add sensor to the scene.
+        Args:
+            sensor: sensor to be added
+        """
+        if len(sensor) != 6:
+            raise ValueError("Sensor must be a sequence of 6 numbers")
+        self._sensors.append(sensor)
 
     def _build(self):
         stdin = None
@@ -220,10 +258,12 @@ class Scene:
             wtr.write(oconv(*inp, stdin=stdin, warning=False, octree=moctname))
 
     def build(self):
-        """Build scene."""
-        if self.changed:
+        """Build an octree, as {sid}.oct in the current directory.
+        Will not build if scene has not changed since last build.
+        """
+        if self._changed:
             self._build()
-            self.changed = False
+            self._changed = False
 
 
 def parse_primitive(pstr: str) -> List[Primitive]:
