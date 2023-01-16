@@ -33,6 +33,8 @@ from .gen import (
     mkillum,
 )
 
+from .lib import RadianceAPI
+
 from .model import (
     Sensor,
     Scene,
@@ -60,6 +62,7 @@ from .rt import (
     rtrace,
 )
 
+
 from .param import SamplingParameters
 
 from .util import (
@@ -67,7 +70,6 @@ from .util import (
     get_header,
     get_image_dimensions,
     getinfo,
-    read_rad,
     rcode_depth,
     rcode_norm,
     render,
@@ -82,8 +84,15 @@ from .util import (
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-os.environ["RAYPATH"] = "." + os.pathsep + os.path.join(os.path.dirname(__file__), "lib")
+os.environ["RAYPATH"] = (
+    "." + os.pathsep + os.path.join(os.path.dirname(__file__), "lib")
+)
 os.environ["PATH"] = str(BINPATH) + os.pathsep + os.environ["PATH"]
+
+librad = RadianceAPI()
+
+read_rad = librad.read_rad
+get_view_resolu = librad.get_view_resolu
 
 __all__ = [
     "bsdf2klems",
@@ -96,8 +105,10 @@ __all__ = [
     "gensky",
     "get_header",
     "get_image_dimensions",
+    "get_view_resolu",
     "getinfo",
     "ies2rad",
+    "read_rad",
     "mgf2rad",
     "mkillum",
     "obj2rad",
