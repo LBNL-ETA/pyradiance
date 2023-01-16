@@ -329,6 +329,8 @@ csources=[
 
 if platform.system().lower() == "linux":
     csources += ["Radiance/src/common/strcmp.c", "Radiance/src/common/strlcpy.c"]
+elif platform.system().lower() == "windows":
+    csources += ["Radiance/src/common/strlcpy.c", "Radiance/src/common/timegm.c", "Radiance/src/common/fixargv0.c"]
 
 
 class PyradianceBDistWheel(bdist_wheel):
