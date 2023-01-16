@@ -327,7 +327,7 @@ csources=[
 ] 
 
 
-if platform.system().lower() != "darwin":
+if platform.system().lower() == "linux":
     csources += ["Radiance/src/common/strcmp.c", "Radiance/src/common/strlcpy.c"]
 
 

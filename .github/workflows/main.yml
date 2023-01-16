@@ -73,6 +73,7 @@ jobs:
 
     - name: Install and test
       run: |
+        git submodule add -b master --force https://github.com/LBNL-ETA/Radiance
         pip install .
         cd test
         pytest
