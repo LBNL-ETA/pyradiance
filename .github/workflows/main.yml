@@ -28,6 +28,7 @@ jobs:
 
     - name: Build Wheels
       run: |
+        git submodule update --init --recursive
         pip install requests wheel auditwheel pytest
         python setup.py bdist_wheel
 
