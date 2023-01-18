@@ -9,7 +9,7 @@ import subprocess as sp
 import sys
 from typing import List, Optional, Sequence, Tuple, Union
 
-from .model import View, parse_primitive, Primitive
+from .model import View
 from .param import SamplingParameters, parse_rtrace_args
 from .ot import getbbox
 
@@ -133,7 +133,7 @@ def getinfo(
     if len(inputs) == 1 and isinstance(inputs[0], bytes):
         stdin = inputs[0]
         if strip_header:
-            cmd.append('-')
+            cmd.append("-")
     else:
         if any(isinstance(i, bytes) for i in inputs):
             raise TypeError("All inputs must be str or Path if one is")
@@ -205,20 +205,21 @@ def rad(
     return sp.run(cmd, stdout=sp.PIPE, check=True).stdout
 
 
-def read_rad(fpath: str) -> List[Primitive]:
-    """Parse a Radiance file.
-
-    Args:
-        fpath: Path to the .rad file
-
-    Returns:
-        A list of primitives
-    """
-    with open(fpath) as rdr:
-        lines = rdr.readlines()
-    if any((l.startswith("!") for l in lines)):
-        lines = xform(fpath).decode().splitlines()
-    return parse_primitive("\n".join(lines))
+# # Replaced with read_rad from lib.py
+# def read_rad(fpath: str) -> List[Primitive]:
+#     """Parse a Radiance file.
+#
+#     Args:
+#         fpath: Path to the .rad file
+#
+#     Returns:
+#         A list of primitives
+#     """
+#     with open(fpath) as rdr:
+#         lines = rdr.readlines()
+#     if any((l.startswith("!") for l in lines)):
+#         lines = xform(fpath).decode().splitlines()
+#     return parse_primitive("\n".join(lines))
 
 
 def rcode_depth(
@@ -239,7 +240,7 @@ def rcode_depth(
     flush: bool = False,
 ) -> bytes:
     """Encode/decode 16-bit depth map.
-    
+
     Args:
         inp: input file or bytes
         ref_depth: reference distance, can be follow by /unit.
@@ -278,14 +279,16 @@ def rcode_depth(
                 cmd.append("-Ho")
         if flush:
             cmd.append("-u")
-        if outform != 'a':
+        if outform != "a":
             if outform not in ("d", "f"):
                 raise ValueError("outform must be 'd' or 'f'")
             cmd.append(f"-f{outform}")
         if per_point and (depth_file is None):
             raise ValueError("depth_file must be set when per_point is True")
         if per_point and (not isinstance(inp, bytes)):
-            raise TypeError("inp(pixel coordinates) must be bytes when per_point is True")
+            raise TypeError(
+                "inp(pixel coordinates) must be bytes when per_point is True"
+            )
         if depth_file is not None:
             cmd.append(depth_file)
     else:
@@ -318,7 +321,7 @@ def rcode_depth(
 
 
 def rcode_norm(
-    inp, 
+    inp,
     inheader: bool = True,
     outheader: bool = True,
     inresolution: bool = True,
@@ -366,17 +369,19 @@ def rcode_norm(
                 cmd.append("-Ho")
         if flush:
             cmd.append("-u")
-        if outform != 'a':
+        if outform != "a":
             if outform not in ("d", "f"):
                 raise ValueError("outform must be 'd' or 'f'")
             cmd.append(f"-f{outform}")
         if per_point and (norm_file is None):
             raise ValueError("norm_file must be set when per_point is True")
         if per_point and (not isinstance(inp, bytes)):
-            raise TypeError("inp(pixel coordinates) must be bytes when per_point is True")
+            raise TypeError(
+                "inp(pixel coordinates) must be bytes when per_point is True"
+            )
         if norm_file is not None:
             cmd.append(norm_file)
-        
+
     else:
         if not inheader:
             cmd.append("-hi")
@@ -816,9 +821,9 @@ def xform(
         iprefix: Prefix identifier
         mprefix: Set surface modifier to this name
         invert: Invert surface normal
-        rotatex: Rotate the scene degrees about the x axis.  
+        rotatex: Rotate the scene degrees about the x axis.
             A positive rotation corresponds to
-        rotatey: Rotate the scene degrees about the y axis.  
+        rotatey: Rotate the scene degrees about the y axis.
         rotatez: Rotate the scene degrees about the z axis.
         scale: Scale the scene by this factor
         mirrorx: Mirror the scene about the yz plane.

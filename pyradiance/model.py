@@ -70,6 +70,7 @@ class View:
         hoff: horizontal offset
         voff: vertical offset
     """
+
     position: Tuple[float, float, float]
     direction: Tuple[float, float, float]
     vtype: str = ViewType.VT_PER
@@ -80,6 +81,7 @@ class View:
     voff: float = 0
     vfore: float = 0
     vaft: float = 0
+    vdist: float = 0
 
     def args(self):
         return [
@@ -103,6 +105,21 @@ class View:
             "-vl",
             str(self.voff),
         ]
+
+
+@dataclass
+class Resolu:
+    """Radiance resolution.
+
+    Attributes:
+        orient: orientation
+        xr: x resolution
+        yr: y resolution
+    """
+
+    orient: str
+    xr: int
+    yr: int
 
 
 @dataclass(eq=True, frozen=True)
@@ -251,14 +268,18 @@ class Scene:
 
     def _build(self):
         stdin = None
-        mstdin = [str(mat) for mat in self.materials.values() if isinstance(mat, Primitive)]
+        mstdin = [
+            str(mat) for mat in self.materials.values() if isinstance(mat, Primitive)
+        ]
         inp = [mat for mat in self.materials.values() if isinstance(mat, str)]
         if mstdin:
             stdin = "".join(mstdin).encode()
         moctname = f"{self.sid}mat.oct"
         with open(moctname, "wb") as wtr:
             wtr.write(oconv(*inp, warning=False, stdin=stdin))
-        sstdin = [str(srf) for srf in self.surfaces.values() if isinstance(srf, Primitive)]
+        sstdin = [
+            str(srf) for srf in self.surfaces.values() if isinstance(srf, Primitive)
+        ]
         sstdin.extend(
             [str(src) for src in self.sources.values() if isinstance(src, Primitive)]
         )

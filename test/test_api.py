@@ -55,3 +55,19 @@ def test_rfluxmtx():
     scene = ("./Resources/materials.mat", "./Resources/floor.rad", "./Resources/ceiling.rad")
     result = pr.rfluxmtx(receiver, rays=rays, scene=scene)
     assert len(result) > 0
+
+
+def test_read_rad():
+    """Test the read_rad function."""
+    result = pr.read_rad("./Resources/materials.mat", "./Resources/floor.rad", "./Resources/ceiling.rad")
+    assert len(result) > 0
+    assert isinstance(result[0], pr.Primitive)
+
+def test_get_view_resolu():
+    view, res = pr.get_view_resolu("./Resources/test.hdr")
+    assert view.vtype == "a"
+    assert res.orient == "-Y+X"
+    assert res.xr == 544
+    assert res.yr == 544
+    assert view.horiz == 180
+    assert view.vert == 180

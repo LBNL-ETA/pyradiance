@@ -21,13 +21,13 @@ def obj2rad(
 
     Args:
         inp: Path to OBJ file
-        quallist: Produce a list of qualifiers from which to construct a 
+        quallist: Produce a list of qualifiers from which to construct a
             mapping for the given .OBJ file.
         flatten: Flatten all faces, effectively ignoring vertex normal information.
         mapfile: Mapping rules files for assigning material names for the surfaces.
         objname: Specify the name of this object, though it will be overriden by any
-           "o" statements in the input file.  If this option is absent, and there 
-           are no "o" statements, obj2rad will attempt to name surfaces based 
+           "o" statements in the input file.  If this option is absent, and there
+           are no "o" statements, obj2rad will attempt to name surfaces based
            on their group associations.
     Returns:
         The converted RADIANCE scene description in bytes
@@ -49,7 +49,9 @@ def obj2rad(
     return sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
 
 
-def pkgbsdf(*xml: Union[str, Path], frozen: bool = False, stdout: bool = False) -> Optional[bytes]:
+def pkgbsdf(
+    *xml: Union[str, Path], frozen: bool = False, stdout: bool = False
+) -> Optional[bytes]:
     """Pacakge BSDFs provided as XML for Radiance.
 
     Args:
@@ -96,11 +98,11 @@ def robjutil(
         remove_surface_normal: Remove surface normal from the output
         remove_surface_by_modifier: Remove surfaces by modifier, mutually
             exclusive with keep_surface_by_modifier
-        keep_surface_by_modifier: Keep surfaces by modifier, mutually 
+        keep_surface_by_modifier: Keep surfaces by modifier, mutually
             exclusive with remove_surface_by_modifier
-        remove_surface_by_group: Remove surfaces by group/object, mutually 
+        remove_surface_by_group: Remove surfaces by group/object, mutually
             exclusive with keep_surface_by_group
-        keep_surface_by_group: Keep surfaces by group/object, mutually 
+        keep_surface_by_group: Keep surfaces by group/object, mutually
             exclusive with remove_surface_by_group
         epsilon: Coalesce vertices that are within the given epsilon
         triangulate: Turns all faces with 4 or more sides into triangles

@@ -8,6 +8,7 @@ from typing import List, Optional, Union
 
 BINPATH = Path(__file__).parent / "bin"
 
+
 def pcond(
     hdr: Path,
     human: bool = False,
@@ -314,9 +315,9 @@ def ra_tiff(
     reverse: bool = False,
     xyze: bool = False,
 ) -> Optional[bytes]:
-    """ra_tiff - convert RADIANCE picture to/from a TIFF color 
+    """ra_tiff - convert RADIANCE picture to/from a TIFF color
     or greyscale image
-    
+
     Args:
         inp: Path or bytes to input picture file.
         out: Path to output file, required when output is a TIFF file.
@@ -329,7 +330,7 @@ def ra_tiff(
         primary: Set to True to use 16-bit/primary output. Default is False.
         reverse: Set to True to invoke a reverse conversion, from a TIFF
             to a RADIANCE picture. Default is False.
-        xyze: Set to True to use XYZE output when invoking a reverse 
+        xyze: Set to True to use XYZE output when invoking a reverse
             conversion. Default is False.
     Returns:
         bytes: output of ra_tiff
@@ -345,9 +346,11 @@ def ra_tiff(
             cmd.extend(["-g", str(gamma)])
         if exposure:
             cmd.extend(["-e", str(exposure)])
-    else: 
+    else:
         if out is None:
-            raise ValueError("Output should be specified when input is a RADIANCE picture.")
+            raise ValueError(
+                "Output should be specified when input is a RADIANCE picture."
+            )
         if lzw:
             cmd.append("-z")
         elif sgilog:
@@ -369,7 +372,7 @@ def ra_tiff(
         cmd.append(str(inp))
     elif isinstance(inp, bytes):
         stdin = inp
-        cmd.append('-')
+        cmd.append("-")
     pout = sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
     if out is None:
         return pout
