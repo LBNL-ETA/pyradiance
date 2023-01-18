@@ -136,7 +136,7 @@ ORIENT_FLAG = [
 class RadianceAPI(CDLL):
     def __init__(self):
         super().__init__(
-            os.path.join(os.path.dirname(os.path.dirname(__file__)), "libraycalls.so")
+            os.path.join(os.path.dirname(__file__), "libraycalls.so")
         )
         self.readobj.argtypes = [c_char_p]
         self.readobj.restype = POINTER(OBJREC)

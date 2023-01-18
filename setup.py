@@ -443,7 +443,9 @@ class build_ext(build_ext_orig):
     def get_export_symbols(self, ext):
         if self._ctypes:
             print(ext.export_symbols)
-            return ext.export_symbols
+            breakpoint()
+            return ["readobj", "viewfile"]
+            # return ext.export_symbols
         return super().get_export_symbols(ext)
 
     def get_ext_filename(self, ext_name):
@@ -473,9 +475,10 @@ setup(
         "Operating System :: OS Independent",
     ],
     python_requires=">=3.8",
+    py_modules=["pyradiance.lib"],
     ext_modules=[
         CTypesExtension(
-            name="libraycalls",  
+            name="pyradiance.libraycalls",  
             include_dirs=["Radiance/src/common", "Radiance/src/rt"],
             sources=csources,
         ),
