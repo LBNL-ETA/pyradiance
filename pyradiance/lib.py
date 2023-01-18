@@ -146,6 +146,12 @@ class RadianceAPI(CDLL):
         self.viewfile.restype = None
 
     def read_rad(self, *paths: str):
+        """Reads a Radiance scene file and returns a list of primitives.
+        Args:
+            paths: Path to .rad file.
+        Returns:
+            List of primitives.
+        """
         for path in paths:
             self.readobj(path.encode("ascii"))
         objblocks = (POINTER(OBJREC) * 131071).in_dll(self, "objblock")
@@ -168,12 +174,19 @@ class RadianceAPI(CDLL):
             primitives.append(
                 Primitive(omod, OTYPES[_obj.otype], _obj.oname.decode(), sargs, fargs)
             )
+        self.freeobjects(0, nobjects)
         return primitives
 
     def free_objects(self, firstobj, nobjects):
         self.freeobjects(firstobj, nobjects)
 
     def get_view_resolu(self, path) -> Tuple[View, Resolu]:
+        """Get view and resolu from .hdr or .vf file
+        Args:
+            path: Path to .hdr or .vf file.
+        Returns:
+            View and Resolu.
+        """
         _view = VIEW()
         _res = RESOLU()
         self.viewfile(path.encode(), byref(_view), byref(_res))
