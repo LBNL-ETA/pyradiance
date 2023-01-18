@@ -443,7 +443,7 @@ class build_ext(build_ext_orig):
     def get_export_symbols(self, ext):
         if self._ctypes:
             print(ext.export_symbols)
-            return ["readobj", "freeobjects", "viewfile"]
+            return ["readobj", "objblock", "nobjects", "freeobjects", "viewfile"]
             # return ext.export_symbols
         return super().get_export_symbols(ext)
 
