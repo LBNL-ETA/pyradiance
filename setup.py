@@ -418,7 +418,7 @@ class PyradianceBDistWheel(bdist_wheel):
                 for file in files:
                     from_path = os.path.join(dir_path, file)
                     to_path = Path(file).name
-                    if Path(file).stem in RADBINS and Path(file).suffix != ".1":
+                    if Path(file).stem in RADBINS and Path(file).suffix not in (".1", '.c', '.h', '.txt', '.mtx'):
                         # Windows need .exe suffix
                         os.chmod(from_path, 0o755)
                         zip.write(from_path, f"pyradiance/bin/{to_path}")
