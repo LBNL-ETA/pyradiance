@@ -332,6 +332,13 @@ if platform.system().lower() == "linux":
 elif platform.system().lower() == "windows":
     csources += ["Radiance/src/common/strlcpy.c", "Radiance/src/common/timegm.c", "Radiance/src/common/fixargv0.c"]
 
+export_symbols = [
+    "readobj", 
+    "objblock", 
+    "nobjects", 
+    "freeobjects", 
+    "viewfile"
+]
 
 class PyradianceBDistWheel(bdist_wheel):
 
@@ -442,9 +449,8 @@ class build_ext(build_ext_orig):
 
     def get_export_symbols(self, ext):
         if self._ctypes:
-            print(ext.export_symbols)
-            return ["readobj", "objblock", "nobjects", "freeobjects", "viewfile"]
-            # return ext.export_symbols
+            # Need this for Windows
+            return export_symbols
         return super().get_export_symbols(ext)
 
     def get_ext_filename(self, ext_name):
@@ -457,7 +463,7 @@ setup(
     name="pyradiance",
     author="LBNL",
     author_email="taoningwang@lbl.gov",
-    version="0.0.2a1",
+    version="0.0.3a1",
     description="Python interface for Radiance command-line tools",
     long_description=Path("README.md").read_text(encoding="utf-8"),
     long_description_content_type="text/markdown",

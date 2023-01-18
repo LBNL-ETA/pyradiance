@@ -61,6 +61,7 @@ def test_read_rad():
     """Test the read_rad function."""
     result = pr.read_rad("./Resources/materials.mat", "./Resources/floor.rad", "./Resources/ceiling.rad")
     assert len(result) > 0
+    assert isinstance(result[0], pr.Primitive)
 
 def test_get_view_resolu():
     view, res = pr.get_view_resolu("./Resources/test.hdr")
