@@ -1,3 +1,5 @@
+![Build & Test](https://github.com/LBNL-ETA/pyradiance/actions/workflows/main.yml/badge.svg)
+
 # pyradiance
 
 This package facilitates a Python interface to commonly used Radiance 
