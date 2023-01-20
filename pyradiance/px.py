@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess as sp
 from typing import List, Optional, Union
 
+
 BINPATH = Path(__file__).parent / "bin"
 
 
@@ -264,15 +265,15 @@ def pvaluer(
     constructing a image from pixel values.
 
     Args:
-        pic: Path to Radiance picture file or bytes of the picture file.
-        xres: Number of columns in the picture file.
-        yres: Number of rows in the picture file.
-        inpformat: Radiance picture file format. Default is "a" for ascii.
+        pic: Path or bytes of the input pixel data.
+        xres: X resolution.
+        yres: Y resolution.
+        inform: input data format. Default is "a" for ascii.
         header: Set to True if the picture file has a header. Default is False.
         primaries: List of primaries for XYZ calculation. Default is None.
         pxyz: Set to True to calculate XYZ values. Default is False.
     Returns:
-        Bytes of the pvalue output (Radiance .
+        Bytes of the pvalue output
     """
     stdin = None
     cmd = ["pvalue", "-r"]
