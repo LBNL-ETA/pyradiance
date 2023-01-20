@@ -252,7 +252,7 @@ def pvaluer(
     pic: Union[Path, str, bytes],
     xres: Optional[int] = None,
     yres: Optional[int] = None,
-    inpformat: str = "a",
+    inform: str = "a",
     resstr: bool = True,
     dataonly: bool = False,
     header: bool = False,
@@ -282,8 +282,8 @@ def pvaluer(
         cmd.append("-H")
     if dataonly:
         cmd.append("-d")
-    if inpformat != "a":
-        cmd.append(f"-d{inpformat}")
+    if inform != "a":
+        cmd.append(f"-d{inform}")
     if yres:
         sign = "-" if yres > 0 else "+"
         cmd.extend([f"{sign}y", str(abs(yres))])
