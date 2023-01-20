@@ -320,6 +320,73 @@ def rcode_depth(
     return sp.run(cmd, stdout=sp.PIPE, input=stdin, check=True).stdout
 
 
+def rcode_ident(
+    inp: Union[str, Path, bytes],
+    index_size: int = 16,
+    sep: str = "\n",
+    decode: bool = False,
+    header: bool = True,
+    xres: Optional[int] = None,
+    yres: Optional[int] = None,
+    resstr: bool = True,
+    identifiers: bool = False,
+    indexes: bool = False,
+    per_point: bool = False,
+    flush: bool = False,
+) -> bytes:
+    """Store identifiers in an indexed map and retrieve from same
+    Args:
+        inp: input file or bytes
+        index_size: index size
+        sep: separator
+        decode: Set to True to decode instead
+        header: Set to False to not to expect header on input;
+            or not to include header on output when decoding
+        xres: x resolution
+        yres: y resolution
+        resstr: Set to False to not include resolution string on output
+        identifiers: Set to True to include identifiers on output
+        indexes: Set to True to instead list identifiers indexes on output
+        per_point: Set to True to compute per point instead of per pixel
+        flush: Set to True to flush output after each identifier
+    Returns:
+        bytes: output of rcode_ident
+    """
+    cmd = [str(BINPATH / "rcode_ident")]
+    if decode:
+        cmd.append("-r")
+        if not resstr:
+            cmd.append("-H")
+        if identifiers:
+            cmd.append("-l")
+        elif indexes:
+            cmd.append("-n")
+        if per_point:
+            cmd.append("-i")
+        if flush:
+            cmd.append("-u")
+    else:
+        if index_size not in (8, 16, 24):
+            raise ValueError("index_size must be 8, 16, or 24")
+        cmd.append(f"-{index_size}")
+        if xres:
+            cmd.extend(["-x", str(xres)])
+        if yres:
+            cmd.extend(["-y", str(yres)])
+    if not header:
+        cmd.append("-h")
+    if sep != "\n":
+        cmd.append(f"-t{sep}")
+    stdin = None
+    if isinstance(inp, bytes):
+        stdin = inp
+    elif isinstance(inp, (str, Path)):
+        cmd.append(str(inp))
+    else:
+        raise TypeError("inp must be a string, Path, or bytes")
+    return sp.run(cmd, stdout=sp.PIPE, input=stdin, check=True).stdout
+
+
 def rcode_norm(
     inp,
     inheader: bool = True,
