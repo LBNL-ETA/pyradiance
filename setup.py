@@ -41,6 +41,7 @@ RADBINS = [
     'pvalue',
     'rad',
     'rcode_depth',
+    'rcode_ident',
     'rcode_norm',
     'rcontrib',
     'rfluxmtx',
