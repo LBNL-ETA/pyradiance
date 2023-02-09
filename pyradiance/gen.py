@@ -10,6 +10,41 @@ from typing import List, Optional, Sequence, Union
 BINPATH = Path(__file__).parent / "bin"
 
 
+def genblinds(
+    mat: str,
+    name: str,
+    depth: float,
+    width: float,
+    height: float,
+    nslats: int,
+    angle: float,
+    rcurv: Optional[float] = None,
+) -> bytes:
+    """Generate a RADIANCE description of venetian blinds.
+
+    Args:
+        mat: Material name
+        name: Name of the blinds
+        depth: Depth of the blinds
+        width: Width of the blinds
+        height: Height of the blinds
+        nslats: Number of slats
+        angle: Angle of the slats
+        rcurv: Radius of curvature of the slats, + for upward curvature, - for downward
+
+    Returns:
+        bytes: RADIANCE description of the blinds
+    """
+    cmd = [BINPATH / "genblinds", mat, name, str(depth), str(width), str(height)]
+    cmd.extend([str(nslats), str(angle)])
+    if rcurv is not None:
+        if rcurv > 0:
+            cmd.extend(["+r", str(rcurv)])
+        else:
+            cmd.extend(["-r", str(rcurv)])
+    return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
+
+
 def genbsdf(
     *inp: Union[str, Path],
     nsamp: int = 1,

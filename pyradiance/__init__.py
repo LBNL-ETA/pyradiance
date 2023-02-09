@@ -26,6 +26,7 @@ from .cv import (
 )
 
 from .gen import (
+    genblinds,
     genbsdf,
     gendaylit,
     gendaymtx,
@@ -57,6 +58,7 @@ from .px import (
 
 from .rt import (
     RcModifier,
+    mkpmap,
     rcontrib,
     rpict,
     rtrace,
@@ -71,6 +73,7 @@ from .util import (
     get_image_dimensions,
     getinfo,
     rcode_depth,
+    rcode_ident,
     rcode_norm,
     render,
     rfluxmtx,
@@ -99,6 +102,7 @@ __all__ = [
     "bsdf2ttree",
     "cnt",
     "dctimestep",
+    "genblinds",
     "genbsdf",
     "gendaylit",
     "gendaymtx",
@@ -111,6 +115,7 @@ __all__ = [
     "read_rad",
     "mgf2rad",
     "mkillum",
+    "mkpmap",
     "obj2rad",
     "oconv",
     "pabopto2bsdf",
@@ -120,6 +125,7 @@ __all__ = [
     "pcond",
     "pfilt",
     "rcode_depth",
+    "rcode_ident",
     "rcode_norm",
     "rcontrib",
     "read_rad",
@@ -138,7 +144,6 @@ __all__ = [
     "Sensor",
     "SamplingParameters",
     "View",
-    "load_views",
     "parse_primitive",
     "wrapbsdf",
     "xform",
