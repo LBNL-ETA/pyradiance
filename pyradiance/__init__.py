@@ -26,6 +26,7 @@ from .cv import (
 )
 
 from .gen import (
+    genblinds,
     genbsdf,
     gendaylit,
     gendaymtx,
@@ -57,6 +58,7 @@ from .px import (
 
 from .rt import (
     RcModifier,
+    mkpmap,
     rcontrib,
     rpict,
     rtrace,
@@ -100,6 +102,7 @@ __all__ = [
     "bsdf2ttree",
     "cnt",
     "dctimestep",
+    "genblinds",
     "genbsdf",
     "gendaylit",
     "gendaymtx",
@@ -112,6 +115,7 @@ __all__ = [
     "read_rad",
     "mgf2rad",
     "mkillum",
+    "mkpmap",
     "obj2rad",
     "oconv",
     "pabopto2bsdf",
