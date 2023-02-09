@@ -490,6 +490,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#pyradiance.genblinds" class="md-nav__link">
+    genblinds()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pyradiance.genbsdf" class="md-nav__link">
     genbsdf()
   </a>
@@ -567,6 +574,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#pyradiance.mkpmap" class="md-nav__link">
+    mkpmap()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pyradiance.obj2rad" class="md-nav__link">
     obj2rad()
   </a>
@@ -632,6 +646,13 @@
           <li class="md-nav__item">
   <a href="#pyradiance.rcode_depth" class="md-nav__link">
     rcode_depth()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.rcode_ident" class="md-nav__link">
+    rcode_ident()
   </a>
   
 </li>
@@ -953,6 +974,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#pyradiance.genblinds" class="md-nav__link">
+    genblinds()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pyradiance.genbsdf" class="md-nav__link">
     genbsdf()
   </a>
@@ -1030,6 +1058,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#pyradiance.mkpmap" class="md-nav__link">
+    mkpmap()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pyradiance.obj2rad" class="md-nav__link">
     obj2rad()
   </a>
@@ -1095,6 +1130,13 @@
           <li class="md-nav__item">
   <a href="#pyradiance.rcode_depth" class="md-nav__link">
     rcode_depth()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.rcode_ident" class="md-nav__link">
+    rcode_ident()
   </a>
   
 </li>
@@ -2490,13 +2532,6 @@ function (default=15000). Setting the value to 0 turns off this limit.</p></td>
   
       <p>Index counter.</p>
 
-<p><strong>Examples:</strong></p>
-    <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">cnt</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="go">b&#39;0 0\n0 1\n0 2\n1 0\n1 1\n1 2\n&#39;</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">cnt</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">shuffled</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="go">b&#39;1 2\n0 1\n1 0\n0 2\n1 1\n0 0\n&#39;</span>
-</code></pre></div>
-
   <p><strong>Parameters:</strong></p>
   <table>
     <thead>
@@ -2548,6 +2583,13 @@ function (default=15000). Setting the value to 0 turns off this limit.</p></td>
         </tr>
     </tbody>
   </table>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">cnt</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="go">b&#39;0 0\n0 1\n0 2\n1 0\n1 1\n1 2\n&#39;</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">cnt</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">shuffled</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="go">b&#39;1 2\n0 1\n1 0\n0 2\n1 1\n0 0\n&#39;</span>
+</code></pre></div>
 
   </div>
 
@@ -2677,6 +2719,140 @@ function (default=15000). Setting the value to 0 turns off this limit.</p></td>
         </tr>
     </tbody>
   </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.genblinds" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">genblinds</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">nslats</span><span class="p">,</span> <span class="n">angle</span><span class="p">,</span> <span class="n">rcurv</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Generate a RADIANCE description of venetian blinds.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>mat</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>Material name</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>name</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>Name of the blinds</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>depth</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td><p>Depth of the blinds</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>width</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td><p>Width of the blinds</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>height</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td><p>Height of the blinds</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>nslats</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td><p>Number of slats</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>angle</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td><p>Angle of the slats</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>rcurv</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[float]</code>
+          </td>
+          <td><p>Radius of curvature of the slats, + for upward curvature, - for downward</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>bytes</code></td>          <td>
+                <code>bytes</code>
+          </td>
+          <td><p>RADIANCE description of the blinds</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+<p><strong>Examples:</strong></p>
+    <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gp">&gt;&gt;&gt; </span><span class="n">genblinds</span><span class="p">(</span><span class="s1">&#39;mat&#39;</span><span class="p">,</span> <span class="s1">&#39;blinds&#39;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">45</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+</code></pre></div>
 
   </div>
 
@@ -4171,6 +4347,285 @@ One view per line.</p>
 
 
 
+<h3 id="pyradiance.mkpmap" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">mkpmap</span><span class="p">(</span><span class="n">octree</span><span class="p">,</span> <span class="n">global_map</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">caustic_map</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">volume_map</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">direct_map</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">contrib_map</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pre_global_map</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">predistrib</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rect_region</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sphere_region</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">maxbounce</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">maxprepass</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">port_mod</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">port_modfile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">precomp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">virtual_mod</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">virtual_modfile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">amb_excl_mod</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">amb_excl_modfile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">amb_incl_mod</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">amb_incl_modfile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">backface_vis</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sample_res</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">partition_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">progress_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">maxdist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scattering_albedo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extinction_coefficient</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scattering_eccentricity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nproc</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">progress_interval</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Mkpmap takes a RADIANCE scene description as an octree and performs 
+Monte Carlo forward path tracing from the light sources, depositing 
+indirect ray hitpoints along with their energy (flux) as "photons". 
+The resulting localised energy distribution represents a global 
+illumination solution which is written to a file for subsequent evaluation 
+by rpict(1), rtrace(1) and rvu(1) in a backward raytracing pass. 
+The photon map(s) can be reused for multiple viewpoints and sensor 
+locations as long as the geometry remains unchanged.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>octree</code></td>
+          <td>
+                <code><span title="typing.Union">Union</span>[<span title="pathlib.Path">Path</span>, str]</code>
+          </td>
+          <td><p>Octree file path.</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>global_map</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.Tuple">Tuple</span>[<span title="typing.Union">Union</span>[<span title="pathlib.Path">Path</span>, str], int]]</code>
+          </td>
+          <td><p>Global map file path and number of photons.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>caustic_map</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.Tuple">Tuple</span>[<span title="typing.Union">Union</span>[<span title="pathlib.Path">Path</span>, str], int]]</code>
+          </td>
+          <td><p>Caustic map file path and number of photons.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>volume_map</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.Tuple">Tuple</span>[<span title="typing.Union">Union</span>[<span title="pathlib.Path">Path</span>, str], int]]</code>
+          </td>
+          <td><p>Volume map file path and number of photons.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>direct_map</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.Tuple">Tuple</span>[<span title="typing.Union">Union</span>[<span title="pathlib.Path">Path</span>, str], int]]</code>
+          </td>
+          <td><p>Direct map file path and number of photons.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>contrib_map</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.Tuple">Tuple</span>[<span title="typing.Union">Union</span>[<span title="pathlib.Path">Path</span>, str], int]]</code>
+          </td>
+          <td><p>Contribution map file path and number of photons.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>pre_global_map</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.Tuple">Tuple</span>[<span title="typing.Union">Union</span>[<span title="pathlib.Path">Path</span>, str], int, float]]</code>
+          </td>
+          <td><p>Precomputed global map file path, number of photons and bandwidth.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>predistrib</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[float]</code>
+          </td>
+          <td><p>Photon predistribution factor.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>rect_region</code></td>
+          <td>
+                <code><span title="typing.Tuple">Tuple</span>[float, float, float, float, float, float]</code>
+          </td>
+          <td><p>Rectangular region</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>sphere_region</code></td>
+          <td>
+                <code><span title="typing.Tuple">Tuple</span>[float, float, float, float]</code>
+          </td>
+          <td><p>Spherical region</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>maxbounce</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>Maximum number of bounces.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>maxprepass</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>Maximum number of iteratiosn of distributoin prepass before terminating.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>port_mod</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.Sequence">Sequence</span>[str]]</code>
+          </td>
+          <td><p>Specifies a modifier to act as a photon port.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>port_modfile</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>File with modifiers to act as photon ports.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>precomp</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[float]</code>
+          </td>
+          <td><p>Fraction of global photons to precompute.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>seed</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>Random seed.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>virtual_mod</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[<span title="typing.Sequence">Sequence</span>[str]]</code>
+          </td>
+          <td><p>Specifies a modifier to act as a virtual source.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>virtual_modfile</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>File with modifiers to act as virtual sources.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>amb_excl_mod</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>Specifies a modifier to exclude from ambient calculation.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>amb_excl_modfile</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>File with modifiers to exclude from ambient calculation.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>amb_incl_mod</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>Specifies a modifier to include in ambient calculation.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>amb_incl_modfile</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[str]</code>
+          </td>
+          <td><p>File with modifiers to include in ambient calculation.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>backface_vis</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Backface visibility.</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>sample_res</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>Sample resolution.</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
 <h3 id="pyradiance.obj2rad" class="doc doc-heading">
 <code class="highlight language-python"><span class="n">obj2rad</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">quallist</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">flatten</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">mapfile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">objname</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
@@ -5203,7 +5658,7 @@ in the following ascii format: xpos ypos red  green     blue</p>
 
 
 <h3 id="pyradiance.pvaluer" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">pvaluer</span><span class="p">(</span><span class="n">pic</span><span class="p">,</span> <span class="n">xres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">inpformat</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">resstr</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dataonly</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">primaries</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pxyz</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">pvaluer</span><span class="p">(</span><span class="n">pic</span><span class="p">,</span> <span class="n">xres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">inform</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">resstr</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dataonly</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">primaries</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pxyz</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
 
 </h3>
 
@@ -5229,7 +5684,7 @@ constructing a image from pixel values.</p>
           <td>
                 <code><span title="typing.Union">Union</span>[<span title="pathlib.Path">Path</span>, str, bytes]</code>
           </td>
-          <td><p>Path to Radiance picture file or bytes of the picture file.</p></td>
+          <td><p>Path or bytes of the input pixel data.</p></td>
           <td>
               <em>required</em>
           </td>
@@ -5239,7 +5694,7 @@ constructing a image from pixel values.</p>
           <td>
                 <code><span title="typing.Optional">Optional</span>[int]</code>
           </td>
-          <td><p>Number of columns in the picture file.</p></td>
+          <td><p>X resolution.</p></td>
           <td>
                 <code>None</code>
           </td>
@@ -5249,17 +5704,17 @@ constructing a image from pixel values.</p>
           <td>
                 <code><span title="typing.Optional">Optional</span>[int]</code>
           </td>
-          <td><p>Number of rows in the picture file.</p></td>
+          <td><p>Y resolution.</p></td>
           <td>
                 <code>None</code>
           </td>
         </tr>
         <tr>
-          <td><code>inpformat</code></td>
+          <td><code>inform</code></td>
           <td>
                 <code>str</code>
           </td>
-          <td><p>Radiance picture file format. Default is "a" for ascii.</p></td>
+          <td><p>input data format. Default is "a" for ascii.</p></td>
           <td>
                 <code>&#39;a&#39;</code>
           </td>
@@ -5310,7 +5765,7 @@ constructing a image from pixel values.</p>
           <td>
                 <code>bytes</code>
           </td>
-          <td><p>Bytes of the pvalue output (Radiance .</p></td>
+          <td><p>Bytes of the pvalue output</p></td>
         </tr>
     </tbody>
   </table>
@@ -5511,6 +5966,177 @@ constructing a image from pixel values.</p>
                 <code>bytes</code>
           </td>
           <td><p>output of rcode_depth</p></td>
+        </tr>
+    </tbody>
+  </table>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="pyradiance.rcode_ident" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">rcode_ident</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">index_size</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">decode</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">xres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yres</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">resstr</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">identifiers</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">indexes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">per_point</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Store identifiers in an indexed map and retrieve from same</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>inp</code></td>
+          <td>
+                <code><span title="typing.Union">Union</span>[str, <span title="pathlib.Path">Path</span>, bytes]</code>
+          </td>
+          <td><p>input file or bytes</p></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>index_size</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td><p>index size</p></td>
+          <td>
+                <code>16</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>sep</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td><p>separator</p></td>
+          <td>
+                <code>&#39;\n&#39;</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>decode</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to True to decode instead</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>header</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to False to not to expect header on input;
+or not to include header on output when decoding</p></td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>xres</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>x resolution</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>yres</code></td>
+          <td>
+                <code><span title="typing.Optional">Optional</span>[int]</code>
+          </td>
+          <td><p>y resolution</p></td>
+          <td>
+                <code>None</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>resstr</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to False to not include resolution string on output</p></td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>identifiers</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to True to include identifiers on output</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>indexes</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to True to instead list identifiers indexes on output</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>per_point</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to True to compute per point instead of per pixel</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>flush</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td><p>Set to True to flush output after each identifier</p></td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>bytes</code></td>          <td>
+                <code>bytes</code>
+          </td>
+          <td><p>output of rcode_ident</p></td>
         </tr>
     </tbody>
   </table>
