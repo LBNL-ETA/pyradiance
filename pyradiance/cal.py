@@ -15,17 +15,17 @@ def cnt(
 ) -> bytes:
     """Index counter.
 
-    Examples:
-        >>> cnt(2, 3)
-        b'0 0\\n0 1\\n0 2\\n1 0\\n1 1\\n1 2\\n'
-        >>> cnt(2, 3, shuffled=True)
-        b'1 2\\n0 1\\n1 0\\n0 2\\n1 1\\n0 0\\n'
-
     Args:
         dims: list of dimensions
         shuffled: if True, the output will be shuffled
     Returns:
         bytes: output of cnt
+
+    Examples:
+        >>> cnt(2, 3)
+        b'0 0\\n0 1\\n0 2\\n1 0\\n1 1\\n1 2\\n'
+        >>> cnt(2, 3, shuffled=True)
+        b'1 2\\n0 1\\n1 0\\n0 2\\n1 1\\n0 0\\n'
     """
     cmd = [str(BINPATH / "cnt")]
     if shuffled:
