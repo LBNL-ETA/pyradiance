@@ -34,7 +34,8 @@ from .gen import (
     mkillum,
 )
 
-from .lib import RadianceAPI
+# from .lib import RadianceAPI
+from .lib import BSDF, read_rad, get_view_resolu
 
 from .model import (
     Sensor,
@@ -92,12 +93,8 @@ os.environ["RAYPATH"] = (
 )
 os.environ["PATH"] = str(BINPATH) + os.pathsep + os.environ["PATH"]
 
-librad = RadianceAPI()
-
-read_rad = librad.read_rad
-get_view_resolu = librad.get_view_resolu
-
 __all__ = [
+    "BSDF",
     "bsdf2klems",
     "bsdf2ttree",
     "cnt",
@@ -112,13 +109,14 @@ __all__ = [
     "get_view_resolu",
     "getinfo",
     "ies2rad",
-    "read_rad",
+    "load_views",
     "mgf2rad",
     "mkillum",
     "mkpmap",
     "obj2rad",
     "oconv",
     "pabopto2bsdf",
+    "parse_primitive",
     "pkgbsdf",
     "pvalue",
     "pvaluer",
@@ -144,16 +142,6 @@ __all__ = [
     "Sensor",
     "SamplingParameters",
     "View",
-    "parse_primitive",
-    "wrapbsdf",
-    "xform",
-    "Scene",
-    "Sensor",
-    "View",
-    "Primitive",
-    "SamplingParameters",
-    "load_views",
-    "parse_primitive",
     "vwrays",
     "wrapbsdf",
     "xform",
