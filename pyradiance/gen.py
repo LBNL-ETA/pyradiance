@@ -34,6 +34,9 @@ def genblinds(
 
     Returns:
         bytes: RADIANCE description of the blinds
+
+    Examples:
+        >>> genblinds('mat', 'blinds', 0.1, 0.5, 1.0, 4, 45, 0.1)
     """
     cmd = [BINPATH / "genblinds", mat, name, str(depth), str(width), str(height)]
     cmd.extend([str(nslats), str(angle)])

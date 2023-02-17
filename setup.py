@@ -388,8 +388,8 @@ class PyradianceBDistWheel(bdist_wheel):
         assert self.dist_dir is not None
         dist_dir = Path(self.dist_dir)
         wheel_path = list(dist_dir.glob("*.whl"))[0]
-        without_platform = str(wheel_path)[:-7] 
-        platform_wheel_path = without_platform + wheel["wheel"]
+        without_platform = wheel_path.stem[:18] + "-py3-none-"
+        platform_wheel_path = os.path.join(self.dist_dir, without_platform + wheel["wheel"])
         zip_name = f'Radiance_{RADTAG}_{wheel["zip_tag"]}.zip'
         if not os.path.exists(zip_name):
             url = f'https://github.com/LBNL-ETA/Radiance/releases/download/{RADTAG}/{zip_name}'
@@ -420,7 +420,7 @@ class PyradianceBDistWheel(bdist_wheel):
                 for file in files:
                     from_path = os.path.join(dir_path, file)
                     to_path = Path(file).name
-                    if Path(file).stem in RADBINS and Path(file).suffix != ".1":
+                    if Path(file).stem in RADBINS and Path(file).suffix not in (".1", '.c', '.h', '.txt', '.mtx'):
                         # Windows need .exe suffix
                         os.chmod(from_path, 0o755)
                         zip.write(from_path, f"pyradiance/bin/{to_path}")

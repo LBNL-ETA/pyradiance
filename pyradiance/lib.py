@@ -114,7 +114,6 @@ ORIENT_FLAG = [
 ]
 
 
-
 class C_COLOR(Structure):
     _fields_ = [
         ("clock", c_double), 
