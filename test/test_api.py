@@ -2,8 +2,10 @@
 Test pyradiance api
 """
 from datetime import datetime
-import pyradiance as pr
 import logging 
+
+import pyradiance as pr
+import pytest
 
 LOGGER = logging.getLogger(__name__)
 
@@ -71,3 +73,14 @@ def test_get_view_resolu():
     assert res.yr == 544
     assert view.horiz == 180
     assert view.vert == 180
+
+def test_BSDF():
+    """Test the bsdf function."""
+    bsdf = pr.BSDF("./Resources/t3.xml")
+    _t = bsdf.direct_hemi(30, 0, "t")
+    assert pytest.approx(_t, 0.0001) == 7.6456e-2
+    _a = bsdf.size(30, 0)
+    assert pytest.approx(_a[0], 0.0001) == 7.6699e-4
+    _sv = bsdf.eval(0, 0, 180, 0)
+    assert pytest.approx(_sv.cieY, 0.001) == 4.997
+
