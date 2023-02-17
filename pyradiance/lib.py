@@ -365,7 +365,6 @@ def read_rad(*paths: str):
             ]
         if _obj.oargs.nfargs > 0:
             fargs = [_obj.oargs.farg[i] for i in range(_obj.oargs.nfargs)]
-            breakpoint()
         primitives.append(
             Primitive(omod, OTYPES[_obj.otype], _obj.oname.decode(), sargs, fargs)
         )
