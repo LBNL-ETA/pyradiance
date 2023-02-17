@@ -334,7 +334,14 @@ if platform.system().lower() == "linux":
 elif platform.system().lower() == "windows":
     csources += ["Radiance/src/common/strlcpy.c", "Radiance/src/common/timegm.c", "Radiance/src/common/fixargv0.c"]
 
+# Need to explictly set these for Windows?
 export_symbols = [
+    "SDcacheFile",
+    "SDfreeCache",
+    "SDsizeBSDF",
+    "SDevalBSDF",
+    "SDsampBSDF",
+    "SDdirectHemi",
     "readobj", 
     "objblock", 
     "nobjects", 
