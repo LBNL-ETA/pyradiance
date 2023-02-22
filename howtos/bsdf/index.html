@@ -9,13 +9,17 @@
       
       
       
+        <link rel="prev" href="../">
+      
+      
+        <link rel="next" href="../../reference/">
       
       <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.2">
     
     
       
-        <title>How to load a WaveFront (.obj) model - Pyradiance Docs</title>
+        <title>BSDF analysis - Pyradiance Docs</title>
       
     
     
@@ -69,7 +73,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#how-to-load-a-wavefront-obj-model" class="md-skip">
+        <a href="#how-to-parse-and-query-a-tabulated-bsdf-file-xml" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +106,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              How to load a WaveFront (.obj) model
+              BSDF analysis
             
           </span>
         </div>
@@ -260,12 +264,14 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" checked>
       
       
       
@@ -302,11 +308,80 @@
               
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="../bsdf/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          BSDF analysis
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         BSDF analysis
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#basic-information" class="md-nav__link">
+    Basic information
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#direct-hemispherical-values" class="md-nav__link">
+    Direct hemispherical values
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#querying-the-projected-solid-angle-given-an-incident-angle" class="md-nav__link">
+    Querying the projected solid angle given an incident angle
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evaluating-the-bsdf-given-an-incident-and-outgoing-angle" class="md-nav__link">
+    Evaluating the BSDF given an incident and outgoing angle
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#generating-random-scattering-samples-given-an-incident-direction" class="md-nav__link">
+    Generating random scattering samples given an incident direction
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -360,29 +435,36 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#load-obj" class="md-nav__link">
-    Load .obj
+  <a href="#basic-information" class="md-nav__link">
+    Basic information
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#define-obj-materials" class="md-nav__link">
-    Define .obj materials
+  <a href="#direct-hemispherical-values" class="md-nav__link">
+    Direct hemispherical values
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#create-an-octree" class="md-nav__link">
-    Create an octree
+  <a href="#querying-the-projected-solid-angle-given-an-incident-angle" class="md-nav__link">
+    Querying the projected solid angle given an incident angle
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#trace-a-ray" class="md-nav__link">
-    Trace a ray
+  <a href="#evaluating-the-bsdf-given-an-incident-and-outgoing-angle" class="md-nav__link">
+    Evaluating the BSDF given an incident and outgoing angle
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#generating-random-scattering-samples-given-an-incident-direction" class="md-nav__link">
+    Generating random scattering samples given an incident direction
   </a>
   
 </li>
@@ -406,29 +488,70 @@
 
 
 
-<h1 id="how-to-load-a-wavefront-obj-model">How to load a WaveFront (.obj) model</h1>
-<h2 id="load-obj">Load .obj</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>room = pr.robjutil(&quot;room.obj&quot;)
+<h1 id="how-to-parse-and-query-a-tabulated-bsdf-file-xml">How to parse and query a tabulated BSDF file (.xml)</h1>
+<p><code>Pyradiance</code> <code>BSDF</code> object provides a host of methods for parsing and analyzing a
+tabulated BSDF file. See sectons below for examples.
+You can instantiate a <code>BSDF</code> object by giving the file path to the BSDF (.xml) file.</p>
+<p>You can either plainly instantiate the object like so:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span> <span class="nn">pyradiance</span> <span class="k">as</span> <span class="nn">pr</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">sd</span> <span class="o">=</span> <span class="n">pr</span><span class="o">.</span><span class="n">BSDF</span><span class="p">(</span><span class="s2">&quot;bsdf.xml&quot;</span><span class="p">)</span>
 </code></pre></div>
-<h2 id="define-obj-materials">Define .obj materials</h2>
-<p>Getting all the modifiers
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">omod</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pr</span><span class="o">.</span><span class="n">read_rad</span><span class="p">(</span><span class="n">room</span><span class="p">)]</span>
+<p>You can also instantiate the BSDF object in a context manager, which will clear for you
+the memory associated with the loaded BSDF once done:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">with</span> <span class="n">pr</span><span class="o">.</span><span class="n">BSDF</span><span class="p">(</span><span class="s1">&#39;bsdf.xml&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">sd</span><span class="p">:</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="o">...</span>
 </code></pre></div>
-Displaying all the modifiers that we need to define
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>
+<h2 id="basic-information">Basic information</h2>
+<p>A BSDF object has two attribtues desecribing basic information about the BSDF:
+<code>info</code> and <code>components</code>. Here is an example of accessing the information:</p>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">with</span> <span class="n">pr</span><span class="o">.</span><span class="n">BSDF</span><span class="p">(</span><span class="s1">&#39;bsdf.xml&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">sd</span><span class="p">:</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="n">info</span>  <span class="o">=</span> <span class="n">sd</span><span class="o">.</span><span class="n">info</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">cp</span> <span class="o">=</span> <span class="n">sd</span><span class="o">.</span><span class="n">components</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">primitives</span> <span class="o">=</span> <span class="p">[]</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">primitives</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Primitive</span><span class="p">(</span><span class="s2">&quot;void&quot;</span><span class="p">,</span> <span class="s2">&quot;plastic&quot;</span><span class="p">,</span> <span class="s2">&quot;white50&quot;</span><span class="p">,</span> <span class="p">[],</span> <span class="p">[</span><span class="mf">.5</span><span class="p">,</span> <span class="mf">.5</span><span class="p">,</span> <span class="mf">.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]))</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">primitives</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Primitive</span><span class="p">(</span><span class="s2">&quot;void&quot;</span><span class="p">,</span> <span class="s2">&quot;plastic&quot;</span><span class="p">,</span> <span class="s2">&quot;white50&quot;</span><span class="p">,</span> <span class="p">[],</span> <span class="p">[</span><span class="mf">.5</span><span class="p">,</span> <span class="mf">.5</span><span class="p">,</span> <span class="mf">.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]))</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">primitives</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Primitive</span><span class="p">(</span><span class="s2">&quot;void&quot;</span><span class="p">,</span> <span class="s2">&quot;plastic&quot;</span><span class="p">,</span> <span class="s2">&quot;white50&quot;</span><span class="p">,</span> <span class="p">[],</span> <span class="p">[</span><span class="mf">.5</span><span class="p">,</span> <span class="mf">.5</span><span class="p">,</span> <span class="mf">.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]))</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">primitives</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Primitive</span><span class="p">(</span><span class="s2">&quot;void&quot;</span><span class="p">,</span> <span class="s2">&quot;plastic&quot;</span><span class="p">,</span> <span class="s2">&quot;white50&quot;</span><span class="p">,</span> <span class="p">[],</span> <span class="p">[</span><span class="mf">.5</span><span class="p">,</span> <span class="mf">.5</span><span class="p">,</span> <span class="mf">.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]))</span>
+Here are the results:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>&gt;&gt;&gt; print(info)
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>Materials: Name
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>Manufacturer: Manufacturer
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>Width x Height x Thickness (m): 0.0 x 0.0 x 0.0
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>Has geometry: no
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>&gt;&gt;&gt; print(cp)
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>Peak front hemispherical reflectance: 0.48338043257526025
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>Peak front hemispherical transmittance: 0.09124324694247694
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>Diffuse front reflectance: (0.3883772003721621, 0.3883772003721621, 0.3883771656485355)
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>Diffuse back reflectance: (0, 0, 0)
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>Diffuse front transmittance: (0, 0, 0)
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>Diffuse back transmittance: (0, 0, 0)
 </code></pre></div></p>
-<h2 id="create-an-octree">Create an octree</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;room.oct&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">wtr</span><span class="p">:</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">wtr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pr</span><span class="o">.</span><span class="n">oconv</span><span class="p">(</span><span class="n">primitives</span><span class="p">,</span> <span class="n">stdin</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<h2 id="direct-hemispherical-values">Direct hemispherical values</h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">with</span> <span class="n">pr</span><span class="o">.</span><span class="n">BSDF</span><span class="p">(</span><span class="s2">&quot;bsdf.xml&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">sd</span><span class="p">:</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">sd</span><span class="o">.</span><span class="n">direct_hemi</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">)</span>  <span class="c1"># direct hemispherical transmittance at theta=0°, phi=0°</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">sd</span><span class="o">.</span><span class="n">direct_hemi</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>  <span class="c1"># direct hemispherical reflectance at theta=30°, phi=0°</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">sd</span><span class="o">.</span><span class="n">direct_hemi</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">45</span><span class="p">,</span> <span class="s1">&#39;ts&#39;</span><span class="p">)</span>  <span class="c1"># direct - direct transmittance at theta=45°, phi=45°</span>
 </code></pre></div>
-<h2 id="trace-a-ray">Trace a ray</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">pr</span><span class="o">.</span><span class="n">rtrace</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;0 0 0 0 0 1&quot;</span><span class="p">,</span> <span class="s2">&quot;room.oct&quot;</span><span class="p">)</span>
+<h2 id="querying-the-projected-solid-angle-given-an-incident-angle">Querying the projected solid angle given an incident angle</h2>
+<p>You can query the scattering solid angle of a given incident direction.
+Here is an example of query and minimum and maximum solid angle at normal incidence.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">with</span> <span class="n">pr</span><span class="o">.</span><span class="n">BSDF</span><span class="p">(</span><span class="s1">&#39;bsdf.xml&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">sd</span><span class="p">:</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="nb">min</span><span class="p">,</span> <span class="nb">max</span> <span class="o">=</span> <span class="n">sd</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</code></pre></div>
+<p>You can also specify the outgoing angle as well and, as a result, the minimum and maximum
+angle will be the same.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">with</span> <span class="n">pr</span><span class="o">.</span><span class="n">BSDF</span><span class="p">(</span><span class="s1">&#39;bsdf.xml&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">sd</span><span class="p">:</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="nb">min</span><span class="p">,</span> <span class="nb">max</span> <span class="o">=</span> <span class="n">sd</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">t2</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span> <span class="n">p2</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</code></pre></div></p>
+<h2 id="evaluating-the-bsdf-given-an-incident-and-outgoing-angle">Evaluating the BSDF given an incident and outgoing angle</h2>
+<p>You can also explicitly evaulate the BSDF at a given incident and outgoing angle.</p>
+<p>Here is an example of evaluating a BSDF with an incident theta=30°, phi=45° and outgoing
+theta=145°, phi=90°.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">with</span> <span class="n">pr</span><span class="o">.</span><span class="n">BSDF</span><span class="p">(</span><span class="s1">&#39;bsdf.xml&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">sd</span><span class="p">:</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    <span class="n">sval</span> <span class="o">=</span> <span class="n">sd</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">45</span><span class="p">,</span> <span class="mi">145</span><span class="p">,</span> <span class="mi">90</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="generating-random-scattering-samples-given-an-incident-direction">Generating random scattering samples given an incident direction</h2>
+<p>You can generate N random scattering sample given an incident direction. You'd also
+need to specify the type of the hemispherical values.</p>
+<p>Here is an example of generating 10 transmittance samples with an incident theta=30°, phi=45°.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">with</span> <span class="n">pr</span><span class="o">.</span><span class="n">BSDF</span><span class="p">(</span><span class="s2">&quot;bsdf.mxl&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">sd</span><span class="p">:</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>    <span class="n">vecs</span><span class="p">,</span> <span class="n">clrs</span> <span class="o">=</span> <span class="n">sd</span><span class="o">.</span><span class="n">samples</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">45</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">)</span>
 </code></pre></div>
 
 
