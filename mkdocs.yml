@@ -21,6 +21,11 @@ theme:
       primary: black
   font:
     text: OpenSans
+  features:
+    # - navigation.tracking
+      # - navigation.tabs
+      # - navigation.sections
+    - navigation.indexes
 
 markdown_extensions:
   - admonition
@@ -48,5 +53,7 @@ plugins:
 nav:
   - Home: "../"
   - tutorials.md
-  - How-To Guides: how-to-guides.md
+  - How-To Guides:
+    - howtos/index.md
+    - BSDF analysis: howtos/bsdf.md
   - reference.md
