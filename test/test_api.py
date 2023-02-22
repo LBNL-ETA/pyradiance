@@ -81,6 +81,6 @@ def test_BSDF():
     assert pytest.approx(_t, 0.0001) == 7.6456e-2
     _a = bsdf.size(30, 0)
     assert pytest.approx(_a[0], 0.0001) == 7.6699e-4
-    _sv = bsdf.eval(0, 0, 180, 0)
-    assert pytest.approx(_sv.cieY, 0.001) == 4.997
+    x, y, z = bsdf.eval(0, 0, 180, 0)
+    assert pytest.approx(y, 0.001) == 4.997
 
