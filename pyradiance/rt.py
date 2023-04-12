@@ -249,6 +249,8 @@ def rcontrib(
     cmd = [str(BINPATH / "rcontrib")]
     if nproc > 1 and sys.platform != "win32":
         cmd.extend(["-n", str(nproc)])
+    if params is not None:
+        cmd.extend(params)
     if None not in (inform, outform):
         cmd.append(f"-f{inform}{outform}")
     for mod in modifiers:
@@ -257,8 +259,8 @@ def rcontrib(
         cmd.extend(["-y", str(yres)])
         if report:
             cmd.extend(["-t", str(report)])
-    if params is not None:
-        cmd.extend(params)
+    # if params is not None:
+    #     cmd.extend(params)
     cmd.append(str(octree))
     return sp.run(cmd, check=True, input=inp, stdout=sp.PIPE).stdout
 
