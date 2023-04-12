@@ -2,6 +2,7 @@
 Radiance utilities
 """
 
+from dataclasses import dataclass
 import os
 from pathlib import Path
 import shlex
@@ -561,7 +562,8 @@ def render(
     elif radcmds[0].startswith(("rm", "del")):
         sp.run(shlex.split(radcmds[0]), check=True)
         _sidx = 1
-    argdict = parse_rtrace_args(" ".join(radcmds[_sidx:]))
+    radcmds = [c for c in radcmds[_sidx:] if not c.startswith(("pfilt", "rm"))]
+    argdict = parse_rtrace_args(" ".join(radcmds))
 
     options = SamplingParameters()
     options.dt = 0.05
@@ -790,17 +792,39 @@ def vwright(
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
+@dataclass
+class WrapBSDFInput:
+    """Input data for wrapbsdf command."""
+
+    spectrum: Optional[str] = "Visible"
+    tf: Optional[Union[str, Path]] = None
+    tb: Optional[Union[str, Path]] = None
+    rf: Optional[Union[str, Path]] = None
+    rb: Optional[Union[str, Path]] = None
+
+    def args(self) -> List[str]:
+        """Return command as a list of strings."""
+        arglist = ["-s", self.spectrum]
+        if self.tf:
+            arglist.extend(["-tf", str(self.tf)])
+        if self.tb:
+            arglist.extend(["-tb", str(self.tb)])
+        if self.rf:
+            arglist.extend(["-rf", str(self.rf)])
+        if self.rb:
+            arglist.extend(["-rb", str(self.rb)])
+        if len(arglist) == 2:
+            raise ValueError("At least one of tf, tb, rf, rb should be provided.")
+        return arglist
+
+
 def wrapbsdf(
-    inp=None,
+    inxml=None,
     enforce_window=False,
     comment: Optional[str] = None,
     correct_solid_angle=False,
     basis: Optional[str] = None,
-    tf: Optional[Union[str, Path]] = None,
-    tb: Optional[Union[str, Path]] = None,
-    rf: Optional[Union[str, Path]] = None,
-    rb: Optional[Union[str, Path]] = None,
-    spectr: Optional[str] = None,
+    inp: Optional[Sequence[WrapBSDFInput]] = None,
     unlink: bool = False,
     unit=None,
     geometry=None,
@@ -832,16 +856,9 @@ def wrapbsdf(
         cmd.append("-c")
     if basis:
         cmd.extend(["-a", basis])
-    if tf:
-        cmd.extend(["-tf", str(tf)])
-    if tb:
-        cmd.extend(["-tb", str(tb)])
-    if rf:
-        cmd.extend(["-rf", str(rf)])
-    if rb:
-        cmd.extend(["-rb", str(rb)])
-    if spectr:
-        cmd.extend(["-s", spectr])
+    if inp is not None:
+        for s in inp:
+            cmd.extend(s.args())
     if unlink:
         cmd.append("-U")
     if unit:
@@ -850,14 +867,15 @@ def wrapbsdf(
         cmd.extend(["-C", comment])
     if geometry:
         cmd.extend(["-g", geometry])
-    fields_keys = ("n", "m", "d", "c", "ef", "eb", "eo", "t", "h", "w")
+    fields_keys = ["n", "m", "d", "c", "ef", "eb", "eo", "t", "h", "w"]
     fields = []
     for key in fields_keys:
         if key in kwargs:
             fields.append(f"{key}={kwargs[key]}")
-    cmd.extend(["-f", ";".join(fields)])
-    if inp is not None:
-        cmd.append(str(inp))
+    if fields:
+        cmd.extend(["-f", ";".join(fields)])
+    if inxml is not None:
+        cmd.append(str(inxml))
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
