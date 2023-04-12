@@ -82,6 +82,7 @@ from .util import (
     rtpict,
     rsensor,
     vwrays,
+    WrapBSDFInput,
     wrapbsdf,
     xform,
 )
@@ -143,6 +144,7 @@ __all__ = [
     "SamplingParameters",
     "View",
     "vwrays",
+    "WrapBSDFInput",
     "wrapbsdf",
     "xform",
 ]
