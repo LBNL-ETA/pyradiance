@@ -17,36 +17,6 @@ from .ot import getbbox
 BINPATH = Path(__file__).parent / "bin"
 
 
-# def build_scene(scene: Scene):
-#     """Build and write the scene octree file.
-#     to the current working directory.
-#     """
-#     if not scene.changed:
-#         print("Scene has not changed since last build.")
-#         return
-#     scene.changed = False
-#     stdin = None
-#     mstdin = [
-#         str(mat) for mat in scene.materials.values() if isinstance(mat, Primitive)
-#     ]
-#     inp = [mat for mat in scene.materials.values() if isinstance(mat, str)]
-#     if mstdin:
-#         stdin = "".join(mstdin).encode()
-#     moctname = f"{scene.sid}mat.oct"
-#     with open(moctname, "wb") as wtr:
-#         wtr.write(oconv(*inp, warning=False, stdin=stdin))
-#     sstdin = [str(srf) for srf in scene.surfaces.values() if isinstance(srf, Primitive)]
-#     sstdin.extend(
-#         [str(src) for src in scene.sources.values() if isinstance(src, Primitive)]
-#     )
-#     inp = [path for path in scene.surfaces.values() if isinstance(path, str)]
-#     inp.extend([path for path in scene.sources.values() if isinstance(path, str)])
-#     if sstdin:
-#         stdin = "".join(sstdin).encode()
-#     with open(f"{scene.sid}.oct", "wb") as wtr:
-#         wtr.write(oconv(*inp, stdin=stdin, warning=False, octree=moctname))
-
-
 def dctimestep(
     *mtx,
     nstep: Optional[int] = None,
