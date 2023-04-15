@@ -35,7 +35,7 @@ from .gen import (
 )
 
 # from .lib import RadianceAPI
-from .lib import BSDF, read_rad, get_view_resolu
+from .lib import ABASELIST, BSDF, read_rad, get_view_resolu
 
 from .model import (
     Sensor,
@@ -95,6 +95,7 @@ os.environ["RAYPATH"] = (
 os.environ["PATH"] = str(BINPATH) + os.pathsep + os.environ["PATH"]
 
 __all__ = [
+    "ABASELIST",
     "BSDF",
     "bsdf2klems",
     "bsdf2ttree",

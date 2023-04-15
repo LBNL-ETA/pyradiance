@@ -113,6 +113,24 @@ ORIENT_FLAG = [
     "-Y-X",
 ]
 
+# bsdf_m.h
+MAXLATS = 46
+MAXBASES = 7
+
+class _Lat(Structure):
+    _fields_ = [
+        ("tmin", c_float),
+        ("nphis", c_int),
+    ]
+
+
+class _AngleBasis(Structure):
+    _fields_ = [
+        ("name", c_char * 64),
+        ("nangles", c_int),
+        ("lat", _Lat * (MAXLATS + 1)),
+    ]
+
 
 class C_COLOR(Structure):
     _fields_ = [
@@ -154,7 +172,7 @@ class OBJREC(Structure):
     ]
 
 
-class VIEW(Structure):
+class _View(Structure):
     _fields_ = [
         ("type", c_char),
         ("vp", FVECT),
@@ -250,8 +268,11 @@ LIBRC.readobj.argtypes = [c_char_p]
 LIBRC.readobj.restype = POINTER(OBJREC)
 LIBRC.freeobjects.argtypes = [c_int, c_int]
 LIBRC.freeobjects.restype = None
-LIBRC.viewfile.argtypes = [c_char_p, POINTER(VIEW), POINTER(RESOLU)]
+LIBRC.viewfile.argtypes = [c_char_p, POINTER(_View), POINTER(RESOLU)]
 LIBRC.viewfile.restype = None
+
+
+ABASELIST = (_AngleBasis * MAXBASES).in_dll(LIBRC, "abase_list")
 
 
 def vec_from_deg(theta: float, phi: float) -> Tuple[float, float, float]:
@@ -379,7 +400,7 @@ def get_view_resolu(path) -> Tuple[View, Resolu]:
     Returns:
         A tuple of View and Resolu
     """
-    _view = VIEW()
+    _view = _View()
     _res = RESOLU()
     LIBRC.viewfile(path.encode(), byref(_view), byref(_res))
     view = View(
@@ -394,6 +415,10 @@ def get_view_resolu(path) -> Tuple[View, Resolu]:
         vfore=_view.vfore,
         vaft=_view.vaft,
         vdist=_view.vdist,
+        hvec=(_view.hvec[0], _view.hvec[1], _view.hvec[2]),
+        vvec=(_view.vvec[0], _view.vvec[1], _view.vvec[2]),
+        hn2=_view.hn2,
+        vn2=_view.vn2,
     )
     resolu = Resolu(ORIENT_FLAG[_res.rp], _res.xr, _res.yr)
     return view, resolu
