@@ -19,6 +19,8 @@ from ctypes import (
 from math import radians, sin, cos
 import os
 # from random import randint
+import sys
+import tempfile
 from typing import Optional, Tuple
 
 from .model import Primitive, View, Resolu
@@ -359,7 +361,7 @@ class BSDF:
         return value
 
 
-def read_rad(*paths: str):
+def read_rad(*paths: str, inbytes=None):
     """
     Read Radiance files and return a list of Primitives.
     Args:
@@ -367,8 +369,16 @@ def read_rad(*paths: str):
     Returns:
         A list of Primitives.
     """
-    for path in paths:
-        LIBRC.readobj(path.encode("ascii"))
+
+    if inbytes is None:
+        for path in paths:
+            LIBRC.readobj(path.encode("ascii"))
+    else:
+        # slow
+        with tempfile.NamedTemporaryFile() as f:
+            f.write(inbytes)
+            f.flush()
+            LIBRC.readobj(f.name.encode("ascii"))
     objblocks = (POINTER(OBJREC) * 131071).in_dll(LIBRC, "objblock")
     nobjects = c_int.in_dll(LIBRC, "nobjects").value
     primitives = []
