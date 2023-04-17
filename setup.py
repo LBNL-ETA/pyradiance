@@ -472,7 +472,7 @@ setup(
     name="pyradiance",
     author="LBNL",
     author_email="taoningwang@lbl.gov",
-    version="0.0.6a1",
+    version="0.0.7a1",
     description="Python interface for Radiance command-line tools",
     long_description=Path("README.md").read_text(encoding="utf-8"),
     long_description_content_type="text/markdown",
@@ -492,7 +492,7 @@ setup(
     py_modules=["pyradiance.lib"],
     ext_modules=[
         CTypesExtension(
-            name="pyradiance.libraycalls",  
+            name="pyradiance.libraycalls",
             include_dirs=["Radiance/src/common", "Radiance/src/rt"],
             sources=csources,
         ),
