@@ -347,6 +347,7 @@ export_symbols = [
     "nobjects", 
     "freeobjects", 
     "viewfile"
+    "abase_list",
 ]
 
 class PyradianceBDistWheel(bdist_wheel):
