@@ -346,7 +346,7 @@ export_symbols = [
     "objblock", 
     "nobjects", 
     "freeobjects", 
-    "viewfile"
+    "viewfile",
     "abase_list",
 ]
 
