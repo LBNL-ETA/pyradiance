@@ -21,7 +21,7 @@ import os
 from random import randint
 import sys
 import tempfile
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 from .model import Primitive, View, Resolu
 
