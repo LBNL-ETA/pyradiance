@@ -82,6 +82,10 @@ class View:
     vfore: float = 0
     vaft: float = 0
     vdist: float = 0
+    hvec: Tuple[float, float, float] = (0, 0, 0)
+    vvec: Tuple[float, float, float] = (0, 0, 0)
+    hn2: float = 0
+    vn2: float = 0
 
     def args(self):
         return [
