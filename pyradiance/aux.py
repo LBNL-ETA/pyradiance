@@ -10,7 +10,7 @@ BINPATH = Path(__file__).parent / "bin"
 
 def handle_called_process_error(func):
     """
-    Decorator to handle CalledProcessError.
+    Decorator to handle subprocess.CalledProcessError.
     """
     @wraps(func)
     def wrapper(*args, **kwargs):

@@ -8,8 +8,9 @@ make Radiance easier to use and accessible to Python user.
 import logging
 import os
 
+from .aux import BINPATH
+
 from .cal import (
-    BINPATH,
     cnt,
     rlam,
 )
