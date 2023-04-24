@@ -10,7 +10,7 @@ import subprocess as sp
 import sys
 from typing import List, Optional, Sequence, Tuple, Union
 
-from .aux import BINPATH, handle_called_process_error
+from .anci import BINPATH, handle_called_process_error
 from .model import View
 from .param import SamplingParameters, parse_rtrace_args
 from .ot import getbbox
