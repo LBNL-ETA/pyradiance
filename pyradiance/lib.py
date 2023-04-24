@@ -194,8 +194,8 @@ class _FullXf(Structure):
     ]
 
 
-class _Ray(Structure):
-    _fields_ = [
+class _Ray(Structure): pass
+_Ray._fields_ = [
         ("rorg", _FVect),
         ("rdir", _FVect),
         ("rmax", c_double),

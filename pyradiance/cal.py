@@ -6,9 +6,10 @@ from pathlib import Path
 import subprocess as sp
 from typing import Optional
 
-BINPATH = Path(__file__).parent / "bin"
+from .aux import BINPATH, handle_called_process_error
 
 
+@handle_called_process_error
 def cnt(
     *dims: int,
     shuffled: bool = False,
@@ -34,6 +35,7 @@ def cnt(
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
+@handle_called_process_error
 def total(
     inp,
     mean=False,
@@ -110,6 +112,7 @@ def total(
     return sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
 
 
+@handle_called_process_error
 def rlam(
     *inputs,
 ) -> bytes:

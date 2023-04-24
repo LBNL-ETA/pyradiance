@@ -2,14 +2,13 @@
 Radiance scene compiler
 """
 
-from pathlib import Path
 import subprocess as sp
 from typing import List
 
+from .aux import BINPATH, handle_called_process_error
 
-BINPATH = Path(__file__).parent / "bin"
 
-
+@handle_called_process_error
 def getbbox(
     *path,
     header: bool = False,
@@ -29,6 +28,7 @@ def getbbox(
     return [float(x) for x in proc.stdout.split()]
 
 
+@handle_called_process_error
 def oconv(*paths, warning=True, stdin=None, frozen: bool = False, octree=None) -> bytes:
     """Run Radiance oconv tool to build an octree.
     Args:

@@ -6,10 +6,10 @@ from pathlib import Path
 import subprocess as sp
 from typing import List, Optional, Union
 
+from .aux import BINPATH, handle_called_process_error
 
-BINPATH = Path(__file__).parent / "bin"
 
-
+@handle_called_process_error
 def pcond(
     hdr: Path,
     human: bool = False,
@@ -96,6 +96,7 @@ def pcond(
     return sp.run(cmd, input=stdin, stdout=sp.PIPE, check=True).stdout
 
 
+@handle_called_process_error
 def pfilt(
     image: Union[str, Path, bytes],
     xres: Optional[str] = None,
@@ -173,6 +174,7 @@ def pfilt(
     return sp.run(cmd, input=stdin, stdout=sp.PIPE, check=True).stdout
 
 
+@handle_called_process_error
 def pvalue(
     pic: Union[Path, str, bytes],
     unique: bool = False,
@@ -249,6 +251,7 @@ def pvalue(
     return proc.stdout
 
 
+@handle_called_process_error
 def pvaluer(
     pic: Union[Path, str, bytes],
     xres: Optional[int] = None,
@@ -302,6 +305,7 @@ def pvaluer(
     return sp.run(cmd, check=True, stdout=sp.PIPE, input=stdin).stdout
 
 
+@handle_called_process_error
 def ra_tiff(
     inp,
     out: Optional[str] = None,
@@ -380,6 +384,7 @@ def ra_tiff(
     return
 
 
+@handle_called_process_error
 def ra_ppm(
     inp,
     gamma: float = 2.2,
