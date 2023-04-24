@@ -6,10 +6,10 @@ from pathlib import Path
 import subprocess as sp
 from typing import Optional, Sequence, Union
 
+from .aux import BINPATH, handle_called_process_error
 
-BINPATH = Path(__file__).parent / "bin"
 
-
+@handle_called_process_error
 def obj2rad(
     inp: Union[bytes, str, Path],
     quallist: bool = False,
@@ -49,6 +49,7 @@ def obj2rad(
     return sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
 
 
+@handle_called_process_error
 def pkgbsdf(
     *xml: Union[str, Path], frozen: bool = False, stdout: bool = False
 ) -> Optional[bytes]:
@@ -74,6 +75,7 @@ def pkgbsdf(
         return result
 
 
+@handle_called_process_error
 def robjutil(
     inp: Union[str, Path],
     radout: bool = False,
@@ -141,6 +143,7 @@ def robjutil(
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
+@handle_called_process_error
 def mgf2rad(*inp, matfile=None, mult=None, dist=None):
     """Convert Materials and Geometry Format file to RADIANCE description.
     Args:
@@ -162,6 +165,7 @@ def mgf2rad(*inp, matfile=None, mult=None, dist=None):
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
+@handle_called_process_error
 def ies2rad(
     *inp: Union[str, Path],
     libdir: Optional[str] = None,
@@ -229,6 +233,7 @@ def ies2rad(
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
+@handle_called_process_error
 def bsdf2klems(
     *inp,
     spp: Optional[int] = None,
@@ -295,6 +300,7 @@ def bsdf2klems(
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
+@handle_called_process_error
 def bsdf2ttree(
     *inp,
     isotropic: bool = False,
@@ -377,6 +383,7 @@ def bsdf2ttree(
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
+@handle_called_process_error
 def pabopto2bsdf(
     *inp,
     nproc: int = 1,

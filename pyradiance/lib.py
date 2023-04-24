@@ -4,13 +4,14 @@ Routines for calling Radiance C functions
 
 from ctypes import (
     CDLL,
-    c_int,
+    c_char,
     c_char_p,
     c_double,
     c_float,
-    c_short,
+    c_int,
     c_long,
-    c_char,
+    c_short,
+    c_size_t,
     c_void_p,
     Structure,
     POINTER,
@@ -19,17 +20,21 @@ from ctypes import (
 from math import radians, sin, cos
 import os
 from random import randint
-import sys
 import tempfile
 from typing import List, Optional, Tuple
 
 from .model import Primitive, View, Resolu
 
 
-FVECT = c_double * 3
-C_CNSS = 41                     # number of spectral samples
-SDmaxCh = 3                     # max number of channels
-SDnameLn = 128                  # max BSDF name length
+# C def
+_FVect = c_double * 3
+_C_CNSS = 41  # number of spectral samples
+_Color = c_float * 3
+_Object = c_int
+_Mat4 = c_double * 4 * 4
+_RNumber = c_size_t
+_SDmaxCh = 3  # max number of channels
+_SdnameLn = 128  # max BSDF name length
 
 SFLAGS = {
     "s": 15,
@@ -119,6 +124,7 @@ ORIENT_FLAG = [
 MAXLATS = 46
 MAXBASES = 7
 
+
 class _Lat(Structure):
     _fields_ = [
         ("tmin", c_float),
@@ -136,10 +142,10 @@ class _AngleBasis(Structure):
 
 class C_COLOR(Structure):
     _fields_ = [
-        ("clock", c_double), 
-        ("client_data", c_void_p), 
+        ("clock", c_double),
+        ("client_data", c_void_p),
         ("flags", c_short),
-        ("ssamp", c_short * C_CNSS),
+        ("ssamp", c_short * _C_CNSS),
         ("ssum", c_long),
         ("cx", c_float),
         ("cy", c_float),
@@ -147,7 +153,7 @@ class C_COLOR(Structure):
     ]
 
 
-class RESOLU(Structure):
+class _Resolu(Structure):
     _fields_ = [
         ("rp", c_int),
         ("xr", c_int),
@@ -155,7 +161,7 @@ class RESOLU(Structure):
     ]
 
 
-class FUNARGS(Structure):
+class _FunArgs(Structure):
     _fields_ = [
         ("sarg", POINTER(c_char_p)),
         ("farg", POINTER(c_double)),
@@ -164,22 +170,75 @@ class FUNARGS(Structure):
     ]
 
 
-class OBJREC(Structure):
+class _ObjRec(Structure):
     _fields_ = [
         ("omod", c_int),
         ("otype", c_short),
         ("oname", c_char_p),
-        ("oargs", FUNARGS),
+        ("oargs", _FunArgs),
         ("os", c_char_p),
+    ]
+
+
+class _Xf(Structure):
+    _fields_ = [
+        ("xfm", _Mat4),
+        ("sca", c_double),
+    ]
+
+
+class _FullXf(Structure):
+    _fields_ = [
+        ("f", _Xf),
+        ("b", _Xf),
+    ]
+
+
+class _Ray(Structure): pass
+_Ray._fields_ = [
+        ("rorg", _FVect),
+        ("rdir", _FVect),
+        ("rmax", c_double),
+        ("rot", c_double),
+        ("rop", _FVect),
+        ("ron", _FVect),
+        ("rod", c_double),
+        ("uv", c_double * 2),
+        ("pert", _FVect),
+        ("rmt", c_double),
+        ("rxt", c_double),
+        ("parent", POINTER(_Ray)),
+        ("clipset", POINTER(_Object)),
+        ("newcset", POINTER(_Object)),
+        ("revf", c_void_p),
+        ("hitf", c_void_p),
+        ("ro", POINTER(_ObjRec)),
+        ("rox", POINTER(_FullXf)),
+        ("slights", POINTER(c_int)),
+        ("rno", _RNumber),
+        ("robj", _Object),
+        ("rsrc", c_int),
+        ("rweight", c_float),
+        ("gecc", c_float),
+        ("rcoef", _Color),
+        ("pcol", _Color),
+        ("mcol", _Color),
+        ("rcol", _Color),
+        ("cext", _Color),
+        ("albedo", _Color),
+        ("rflips", c_short),
+        ("rlvl", c_short),
+        ("rtype", c_short),
+        ("crtype", c_short),
     ]
 
 
 class _View(Structure):
     _fields_ = [
         ("type", c_char),
-        ("vp", FVECT),
-        ("vdir", FVECT),
-        ("vup", FVECT),
+        ("vp", _FVect),
+        ("vdir", _FVect),
+        ("vup", _FVect),
         ("vdist", c_double),
         ("horiz", c_double),
         ("vert", c_double),
@@ -187,90 +246,102 @@ class _View(Structure):
         ("voff", c_double),
         ("vfore", c_double),
         ("vaft", c_double),
-        ("hvec", FVECT),
-        ("vvec", FVECT),
+        ("hvec", _FVect),
+        ("vvec", _FVect),
         ("hn2", c_double),
         ("vn2", c_double),
     ]
 
 
-class SDValue(Structure):
+class _SDValue(Structure):
     _fields_ = [
         ("cieY", c_double),
         ("spec", C_COLOR),
     ]
 
 
-class SDCDst(Structure):
+class _SDCDst(Structure):
     _fields_ = [
         ("SD_CDIST_BASE", c_void_p),
     ]
 
 
-class SDFunc(Structure):
+class _SDFunc(Structure):
     _fields_ = [
         ("getBSDFs", POINTER(c_int)),
         ("queryProjSA", POINTER(c_int)),
-        ("getCDist", POINTER(SDCDst)),
+        ("getCDist", POINTER(_SDCDst)),
         ("sampCDist", POINTER(c_int)),
         ("freeSC", c_void_p),
     ]
 
 
-class SDComponent(Structure):
+class _SDComponent(Structure):
     _fields_ = [
-        ("cspec", C_COLOR * SDmaxCh),
-        ("func", POINTER(SDFunc)),
+        ("cspec", C_COLOR * _SDmaxCh),
+        ("func", POINTER(_SDFunc)),
         ("dist", c_void_p),
-        ("cdList", POINTER(SDCDst)),
+        ("cdList", POINTER(_SDCDst)),
     ]
 
 
-class SDSpectralDF(Structure):
+class _SDSpectralDF(Structure):
     _fields_ = [
         ("minProjSA", c_double),
         ("maxHemi", c_double),
         ("ncomp", c_int),
-        ("comp", SDComponent * 1),
+        ("comp", _SDComponent * 1),
     ]
 
 
-class SDData(Structure):
+class _SDData(Structure):
     _fields_ = [
-        ("name", c_char * SDnameLn),
-        ("matn", c_char * SDnameLn),
-        ("makr", c_char * SDnameLn),
+        ("name", c_char * _SdnameLn),
+        ("matn", c_char * _SdnameLn),
+        ("makr", c_char * _SdnameLn),
         ("mgf", c_char_p),
         ("dim", c_double * 3),
-        ("rLambFront", SDValue),
-        ("rLambBack", SDValue),
-        ("tLambFront", SDValue),
-        ("tLambBack", SDValue),
-        ("rf", POINTER(SDSpectralDF)),
-        ("rb", POINTER(SDSpectralDF)),
-        ("tf", POINTER(SDSpectralDF)),
-        ("tb", POINTER(SDSpectralDF)),
+        ("rLambFront", _SDValue),
+        ("rLambBack", _SDValue),
+        ("tLambFront", _SDValue),
+        ("tLambBack", _SDValue),
+        ("rf", POINTER(_SDSpectralDF)),
+        ("rb", POINTER(_SDSpectralDF)),
+        ("tf", POINTER(_SDSpectralDF)),
+        ("tb", POINTER(_SDSpectralDF)),
     ]
 
 
 LIBRC = CDLL(os.path.join(os.path.dirname(__file__), "libraycalls.so"))
 LIBRC.SDcacheFile.argtypes = [c_char_p]
-LIBRC.SDcacheFile.restype = POINTER(SDData)
-LIBRC.SDfreeCache.argtypes = [POINTER(SDData)]
+LIBRC.SDcacheFile.restype = POINTER(_SDData)
+LIBRC.SDfreeCache.argtypes = [POINTER(_SDData)]
 LIBRC.SDfreeCache.restype = None
-LIBRC.SDsizeBSDF.argtypes = [POINTER(c_double), FVECT, POINTER(c_double), c_int, POINTER(SDData)]
+LIBRC.SDsizeBSDF.argtypes = [
+    POINTER(c_double),
+    _FVect,
+    POINTER(c_double),
+    c_int,
+    POINTER(_SDData),
+]
 LIBRC.SDsizeBSDF.restype = c_int
-LIBRC.SDevalBSDF.argtypes = [POINTER(SDValue), FVECT, FVECT, POINTER(SDData)]
+LIBRC.SDevalBSDF.argtypes = [POINTER(_SDValue), _FVect, _FVect, POINTER(_SDData)]
 LIBRC.SDevalBSDF.restype = c_int
-LIBRC.SDdirectHemi.argtypes = [FVECT, c_int, POINTER(SDData)]
+LIBRC.SDdirectHemi.argtypes = [_FVect, c_int, POINTER(_SDData)]
 LIBRC.SDdirectHemi.restype = c_double
-LIBRC.SDsampBSDF.argtypes = [POINTER(SDValue), FVECT, c_double, c_int, POINTER(SDData)]
+LIBRC.SDsampBSDF.argtypes = [
+    POINTER(_SDValue),
+    _FVect,
+    c_double,
+    c_int,
+    POINTER(_SDData),
+]
 LIBRC.SDsampBSDF.restype = c_int
 LIBRC.readobj.argtypes = [c_char_p]
-LIBRC.readobj.restype = POINTER(OBJREC)
+LIBRC.readobj.restype = POINTER(_ObjRec)
 LIBRC.freeobjects.argtypes = [c_int, c_int]
 LIBRC.freeobjects.restype = None
-LIBRC.viewfile.argtypes = [c_char_p, POINTER(_View), POINTER(RESOLU)]
+LIBRC.viewfile.argtypes = [c_char_p, POINTER(_View), POINTER(_Resolu)]
 LIBRC.viewfile.restype = None
 
 
@@ -288,7 +359,8 @@ def vec_from_deg(theta: float, phi: float) -> Tuple[float, float, float]:
 
 
 class BSDF:
-    """A BSDF object""" 
+    """A BSDF object"""
+
     def __init__(self, path):
         """Initialize the BSDF object from a file"""
         self.sd = LIBRC.SDcacheFile(path.encode())
@@ -321,20 +393,43 @@ class BSDF:
         """Report diffuse and specular components."""
         _out = []
         if self.sd.contents.rf:
-            _out.append(f"Peak front hemispherical reflectance: {self.sd.contents.rLambFront.cieY + self.sd.contents.rf.contents.maxHemi}")
+            _out.append(
+                f"Peak front hemispherical reflectance: {self.sd.contents.rLambFront.cieY + self.sd.contents.rf.contents.maxHemi}"
+            )
         if self.sd.contents.rb:
-            _out.append(f"Peak back hemispherical reflectance: {self.sd.contents.rLambBack.cieY + self.sd.contents.rb.contents.maxHemi}")
+            _out.append(
+                f"Peak back hemispherical reflectance: {self.sd.contents.rLambBack.cieY + self.sd.contents.rb.contents.maxHemi}"
+            )
         if self.sd.contents.tf:
-            _out.append(f"Peak front hemispherical transmittance: {self.sd.contents.tLambFront.cieY + self.sd.contents.tf.contents.maxHemi}")
+            _out.append(
+                f"Peak front hemispherical transmittance: {self.sd.contents.tLambFront.cieY + self.sd.contents.tf.contents.maxHemi}"
+            )
         if self.sd.contents.tb:
-            _out.append(f"Peak back hemispherical transmittance: {self.sd.contents.tLambBack.cieY + self.sd.contents.tb.contents.maxHemi}")
-        _out.append(f"Diffuse front reflectance: {self._sdvalue_to_xyz(self.sd.contents.rLambFront)}")
-        _out.append(f"Diffuse back reflectance: {self._sdvalue_to_xyz(self.sd.contents.rLambBack)}")
-        _out.append(f"Diffuse front transmittance: {self._sdvalue_to_xyz(self.sd.contents.tLambFront)}")
-        _out.append(f"Diffuse back transmittance: {self._sdvalue_to_xyz(self.sd.contents.tLambBack)}")
+            _out.append(
+                f"Peak back hemispherical transmittance: {self.sd.contents.tLambBack.cieY + self.sd.contents.tb.contents.maxHemi}"
+            )
+        _out.append(
+            f"Diffuse front reflectance: {self._sdvalue_to_xyz(self.sd.contents.rLambFront)}"
+        )
+        _out.append(
+            f"Diffuse back reflectance: {self._sdvalue_to_xyz(self.sd.contents.rLambBack)}"
+        )
+        _out.append(
+            f"Diffuse front transmittance: {self._sdvalue_to_xyz(self.sd.contents.tLambFront)}"
+        )
+        _out.append(
+            f"Diffuse back transmittance: {self._sdvalue_to_xyz(self.sd.contents.tLambBack)}"
+        )
         return "\n".join(_out)
 
-    def size(self, theta: float, phi: float, qflags: str="min_max", t2: Optional[float]=None, p2: Optional[float]=None) -> Tuple[float, float]:
+    def size(
+        self,
+        theta: float,
+        phi: float,
+        qflags: str = "min_max",
+        t2: Optional[float] = None,
+        p2: Optional[float] = None,
+    ) -> Tuple[float, float]:
         """Get resolution (in proj. steradians) for given direction(s)
         Args:
             theta: zenith angle (degrees)
@@ -349,7 +444,7 @@ class BSDF:
             >>> pr.BSDF("bsdf.xml").size(0, 0)
             0.0001, 0.0001
         """
-        proj_sa = (c_double * 2)(0, 0) 
+        proj_sa = (c_double * 2)(0, 0)
         v1 = (c_double * 3)(*vec_from_deg(theta, phi))
         v2 = None
         if (t2 is not None) and (p2 is not None):
@@ -361,9 +456,15 @@ class BSDF:
     def _sdvalue_to_xyz(self, vp) -> Tuple[float, float, float]:
         if vp.cieY <= 1e-9:
             return (0, 0, 0)
-        return vp.spec.cx / vp.spec.cy * vp.cieY, vp.cieY, (1 - vp.spec.cx - vp.spec.cy) / vp.spec.cy * vp.cieY
+        return (
+            vp.spec.cx / vp.spec.cy * vp.cieY,
+            vp.cieY,
+            (1 - vp.spec.cx - vp.spec.cy) / vp.spec.cy * vp.cieY,
+        )
 
-    def eval(self, itheta: float, iphi: float, otheta: float, ophi: float) -> Tuple[float, float, float]:
+    def eval(
+        self, itheta: float, iphi: float, otheta: float, ophi: float
+    ) -> Tuple[float, float, float]:
         """Query BSDF for given path.
         Args:
             itheta: incident zenith angle (degrees)
@@ -377,7 +478,7 @@ class BSDF:
             >>> pr.BSDF("bsdf.xml").eval(0, 0, 180, 0)
             2.3, 2.3, 2.3
         """
-        value = SDValue()
+        value = _SDValue()
         in_vec = (c_double * 3)(*vec_from_deg(itheta, iphi))
         out_vec = (c_double * 3)(*vec_from_deg(otheta, ophi))
         LIBRC.SDevalBSDF(byref(value), in_vec, out_vec, self.sd)
@@ -399,7 +500,9 @@ class BSDF:
         in_vec = (c_double * 3)(*vec_from_deg(theta, phi))
         return LIBRC.SDdirectHemi(in_vec, SFLAGS[sflag.lower()], self.sd)
 
-    def sample(self, theta: float, phi: float, randx: float, sflag: str) -> Tuple[List[float], Tuple[float, float, float]]:
+    def sample(
+        self, theta: float, phi: float, randx: float, sflag: str
+    ) -> Tuple[List[float], Tuple[float, float, float]]:
         """Sample BSDF for given direction.
         Args:
             theta: zenith angle (degrees)
@@ -413,13 +516,14 @@ class BSDF:
             >>> pr.BSDF("bsdf.xml").sample(0, 0, 0.5, "r")
             [0.0, 0.0, 1.0], (0.1, 0.1, 0.1)
         """
-        value = SDValue()
+        value = _SDValue()
         vout = (c_double * 3)(*vec_from_deg(theta, phi))
         LIBRC.SDsampBSDF(byref(value), vout, randx, SFLAGS[sflag.lower()], self.sd)
         return vout[:], self._sdvalue_to_xyz(value)
 
-
-    def samples(self, theta: float, phi: float, nsamp: int, sflag: str) -> Tuple[List[List[float]], List[Tuple[float, float, float]]]:
+    def samples(
+        self, theta: float, phi: float, nsamp: int, sflag: str
+    ) -> Tuple[List[List[float]], List[Tuple[float, float, float]]]:
         """
         Generate samples for a given incident direction.
         Args:
@@ -434,15 +538,15 @@ class BSDF:
             >>> pr.BSDF("bsdf.xml").samples(0, 0, 10, "r")
             [[0.0, 0.0, 1.0], [0.0, 0.0, 1.0], ...], [(0.1, 0.1, 0.1), (0.1, 0.1, 0.1), ...]
         """
-        rand_max = 0x7fffffff
+        rand_max = 0x7FFFFFFF
         vin = (c_double * 3)(*vec_from_deg(theta, phi))
         vout = (c_double * 3)(0, 0, 0)
         vecs = []
         values = []
         for i in range(nsamp, 0, -1):
             vout[0], vout[1], vout[2] = vin[0], vin[1], vin[2]
-            value = SDValue()
-            randx = ((i-1) + randint(0, rand_max) * (1 / (rand_max + .5))) / nsamp
+            value = _SDValue()
+            randx = ((i - 1) + randint(0, rand_max) * (1 / (rand_max + 0.5))) / nsamp
             LIBRC.SDsampBSDF(byref(value), vout, randx, SFLAGS[sflag.lower()], self.sd)
             vecs.append(vout[:])
             values.append(self._sdvalue_to_xyz(value))
@@ -470,7 +574,7 @@ def read_rad(*paths: str, inbytes=None):
             f.write(inbytes)
             f.flush()
             LIBRC.readobj(f.name.encode("ascii"))
-    objblocks = (POINTER(OBJREC) * 131071).in_dll(LIBRC, "objblock")
+    objblocks = (POINTER(_ObjRec) * 131071).in_dll(LIBRC, "objblock")
     nobjects = c_int.in_dll(LIBRC, "nobjects").value
     primitives = []
     for i in range(nobjects):
@@ -505,7 +609,7 @@ def get_view_resolu(path) -> Tuple[View, Resolu]:
         >>> pr.get_view_resolu("view.vf")
     """
     _view = _View()
-    _res = RESOLU()
+    _res = _Resolu()
     LIBRC.viewfile(path.encode(), byref(_view), byref(_res))
     view = View(
         position=(_view.vp[0], _view.vp[1], _view.vp[2]),

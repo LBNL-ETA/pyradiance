@@ -6,10 +6,10 @@ from pathlib import Path
 import subprocess as sp
 from typing import List, Optional, Sequence, Union
 
+from .aux import BINPATH, handle_called_process_error
 
-BINPATH = Path(__file__).parent / "bin"
 
-
+@handle_called_process_error
 def genblinds(
     mat: str,
     name: str,
@@ -48,6 +48,7 @@ def genblinds(
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
+@handle_called_process_error
 def genbsdf(
     *inp: Union[str, Path],
     nsamp: int = 1,
@@ -137,6 +138,7 @@ def genbsdf(
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
+@handle_called_process_error
 def gendaylit(
     dt: datetime,
     latitude: float,
@@ -202,9 +204,10 @@ def gendaylit(
         cmd.extend(["-g", str(grefl)])
     if interval is not None:
         cmd.extend(["-i", str(interval)])
-    return sp.run(cmd, stdout=sp.PIPE, check=True).stdout
+    return sp.run(cmd, stderr=sp.PIPE, stdout=sp.PIPE, check=True).stdout
 
 
+@handle_called_process_error
 def gendaymtx(
     weather_data: Union[str, Path, bytes],
     verbose: bool = False,
@@ -291,6 +294,7 @@ def gendaymtx(
     return out.stderr, out.stdout
 
 
+@handle_called_process_error
 def gensky(
     dt: Optional[datetime] = None,
     latitude: Optional[float] = None,
@@ -378,9 +382,10 @@ def gensky(
         cmd.extend(["-R", str(horizontal_direct_irradiance)])
     if turbidity is not None:
         cmd.extend(["-t", str(turbidity)])
-    return sp.run(cmd, stdout=sp.PIPE, check=True).stdout
+    return sp.run(cmd, stderr=sp.PIPE, stdout=sp.PIPE, check=True).stdout
 
 
+@handle_called_process_error
 def mkillum(
     inp: bytes,
     octree: Union[str, Path],
@@ -403,4 +408,4 @@ def mkillum(
     if params:
         cmd.extend(params)
     cmd.append(str(octree))
-    return sp.run(cmd, input=inp, stdout=sp.PIPE, check=True).stdout
+    return sp.run(cmd, input=inp, stderr=sp.PIPE, stdout=sp.PIPE, check=True).stdout

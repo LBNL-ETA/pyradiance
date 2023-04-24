@@ -10,8 +10,7 @@ import subprocess as sp
 import sys
 from typing import Optional, Sequence, Tuple, Union
 
-
-BINPATH = Path(__file__).parent / "bin"
+from .aux import BINPATH, handle_called_process_error
 
 
 @dataclass
@@ -70,6 +69,7 @@ class RcModifier:
         return arglist
 
 
+@handle_called_process_error
 def mkpmap(
     octree: Union[Path, str],
     global_map: Optional[Tuple[Union[Path, str], int]] = None,
@@ -106,13 +106,13 @@ def mkpmap(
     progress_interval: Optional[int] = None,
 ) -> None:
     """
-    Mkpmap takes a RADIANCE scene description as an octree and performs 
-    Monte Carlo forward path tracing from the light sources, depositing 
-    indirect ray hitpoints along with their energy (flux) as "photons". 
-    The resulting localised energy distribution represents a global 
-    illumination solution which is written to a file for subsequent evaluation 
-    by rpict(1), rtrace(1) and rvu(1) in a backward raytracing pass. 
-    The photon map(s) can be reused for multiple viewpoints and sensor 
+    Mkpmap takes a RADIANCE scene description as an octree and performs
+    Monte Carlo forward path tracing from the light sources, depositing
+    indirect ray hitpoints along with their energy (flux) as "photons".
+    The resulting localised energy distribution represents a global
+    illumination solution which is written to a file for subsequent evaluation
+    by rpict(1), rtrace(1) and rvu(1) in a backward raytracing pass.
+    The photon map(s) can be reused for multiple viewpoints and sensor
     locations as long as the geometry remains unchanged.
     Args:
         octree: Octree file path.
@@ -141,7 +141,7 @@ def mkpmap(
         sample_res: Sample resolution.
 
 
-        
+
     """
     cmd = [str(BINPATH / "mkpmap")]
     if global_map is not None:
@@ -219,9 +219,10 @@ def mkpmap(
     if progress_interval is not None:
         cmd.extend(["-t", str(progress_interval)])
     cmd.append(str(octree))
-    sp.run(cmd, check=True, stdout=sp.PIPE).stdout
+    sp.run(cmd, check=True, capture_output=True)
 
 
+@handle_called_process_error
 def rcontrib(
     inp: bytes,
     octree: Union[Path, str],
@@ -259,12 +260,11 @@ def rcontrib(
         cmd.extend(["-y", str(yres)])
         if report:
             cmd.extend(["-t", str(report)])
-    # if params is not None:
-    #     cmd.extend(params)
     cmd.append(str(octree))
-    return sp.run(cmd, check=True, input=inp, stdout=sp.PIPE).stdout
+    return sp.run(cmd, check=True, input=inp, stderr=sp.PIPE, stdout=sp.PIPE).stdout
 
 
+@handle_called_process_error
 def rpict(
     view: Sequence[str],
     octree: Union[Path, str],
@@ -299,9 +299,10 @@ def rpict(
     if params:
         cmd.extend(params)
     cmd.append(str(octree))
-    return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
+    return sp.run(cmd, check=True, capture_output=True).stdout
 
 
+@handle_called_process_error
 def rtrace(
     rays: bytes,
     octree: Union[Path, str],
@@ -386,4 +387,4 @@ def rtrace(
     if params is not None:
         cmd.extend(params)
     cmd.append(str(octree))
-    return sp.run(cmd, check=True, stdout=sp.PIPE, input=rays).stdout
+    return sp.run(cmd, check=True, capture_output=True, input=rays).stdout

@@ -10,13 +10,13 @@ import subprocess as sp
 import sys
 from typing import List, Optional, Sequence, Tuple, Union
 
+from .aux import BINPATH, handle_called_process_error
 from .model import View
 from .param import SamplingParameters, parse_rtrace_args
 from .ot import getbbox
 
-BINPATH = Path(__file__).parent / "bin"
 
-
+@handle_called_process_error
 def dctimestep(
     *mtx,
     nstep: Optional[int] = None,
@@ -62,12 +62,13 @@ def dctimestep(
         cmd.extend(["-o", ospec])
         _stdout = False
     cmd.extend(mtx)
-    result = sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
+    result = sp.run(cmd, check=True, input=stdin, capture_output=True)
     if _stdout:
-        return result
+        return result.stdout
     return None
 
 
+@handle_called_process_error
 def getinfo(
     *inputs: Union[str, Path, bytes],
     dimension_only: bool = False,
@@ -109,7 +110,7 @@ def getinfo(
         if any(isinstance(i, bytes) for i in inputs):
             raise TypeError("All inputs must be str or Path if one is")
         cmd.extend([str(i) for i in inputs])
-    return sp.run(cmd, input=stdin, stdout=sp.PIPE, check=True).stdout
+    return sp.run(cmd, input=stdin, capture_output=True, check=True).stdout
 
 
 def get_image_dimensions(image: Union[str, Path, bytes]) -> Tuple[int, int]:
@@ -123,6 +124,7 @@ def get_image_dimensions(image: Union[str, Path, bytes]) -> Tuple[int, int]:
     return int(output[3]), int(output[1])
 
 
+@handle_called_process_error
 def get_header(inp, dimension: bool = False) -> bytes:
     """Get header information from a Radiance file.
 
@@ -144,6 +146,7 @@ def get_header(inp, dimension: bool = False) -> bytes:
     return sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
 
 
+@handle_called_process_error
 def rad(
     inp,
     dryrun: bool = False,
@@ -193,6 +196,7 @@ def rad(
 #     return parse_primitive("\n".join(lines))
 
 
+@handle_called_process_error
 def rcode_depth(
     inp: Union[str, Path, bytes],
     ref_depth: str = "1.0",
@@ -291,6 +295,7 @@ def rcode_depth(
     return sp.run(cmd, stdout=sp.PIPE, input=stdin, check=True).stdout
 
 
+@handle_called_process_error
 def rcode_ident(
     inp: Union[str, Path, bytes],
     index_size: int = 16,
@@ -358,6 +363,7 @@ def rcode_ident(
     return sp.run(cmd, stdout=sp.PIPE, input=stdin, check=True).stdout
 
 
+@handle_called_process_error
 def rcode_norm(
     inp,
     inheader: bool = True,
@@ -553,6 +559,7 @@ def render(
     )
 
 
+@handle_called_process_error
 def rfluxmtx(
     receiver: Union[str, Path],
     surface: Optional[Union[str, Path]] = None,
@@ -585,6 +592,7 @@ def rfluxmtx(
     return sp.run(cmd, check=True, stdout=sp.PIPE, input=rays).stdout
 
 
+@handle_called_process_error
 def rmtxop(
     inp, outform="a", transpose=False, scale=None, transform=None, reflectance=None
 ):
@@ -609,6 +617,7 @@ def rmtxop(
     return sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
 
 
+@handle_called_process_error
 def rsensor(
     sensor: Sequence[Union[str, Path]],
     sensor_view: Optional[Sequence[Union[str, Path]]] = None,
@@ -652,6 +661,7 @@ def rsensor(
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
+@handle_called_process_error
 def rtpict(
     view: View,
     octree: Union[str, Path],
@@ -697,6 +707,7 @@ def rtpict(
         return proc.stdout
 
 
+@handle_called_process_error
 def strip_header(inp) -> bytes:
     """Use getinfo to strip the header from a Radiance file."""
     cmd = ["getinfo", "-"]
@@ -707,6 +718,7 @@ def strip_header(inp) -> bytes:
     return sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
 
 
+@handle_called_process_error
 def vwrays(
     pixpos: Optional[bytes] = None,
     unbuf: bool = False,
@@ -751,6 +763,7 @@ def vwrays(
     return sp.run(cmd, input=stdin, stdout=sp.PIPE, check=True).stdout
 
 
+@handle_called_process_error
 def vwright(
     view,
     distance: float = 0,
@@ -788,6 +801,7 @@ class WrapBSDFInput:
         return arglist
 
 
+@handle_called_process_error
 def wrapbsdf(
     inxml=None,
     enforce_window=False,
@@ -849,6 +863,7 @@ def wrapbsdf(
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
+@handle_called_process_error
 def xform(
     inp,
     translate: Optional[Tuple[float, float, float]] = None,
