@@ -13,9 +13,14 @@ on:
     types: [published]
 
 jobs:
-  deploy_linux:
+  pypi-publish_linux:
+    name: Upload release to PyPI
     runs-on: ubuntu-latest
-
+    environment:
+      name: pypi
+      url: https://pypi.org/p/pyradiance
+    permissions:
+      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
     steps:
     - name: Checkout pyradiance
       uses: actions/checkout@v3
@@ -36,15 +41,17 @@ jobs:
         pip install requests wheel auditwheel pytest
         python setup.py bdist_wheel
 
-    - name: Publish package
-      uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
-      with:
-        user: __token__
-        password: ${{ secrets.PYPI_API_TOKEN }}
+    - name: Publish package distributions to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
 
-  deploy_macos:
+  pypi-publish_macos:
+    name: Upload release to PyPI
     runs-on: macos-latest
-
+    environment:
+      name: pypi
+      url: https://pypi.org/p/pyradiance
+    permissions:
+      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
     steps:
     - name: Checkout pyradiance
       uses: actions/checkout@v3
@@ -65,15 +72,18 @@ jobs:
         pip install requests wheel auditwheel pytest
         python setup.py bdist_wheel
 
-    - name: Publish package
-      uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
-      with:
-        user: __token__
-        password: ${{ secrets.PYPI_API_TOKEN }}
+    - name: Publish package distributions to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
 
-  deploy_windows:
+
+  pypi-publish_windows:
+    name: Upload release to PyPI
     runs-on: windows-latest
-
+    environment:
+      name: pypi
+      url: https://pypi.org/p/pyradiance
+    permissions:
+      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
     steps:
     - name: Checkout pyradiance
       uses: actions/checkout@v3
@@ -94,8 +104,5 @@ jobs:
         pip install requests wheel auditwheel pytest
         python setup.py bdist_wheel
 
-    - name: Publish package
-      uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
-      with:
-        user: __token__
-        password: ${{ secrets.PYPI_API_TOKEN }}
+    - name: Publish package distributions to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
