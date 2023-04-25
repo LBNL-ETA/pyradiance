@@ -474,7 +474,7 @@ setup(
     name="pyradiance",
     author="LBNL",
     author_email="taoningwang@lbl.gov",
-    version="0.0.8a1",
+    version="0.0.9a1",
     description="Python interface for Radiance command-line tools",
     long_description=Path("README.md").read_text(encoding="utf-8"),
     long_description_content_type="text/markdown",
