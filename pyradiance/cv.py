@@ -6,7 +6,7 @@ from pathlib import Path
 import subprocess as sp
 from typing import Optional, Sequence, Union
 
-from .aux import BINPATH, handle_called_process_error
+from .anci import BINPATH, handle_called_process_error
 
 
 @handle_called_process_error

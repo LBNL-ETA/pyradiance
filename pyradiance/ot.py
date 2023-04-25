@@ -5,7 +5,7 @@ Radiance scene compiler
 import subprocess as sp
 from typing import List
 
-from .aux import BINPATH, handle_called_process_error
+from .anci import BINPATH, handle_called_process_error
 
 
 @handle_called_process_error

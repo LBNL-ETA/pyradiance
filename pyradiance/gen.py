@@ -6,7 +6,7 @@ from pathlib import Path
 import subprocess as sp
 from typing import List, Optional, Sequence, Union
 
-from .aux import BINPATH, handle_called_process_error
+from .anci import BINPATH, handle_called_process_error
 
 
 @handle_called_process_error
@@ -291,7 +291,7 @@ def gendaymtx(
     else:
         raise TypeError("weather_data must be a string, Path, or bytes")
     out = sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE, stderr=sp.PIPE)
-    return out.stderr, out.stdout
+    return out.stdout
 
 
 @handle_called_process_error
