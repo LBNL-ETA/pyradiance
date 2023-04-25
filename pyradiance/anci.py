@@ -17,7 +17,10 @@ def handle_called_process_error(func):
         try:
             result = func(*args, **kwargs)
         except CalledProcessError as e:
-            raise RuntimeError(f"An error occurred with exit code {e.returncode}: {e.stderr.decode('utf-8')}")
+            err = ""
+            if e.stderr is not None:
+                err = e.stderr.decode()
+            raise RuntimeError(f"An error occurred with exit code {e.returncode}: {err}")
         else:
             return result
     return wrapper
