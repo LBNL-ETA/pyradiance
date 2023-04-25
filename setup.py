@@ -41,6 +41,7 @@ RADBINS = [
     'pkgBSDF',
     'pvalue',
     'rad',
+    'rcalc',
     'rcode_depth',
     'rcode_ident',
     'rcode_norm',
