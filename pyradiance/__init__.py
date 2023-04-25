@@ -8,10 +8,13 @@ make Radiance easier to use and accessible to Python user.
 import logging
 import os
 
+from .anci import BINPATH
+
 from .cal import (
-    BINPATH,
     cnt,
     rlam,
+    total,
+    rcalc,
 )
 
 from .cv import (
@@ -124,6 +127,7 @@ __all__ = [
     "pvaluer",
     "pcond",
     "pfilt",
+    "rcalc",
     "rcode_depth",
     "rcode_ident",
     "rcode_norm",
@@ -143,6 +147,7 @@ __all__ = [
     "Scene",
     "Sensor",
     "SamplingParameters",
+    "total",
     "View",
     "vwrays",
     "WrapBSDFInput",
