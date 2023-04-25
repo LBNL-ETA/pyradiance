@@ -13,6 +13,8 @@ from .anci import BINPATH
 from .cal import (
     cnt,
     rlam,
+    total,
+    rcalc,
 )
 
 from .cv import (
@@ -125,6 +127,7 @@ __all__ = [
     "pvaluer",
     "pcond",
     "pfilt",
+    "rcalc",
     "rcode_depth",
     "rcode_ident",
     "rcode_norm",
@@ -144,6 +147,7 @@ __all__ = [
     "Scene",
     "Sensor",
     "SamplingParameters",
+    "total",
     "View",
     "vwrays",
     "WrapBSDFInput",

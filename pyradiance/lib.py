@@ -440,7 +440,6 @@ class BSDF:
         Returns:
             resolution(s) (in proj. steradians)
         Examples:
-            >>> import pyradiance as pr
             >>> pr.BSDF("bsdf.xml").size(0, 0)
             0.0001, 0.0001
         """
@@ -512,7 +511,6 @@ class BSDF:
         Returns:
             Outgoing sample direction and color in XYZ.
         Examples:
-            >>> import pyradiance as pr
             >>> pr.BSDF("bsdf.xml").sample(0, 0, 0.5, "r")
             [0.0, 0.0, 1.0], (0.1, 0.1, 0.1)
         """
@@ -534,7 +532,6 @@ class BSDF:
         Returns:
             Outgoing sample directions and colors in XYZ.
         Examples:
-            >>> import pyradiance as pr
             >>> pr.BSDF("bsdf.xml").samples(0, 0, 10, "r")
             [[0.0, 0.0, 1.0], [0.0, 0.0, 1.0], ...], [(0.1, 0.1, 0.1), (0.1, 0.1, 0.1), ...]
         """
@@ -561,7 +558,6 @@ def read_rad(*paths: str, inbytes=None):
     Returns:
         A list of Primitives.
     Examples:
-        >>> import pyradiance as pr
         >>> pr.read_rad("scene.rad")
     """
 
@@ -605,7 +601,6 @@ def get_view_resolu(path) -> Tuple[View, Resolu]:
     Returns:
         A tuple of View and Resolu
     Examples:
-        >>> import pyradiance as pr
         >>> pr.get_view_resolu("view.vf")
     """
     _view = _View()

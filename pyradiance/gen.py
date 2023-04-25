@@ -291,7 +291,7 @@ def gendaymtx(
     else:
         raise TypeError("weather_data must be a string, Path, or bytes")
     out = sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE, stderr=sp.PIPE)
-    return out.stderr, out.stdout
+    return out.stdout
 
 
 @handle_called_process_error
