@@ -397,7 +397,7 @@ class PyradianceBDistWheel(bdist_wheel):
         assert self.dist_dir is not None
         dist_dir = Path(self.dist_dir)
         wheel_path = list(dist_dir.glob("*.whl"))[0]
-        without_platform = wheel_path.stem[:18] + "-py3-none-"
+        without_platform = "-".join(wheel_path.stem.split("-")[:2]) + "-py3-none-"
         platform_wheel_path = os.path.join(self.dist_dir, without_platform + wheel["wheel"])
         zip_name = f'Radiance_{RADTAG}_{wheel["zip_tag"]}.zip'
         if not os.path.exists(zip_name):
