@@ -17,7 +17,7 @@ on:
 
 jobs:
   pypi-publish_linux:
-    name: Upload release to PyPI
+    name: Upload Linux release to PyPI
     runs-on: ubuntu-latest
     environment:
       name: pypi
@@ -48,7 +48,7 @@ jobs:
       uses: pypa/gh-action-pypi-publish@release/v1
 
   pypi-publish_macos:
-    name: Upload release to PyPI
+    name: Upload macOS release to PyPI
     runs-on: macos-latest
     environment:
       name: pypi
@@ -80,7 +80,7 @@ jobs:
 
 
   pypi-publish_windows:
-    name: Upload release to PyPI
+    name: Upload Windows release to PyPI
     runs-on: windows-latest
     environment:
       name: pypi
