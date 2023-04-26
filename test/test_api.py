@@ -5,6 +5,7 @@ from datetime import datetime
 import logging 
 
 import pyradiance as pr
+from pyradiance import model, param
 import pytest
 
 LOGGER = logging.getLogger(__name__)
@@ -83,3 +84,28 @@ def test_BSDF():
         assert pytest.approx(_a[0], 0.0001) == 7.6699e-4
         _sv = bsdf.eval(0, 0, 180, 0)
         assert pytest.approx(_sv[1], 0.001) == 4.997
+
+def test_parse_view():
+    inp_str = "-vta -vv 180 -vh 180 -vp 0 0 0 -vd 0 -1 0"
+    res = model.parse_view(inp_str)
+    answer = {"vt": "a", "vv": 180, "vh": 180,
+              "vp": [0, 0, 0], "vd": [0, -1, 0]}
+    assert res.position == [0, 0, 0]
+    assert res.direction == [0, -1, 0]
+    assert res.vtype == "a"
+    assert res.horiz == 180
+
+
+def test_parse_opt():
+    inp_str = "-ab 8 -ad 1024 -I+ -u- -c 8 -aa .1 -lw 1e-8"
+    res = param.parse_rcontrib_args(inp_str)
+    answer = {
+        "ab": 8,
+        "ad": 1024,
+        "I": True,
+        "u": False,
+        "c": 8,
+        "aa": 0.1,
+        "lw": 1e-8,
+    }
+    assert res == answer
