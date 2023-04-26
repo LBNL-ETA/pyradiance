@@ -241,6 +241,20 @@ def add_mist_args(parser):
     parser.add_argument("-ms", type=float, default=None)
     return parser
 
+def add_view_args(parser):
+    parser.add_argument("-v", action="store", dest="vt")
+    parser.add_argument("-vp", nargs=3, type=float, default=(0, 0, 0))
+    parser.add_argument("-vd", nargs=3, type=float, default=(0, 1, 0))
+    parser.add_argument("-vu", nargs=3, type=float, default=(0, 0, 1))
+    parser.add_argument("-vv", type=float, default=45)
+    parser.add_argument("-vh", type=float, default=45)
+    parser.add_argument("-vo", type=float, default=0)
+    parser.add_argument("-va", type=float, default=0)
+    parser.add_argument("-vs", type=float, default=0)
+    parser.add_argument("-vl", type=float, default=0)
+    parser.add_argument("-vf", type=argparse.FileType("r"))
+    return parser
+
 
 def parse_rpict_args(options: str) -> dict:
     """Parse rpict options."""
@@ -258,15 +272,35 @@ def parse_rpict_args(options: str) -> dict:
     return odict
 
 
-def parse_rtrace_args(options: str) -> dict:
-    """Add rtrace options and flags to a parser."""
-    parser = argparse.ArgumentParser(add_help=False)
+def add_rtrace_args(parser):
     parser = add_ambient_args(parser)
     parser = add_direct_args(parser)
     parser = add_mist_args(parser)
     parser = add_limit_args(parser)
     parser = add_specular_args(parser)
     parser = add_toggle_args(parser)
+    return parser
+
+
+def add_rcontrib_args(parser):
+    parser = add_rtrace_args(parser)
+    parser.add_argument("-c", type=int) 
+    return parser
+
+
+def parse_rtrace_args(options: str) -> dict:
+    """Add rtrace options and flags to a parser."""
+    parser = argparse.ArgumentParser(add_help=False)
+    parser = add_rtrace_args(parser)
+    args, _ = parser.parse_known_args(options.strip().split())
+    odict = {k: v for k, v in vars(args).items() if v is not None}
+    return odict
+
+
+def parse_rcontrib_args(options: str) -> dict:
+    """Add rtrace options and flags to a parser."""
+    parser = argparse.ArgumentParser(add_help=False)
+    parser = add_rcontrib_args(parser)
     args, _ = parser.parse_known_args(options.strip().split())
     odict = {k: v for k, v in vars(args).items() if v is not None}
     return odict
