@@ -88,8 +88,6 @@ def test_BSDF():
 def test_parse_view():
     inp_str = "-vta -vv 180 -vh 180 -vp 0 0 0 -vd 0 -1 0"
     res = model.parse_view(inp_str)
-    answer = {"vt": "a", "vv": 180, "vh": 180,
-              "vp": [0, 0, 0], "vd": [0, -1, 0]}
     assert res.position == [0, 0, 0]
     assert res.direction == [0, -1, 0]
     assert res.vtype == "a"
