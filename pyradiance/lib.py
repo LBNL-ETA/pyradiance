@@ -140,7 +140,7 @@ class _AngleBasis(Structure):
     ]
 
 
-class C_COLOR(Structure):
+class _C_Color(Structure):
     _fields_ = [
         ("clock", c_double),
         ("client_data", c_void_p),
@@ -256,7 +256,7 @@ class _View(Structure):
 class _SDValue(Structure):
     _fields_ = [
         ("cieY", c_double),
-        ("spec", C_COLOR),
+        ("spec", _C_Color),
     ]
 
 
@@ -278,7 +278,7 @@ class _SDFunc(Structure):
 
 class _SDComponent(Structure):
     _fields_ = [
-        ("cspec", C_COLOR * _SDmaxCh),
+        ("cspec", _C_Color * _SDmaxCh),
         ("func", POINTER(_SDFunc)),
         ("dist", c_void_p),
         ("cdList", POINTER(_SDCDst)),
@@ -343,6 +343,12 @@ LIBRC.freeobjects.argtypes = [c_int, c_int]
 LIBRC.freeobjects.restype = None
 LIBRC.viewfile.argtypes = [c_char_p, POINTER(_View), POINTER(_Resolu)]
 LIBRC.viewfile.restype = None
+LIBRC.c_ccvt.argtypes = [POINTER(_C_Color), c_short]
+LIBRC.c_ccvt.restype = None
+LIBRC.c_sset.argtypes = [POINTER(_C_Color), c_double, c_double, POINTER(c_float), c_int]
+LIBRC.c_sset.restype = c_double
+LIBRC.cie_rgb.argtypes = [_Color, _Color]
+LIBRC.cie_rgb.restype = None
 
 
 ABASELIST = (_AngleBasis * MAXBASES).in_dll(LIBRC, "abase_list")
@@ -625,3 +631,38 @@ def get_view_resolu(path) -> Tuple[View, Resolu]:
     )
     resolu = Resolu(ORIENT_FLAG[_res.rp], _res.xr, _res.yr)
     return view, resolu
+
+
+def spec_xyz(spec: List[float], wlmin: float, wlmax: float) -> Tuple[float, float, float]:
+    """Convert a spectrum into CIE XYZ.
+    Args:
+        spec: A list of spectral values, must be equally spaced in wavelength.
+        wlmin: The minimum wavelength in nm.
+        wlmax: The maximum wavelength in nm.
+    Returns:
+        A tuple of X, Y, Z values.
+    """
+    c = _C_Color()
+    nwvl = len(spec)
+    ssamp = (c_float * nwvl)(*spec)
+    cie_y = LIBRC.c_sset(byref(c), wlmin, wlmax, ssamp, nwvl)
+    LIBRC.c_ccvt(byref(c), 4)
+    d = c.cx / c.cy
+    cie_x = d * cie_y
+    cie_z = (1 / c.cy - 1 - d) * cie_y
+    return cie_x, cie_y, cie_z
+
+
+def xyz_rgb(x: float, y: float, z: float) -> Tuple[float, float, float]:
+    """Convert CIE XYZ to RGB (Radiance).
+    Args:
+        x: X value.
+        y: Y value.
+        z: Z value.
+    Returns:
+        A tuple of R, G, B values.
+    """
+    rgb = (c_float * 3)()
+    xyz = (c_float * 3)(x, y, z)
+    LIBRC.cie_rgb(rgb, xyz)
+    return rgb[0], rgb[1], rgb[2]

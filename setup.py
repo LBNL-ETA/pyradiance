@@ -349,6 +349,9 @@ export_symbols = [
     "freeobjects", 
     "viewfile",
     "abase_list",
+    "c_sset",
+    "c_ccvt",
+    "cie_rgb",
 ]
 
 class PyradianceBDistWheel(bdist_wheel):
