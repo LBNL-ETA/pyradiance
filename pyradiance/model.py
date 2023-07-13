@@ -338,17 +338,6 @@ def parse_view(vstr: str) -> View:
     args_list = vstr.strip().split()
     vparser = argparse.ArgumentParser()
     vparser = add_view_args(vparser)
-    # vparser.add_argument("-v", action="store", dest="vt")
-    # vparser.add_argument("-vp", nargs=3, type=float, default=(0, 0, 0))
-    # vparser.add_argument("-vd", nargs=3, type=float, default=(0, 1, 0))
-    # vparser.add_argument("-vu", nargs=3, type=float, default=(0, 0, 1))
-    # vparser.add_argument("-vv", type=float, default=45)
-    # vparser.add_argument("-vh", type=float, default=45)
-    # vparser.add_argument("-vo", type=float, default=0)
-    # vparser.add_argument("-va", type=float, default=0)
-    # vparser.add_argument("-vs", type=float, default=0)
-    # vparser.add_argument("-vl", type=float, default=0)
-    # vparser.add_argument("-vf", type=argparse.FileType("r"))
     args, _ = vparser.parse_known_args(args_list)
     if args.vf is not None:
         args, _ = vparser.parse_known_args(
