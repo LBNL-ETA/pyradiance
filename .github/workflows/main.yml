@@ -33,7 +33,7 @@ jobs:
         python setup.py bdist_wheel
 
     - name: upload wheels
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         path: ./dist/*.whl
 
@@ -67,7 +67,7 @@ jobs:
         python setup.py bdist_wheel
 
     - name: upload wheels
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         path: ./dist/*.whl
 
@@ -105,7 +105,7 @@ jobs:
         python setup.py bdist_wheel
 
     - name: upload wheels
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         path: ./dist/*.whl
 
