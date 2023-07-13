@@ -230,6 +230,7 @@ csources=[
     "Radiance/src/common/error.c",
     "Radiance/src/common/ezxml.c",
     "Radiance/src/common/face.c",
+    "Radiance/src/common/fdate.c",
     "Radiance/src/common/fgetline.c",
     "Radiance/src/common/fgetval.c",
     "Radiance/src/common/fgetword.c",
