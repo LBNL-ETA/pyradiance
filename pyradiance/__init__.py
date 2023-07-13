@@ -73,6 +73,7 @@ from .param import SamplingParameters
 
 from .util import (
     dctimestep,
+    evalglare,
     get_header,
     get_image_dimensions,
     getinfo,
@@ -104,6 +105,7 @@ __all__ = [
     "bsdf2ttree",
     "cnt",
     "dctimestep",
+    "evalglare",
     "genblinds",
     "genbsdf",
     "gendaylit",

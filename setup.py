@@ -14,7 +14,7 @@ from distutils.command.build_ext import build_ext as build_ext_orig
 from auditwheel.wheeltools import InWheel
 from wheel.bdist_wheel import bdist_wheel
 
-RADTAG = "2f5bc2ef"
+RADTAG = "ee06fd82"
 
 RADBINS = [
     'bsdf2ttree',
@@ -230,6 +230,7 @@ csources=[
     "Radiance/src/common/error.c",
     "Radiance/src/common/ezxml.c",
     "Radiance/src/common/face.c",
+    "Radiance/src/common/fdate.c",
     "Radiance/src/common/fgetline.c",
     "Radiance/src/common/fgetval.c",
     "Radiance/src/common/fgetword.c",
@@ -477,7 +478,7 @@ setup(
     name="pyradiance",
     author="LBNL",
     author_email="taoningwang@lbl.gov",
-    version="0.0.10a1",
+    version="0.1.0b1",
     description="Python interface for Radiance command-line tools",
     long_description=Path("README.md").read_text(encoding="utf-8"),
     long_description_content_type="text/markdown",

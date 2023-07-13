@@ -17,6 +17,113 @@ from .ot import getbbox
 
 
 @handle_called_process_error
+def evalglare(
+    inp,
+    view: Optional[List[str]] = None,
+    detailed: bool = False,
+    ev_only: bool = False,
+    ev: Optional[float] = None,
+    smooth: bool = False,
+    threshold: Optional[float] = None,
+    task_area: Optional[tuple] = None,
+    masking_file: Optional[Union[str, Path]] = None,
+    band_lum_angle: Optional[float] = None,
+    check_file: Optional[Union[str, Path]] = None,
+    correction_mode: Optional[str] = None,
+    peak_extraction: bool = True,
+    peak_extraction_value: float = 50000,
+    bg_lum_mode: int = 0,
+    search_radius: float = 0.2,
+    version: bool = False,
+    source_color: Optional[Tuple[float, float, float]] = None,
+):
+    """Run evalglare on a Radiance image.
+    Args:
+        inp: input image
+        view: view parameters
+        detailed: detailed output
+        ev_only: return vertical illuminance value
+        ev: vertical illuminance value to use instead of the one computer from the image.
+        smooth: enable smoothing function.
+        threshold: Threshold factor.
+        task_area: task area
+        masking_file: masking file
+        band_lum_angle: band luminance angle
+        check_file: check file path.
+        correction_mode: correction mode
+        peak_extraction: enable luminance peak extraction
+        peak_extraction_value: luminance peak extraction value
+        bg_lum_mode: background luminance calculation mode
+        search_radius: search radius
+        version: print version
+        source_color: source color
+    Returns:
+        Evalglare output
+    """
+    stdin = None
+    cmd = [str(BINPATH / "evalglare")]
+    if version:
+        cmd.append("-v")
+        return sp.run(cmd, check=True, capture_output=True).stdout
+    if ev_only:
+        cmd.append("-V")
+    else:
+        if detailed:
+            cmd.append("-d")
+        if ev is not None:
+            if isinstance(ev, (float, int)):
+                cmd.extend(["-i", str(ev)])
+            else:
+                cmd.extend(["-I", *map(str, ev)])
+        if view is not None:
+            cmd.extend(view)
+        if check_file is not None:
+            cmd.append("-c")
+            cmd.append(str(check_file))
+            if source_color is not None:
+                cmd.append("-u")
+                cmd.extend(*map(str, source_color))
+        if smooth:
+            cmd.append("-s")
+        if threshold is not None:
+            cmd.append("-b")
+            cmd.append(str(threshold))
+        if task_area:
+            if check_file is not None:
+                cmd.append("-T")
+            else:
+                cmd.append("-t")
+            cmd.extend(*map(str, task_area))
+        if bg_lum_mode:
+            cmd.append("-q")
+            cmd.append(str(bg_lum_mode))
+        if masking_file:
+            cmd.append("-A")
+            cmd.append(str(masking_file))
+        if band_lum_angle:
+            cmd.append("-B")
+            cmd.append(str(band_lum_angle))
+        if correction_mode:
+            cmd.append("-C")
+            cmd.append(str(correction_mode))
+        if not peak_extraction:
+            cmd.append("-x")
+        if peak_extraction_value:
+            cmd.append("-Y")
+            cmd.append(str(peak_extraction_value))
+        if search_radius != 0.2:
+            cmd.append("-r")
+            cmd.append(str(search_radius))
+    if isinstance(inp, bytes):
+        stdin = inp
+    elif isinstance(inp, (Path, str)):
+        cmd.append(str(inp))
+    else:
+        raise ValueError("input must be a path, string, or bytes")
+    return sp.run(cmd, input=stdin, check=True, capture_output=True).stdout
+
+
+@handle_called_process_error
 def dctimestep(
     *mtx,
     nstep: Optional[int] = None,
