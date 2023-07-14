@@ -1,4 +1,4 @@
-![Build & Test](https://github.com/LBNL-ETA/pyradiance/actions/workflows/main.yml/badge.svg)
+![Build & Test](https://github.com/LBNL-ETA/pyradiance/actions/workflows/build_test.yml/badge.svg)
 ![Downloads](https://img.shields.io/pypi/dm/Pyradiance.svg)
 
 # pyradiance
