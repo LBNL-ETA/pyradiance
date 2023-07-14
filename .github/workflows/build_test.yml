@@ -28,6 +28,7 @@ jobs:
 
     - name: Install and test
       run: |
+        pip install pytest
         git submodule update --init --recursive
         pip install .
         cd test
@@ -52,6 +53,7 @@ jobs:
 
     - name: Install and test
       run: |
+        pip install pytest
         git submodule update --init --recursive
         pip install .
         cd test
@@ -79,6 +81,7 @@ jobs:
 
     - name: Install
       run: |
+        pip install pytest
         git submodule update --init --recursive
         pip install .
 
