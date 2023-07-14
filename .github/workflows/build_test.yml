@@ -28,6 +28,7 @@ jobs:
 
     - name: Install and test
       run: |
+        git submodule update --init --recursive
         pip install .
         cd test
         pytest
@@ -51,7 +52,7 @@ jobs:
 
     - name: Install and test
       run: |
-        git submodule add -b master --force https://github.com/LBNL-ETA/Radiance
+        git submodule update --init --recursive
         pip install .
         cd test
         pytest
@@ -78,7 +79,7 @@ jobs:
 
     - name: Install
       run: |
-        git submodule add -b master --force https://github.com/LBNL-ETA/Radiance
+        git submodule update --init --recursive
         pip install .
 
     - name: Test
