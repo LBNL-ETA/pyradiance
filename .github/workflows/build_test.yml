@@ -26,17 +26,6 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Build Wheels
-      run: |
-        git submodule update --init --recursive
-        pip install requests wheel auditwheel pytest
-        python setup.py bdist_wheel
-
-    - name: upload wheels
-      uses: actions/upload-artifact@v3
-      with:
-        path: ./dist/*.whl
-
     - name: Install and test
       run: |
         pip install .
@@ -60,17 +49,6 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Build Wheels
-      run: |
-        git submodule update --init --recursive
-        pip install requests wheel auditwheel pytest
-        python setup.py bdist_wheel
-
-    - name: upload wheels
-      uses: actions/upload-artifact@v3
-      with:
-        path: ./dist/*.whl
-
     - name: Install and test
       run: |
         git submodule add -b master --force https://github.com/LBNL-ETA/Radiance
@@ -80,7 +58,7 @@ jobs:
 
 
   build_test_windows:
-    runs-on: windows-2019
+    runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
@@ -97,17 +75,6 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
-
-    - name: Build Wheels
-      run: |
-        git submodule update --init --recursive
-        pip install requests wheel auditwheel pytest
-        python setup.py bdist_wheel
-
-    - name: upload wheels
-      uses: actions/upload-artifact@v3
-      with:
-        path: ./dist/*.whl
 
     - name: Install
       run: |
