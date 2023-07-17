@@ -11,6 +11,12 @@ import pytest
 LOGGER = logging.getLogger(__name__)
 
 
+
+def test_primitive():
+    prim = pr.Primitive("void", "plastic", "white", [], [0.5, 0.6, 0.7, 0, 0])
+    assert prim.ptype == "plastic"
+    assert prim.bytes == b"void plastic white 0 0 5 0.5 0.6 0.7 0 0 "
+
 def test_install():
     radiance_version = pr.rtrace(None, None, version=True)
     assert radiance_version != ""

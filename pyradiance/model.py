@@ -36,6 +36,20 @@ class Primitive:
     sargs: Sequence[str]
     fargs: Sequence[float]
 
+    @property
+    def bytes(self):
+        out = f"{self.modifier} {self.ptype} {self.identifier} "
+        if len(self.sargs) > 0:
+            out += f"{len(self.sargs)} {' '.join(self.sargs)} "
+        else:
+            out += "0 "
+        out += "0 "
+        if len(self.fargs) > 0:
+            out += f"{len(self.fargs)} {str(self.fargs)[1:-1].replace(',', '')} "
+        else:
+            out += "0 "
+        return out.encode('utf-8')
+
     def __str__(self) -> str:
         return (
             f"{self.modifier} {self.ptype} {self.identifier}\n"
