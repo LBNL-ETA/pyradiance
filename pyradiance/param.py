@@ -241,6 +241,7 @@ def add_mist_args(parser):
     parser.add_argument("-ms", type=float, default=None)
     return parser
 
+
 def add_view_args(parser):
     parser.add_argument("-v", action="store", dest="vt")
     parser.add_argument("-vp", nargs=3, type=float, default=(0, 0, 0))
@@ -284,7 +285,7 @@ def add_rtrace_args(parser):
 
 def add_rcontrib_args(parser):
     parser = add_rtrace_args(parser)
-    parser.add_argument("-c", type=int) 
+    parser.add_argument("-c", type=int)
     return parser
 
 
