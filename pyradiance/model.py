@@ -48,7 +48,7 @@ class Primitive:
             out += f"{len(self.fargs)} {str(self.fargs)[1:-1].replace(',', '')} "
         else:
             out += "0 "
-        return out.encode('utf-8')
+        return out.encode("utf-8")
 
     def __str__(self) -> str:
         return (

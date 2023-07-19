@@ -194,43 +194,46 @@ class _FullXf(Structure):
     ]
 
 
-class _Ray(Structure): pass
+class _Ray(Structure):
+    pass
+
+
 _Ray._fields_ = [
-        ("rorg", _FVect),
-        ("rdir", _FVect),
-        ("rmax", c_double),
-        ("rot", c_double),
-        ("rop", _FVect),
-        ("ron", _FVect),
-        ("rod", c_double),
-        ("uv", c_double * 2),
-        ("pert", _FVect),
-        ("rmt", c_double),
-        ("rxt", c_double),
-        ("parent", POINTER(_Ray)),
-        ("clipset", POINTER(_Object)),
-        ("newcset", POINTER(_Object)),
-        ("revf", c_void_p),
-        ("hitf", c_void_p),
-        ("ro", POINTER(_ObjRec)),
-        ("rox", POINTER(_FullXf)),
-        ("slights", POINTER(c_int)),
-        ("rno", _RNumber),
-        ("robj", _Object),
-        ("rsrc", c_int),
-        ("rweight", c_float),
-        ("gecc", c_float),
-        ("rcoef", _Color),
-        ("pcol", _Color),
-        ("mcol", _Color),
-        ("rcol", _Color),
-        ("cext", _Color),
-        ("albedo", _Color),
-        ("rflips", c_short),
-        ("rlvl", c_short),
-        ("rtype", c_short),
-        ("crtype", c_short),
-    ]
+    ("rorg", _FVect),
+    ("rdir", _FVect),
+    ("rmax", c_double),
+    ("rot", c_double),
+    ("rop", _FVect),
+    ("ron", _FVect),
+    ("rod", c_double),
+    ("uv", c_double * 2),
+    ("pert", _FVect),
+    ("rmt", c_double),
+    ("rxt", c_double),
+    ("parent", POINTER(_Ray)),
+    ("clipset", POINTER(_Object)),
+    ("newcset", POINTER(_Object)),
+    ("revf", c_void_p),
+    ("hitf", c_void_p),
+    ("ro", POINTER(_ObjRec)),
+    ("rox", POINTER(_FullXf)),
+    ("slights", POINTER(c_int)),
+    ("rno", _RNumber),
+    ("robj", _Object),
+    ("rsrc", c_int),
+    ("rweight", c_float),
+    ("gecc", c_float),
+    ("rcoef", _Color),
+    ("pcol", _Color),
+    ("mcol", _Color),
+    ("rcol", _Color),
+    ("cext", _Color),
+    ("albedo", _Color),
+    ("rflips", c_short),
+    ("rlvl", c_short),
+    ("rtype", c_short),
+    ("crtype", c_short),
+]
 
 
 class _View(Structure):
@@ -633,7 +636,9 @@ def get_view_resolu(path) -> Tuple[View, Resolu]:
     return view, resolu
 
 
-def spec_xyz(spec: List[float], wlmin: float, wlmax: float) -> Tuple[float, float, float]:
+def spec_xyz(
+    spec: List[float], wlmin: float, wlmax: float
+) -> Tuple[float, float, float]:
     """Convert a spectrum into CIE XYZ.
     Args:
         spec: A list of spectral values, must be equally spaced in wavelength.
