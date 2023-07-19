@@ -37,13 +37,13 @@ def cnt(
 
 @handle_called_process_error
 def rcalc(
-    inp, 
-    sep=None, 
-    inform=None, 
-    incount=1, 
-    outform=None, 
-    passive=False, 
-    pass_negative=False, 
+    inp,
+    sep=None,
+    inform=None,
+    incount=1,
+    outform=None,
+    passive=False,
+    pass_negative=False,
     inlimit=None,
     outlimit=None,
     source=None,
@@ -56,32 +56,32 @@ def rcalc(
     stdin = None
     cmd = [str(BINPATH / "rcalc")]
     if sep is not None:
-        cmd.append(f'-t{sep}')
+        cmd.append(f"-t{sep}")
     if inform is not None:
-        cmd.append(f'-i{inform}{incount}')
+        cmd.append(f"-i{inform}{incount}")
     if outform is not None:
-        cmd.append(f'-o{outform}')
+        cmd.append(f"-o{outform}")
     if inform and outform:
         if passive:
-            cmd.append('-p')
+            cmd.append("-p")
         elif pass_negative:
-            cmd.append('-P')
+            cmd.append("-P")
     if inlimit is not None:
-        cmd.extend(['-in', str(inlimit)])
+        cmd.extend(["-in", str(inlimit)])
     if outlimit is not None:
-        cmd.extend(['-on', str(outlimit)])
-    if source is not None:
-        cmd.extend(['-f', source])
+        cmd.extend(["-on", str(outlimit)])
     if expr is not None:
-        cmd.extend(['-e', expr])
+        cmd.extend(["-e", expr])
     if assign is not None:
-        cmd.extend(['-s', assign])
+        cmd.extend(["-s", assign])
+    if source is not None:
+        cmd.extend(["-f", source])
     if exact_only:
-        cmd.append('-b')
+        cmd.append("-b")
     if ignore_newlines:
-        cmd.append('-l')
+        cmd.append("-l")
     if silent:
-        cmd.append('-w')
+        cmd.append("-w")
     if isinstance(inp, (Path, str)):
         cmd.append(str(inp))
     elif isinstance(inp, bytes):
