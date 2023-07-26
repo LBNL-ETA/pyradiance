@@ -47,10 +47,10 @@ def oconv(*paths, warning=True, stdin=None, frozen: bool = False, octree=None) -
         cmd.append("-w")
     if frozen:
         cmd.append("-f")
+    cmd.extend(paths)
     if stdin:
         if isinstance(stdin, bytes):
             cmd.append("-")
         else:
             raise TypeError("stdin should be bytes.")
-    cmd.extend(paths)
     return sp.run(cmd, input=stdin, stdout=sp.PIPE, check=True).stdout
