@@ -37,8 +37,14 @@ from .gen import (
     mkillum,
 )
 
-# from .lib import RadianceAPI
-from .lib import ABASELIST, BSDF, read_rad, get_view_resolu
+from .lib import (
+    ABASELIST, 
+    BSDF, 
+    read_rad, 
+    get_view_resolu, 
+    spec_xyz, 
+    xyz_rgb
+)
 
 from .model import (
     Sensor,
@@ -149,10 +155,12 @@ __all__ = [
     "Scene",
     "Sensor",
     "SamplingParameters",
+    "spec_xyz",
     "total",
     "View",
     "vwrays",
     "WrapBSDFInput",
     "wrapbsdf",
     "xform",
+    "xyz_rgb",
 ]
