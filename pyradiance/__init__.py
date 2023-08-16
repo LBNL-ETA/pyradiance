@@ -8,7 +8,7 @@ make Radiance easier to use and accessible to Python user.
 import logging
 import os
 
-from .anci import BINPATH
+from .anci import BINPATH, write
 
 from .cal import (
     cnt,
@@ -37,14 +37,7 @@ from .gen import (
     mkillum,
 )
 
-from .lib import (
-    ABASELIST, 
-    BSDF, 
-    read_rad, 
-    get_view_resolu, 
-    spec_xyz, 
-    xyz_rgb
-)
+from .lib import ABASELIST, BSDF, read_rad, get_view_resolu, spec_xyz, xyz_rgb
 
 from .model import (
     Sensor,
@@ -52,6 +45,7 @@ from .model import (
     View,
     Primitive,
     load_views,
+    parse_view,
     parse_primitive,
 )
 
@@ -130,6 +124,7 @@ __all__ = [
     "oconv",
     "pabopto2bsdf",
     "parse_primitive",
+    "parse_view",
     "pkgbsdf",
     "pvalue",
     "pvaluer",
@@ -161,6 +156,7 @@ __all__ = [
     "vwrays",
     "WrapBSDFInput",
     "wrapbsdf",
+    "write",
     "xform",
     "xyz_rgb",
 ]
