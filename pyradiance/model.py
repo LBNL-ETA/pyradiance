@@ -16,28 +16,36 @@ from .ot import oconv
 from .param import add_view_args
 
 
-@dataclass
 class Primitive:
-    """Radiance Primitive.
-
-    Attributes one-to-one mapped from Radiance.
-
+    """
+    Primitive base class
     Attributes:
-        modifier: modifier, which primitive modifies this one
-        ptype: primitive type
-        identifier: identifier, name of this primitive
-        sargs: string arguments
-        fargs: real arguments
+        modifier: The modifier of the primitive
+        ptype: The type of the primitive
+        identifier: The identifier of the primitive
+        sargs: The string arguments of the primitive
+        fargs: The float arguments of the primitive
     """
 
-    modifier: str
-    ptype: str
-    identifier: str
-    sargs: Sequence[str]
-    fargs: Sequence[float]
+    def __init__(
+        self,
+        modifier: str,
+        ptype: str,
+        identifier: str,
+        sargs: List[str],
+        fargs: List[float],
+    ):
+        self.modifier = modifier
+        self.ptype = ptype
+        self.identifier = identifier
+        self.sargs = sargs
+        self.fargs = fargs
 
     @property
     def bytes(self):
+        """
+        Returns the bytes of the primitive
+        """
         out = f"{self.modifier} {self.ptype} {self.identifier} "
         if len(self.sargs) > 0:
             out += f"{len(self.sargs)} {' '.join(self.sargs)} "
@@ -51,6 +59,9 @@ class Primitive:
         return out.encode("utf-8")
 
     def __str__(self) -> str:
+        """
+        Returns the string representation of the primitive
+        """
         return (
             f"{self.modifier} {self.ptype} {self.identifier}\n"
             f"{len(self.sargs)} {' '.join(self.sargs)}\n"
