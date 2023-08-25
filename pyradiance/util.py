@@ -5,7 +5,6 @@ Radiance utilities
 from dataclasses import dataclass
 import os
 from pathlib import Path
-import shlex
 import subprocess as sp
 import sys
 from typing import List, Optional, Sequence, Tuple, Union
@@ -641,11 +640,10 @@ def render(
         print("rebuilding octree...")
         with open(octpath, "wb") as wtr:
             _cmd = radcmds[0].split(">", 1)[0]
-            print(_cmd.split())
             sp.run(_cmd.split(), check=True, stdout=wtr)
         _sidx = 1
     elif radcmds[0].startswith(("rm", "del")):
-        sp.run(shlex.split(radcmds[0]), check=True)
+        sp.run(radcmds[0].split(), check=True)
         _sidx = 1
     radcmds = [c for c in radcmds[_sidx:] if not c.startswith(("pfilt", "rm"))]
     argdict = parse_rtrace_args(" ".join(radcmds))
