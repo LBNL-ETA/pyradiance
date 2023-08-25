@@ -592,7 +592,6 @@ def render(
         [str(srf) for _, srf in {**scene.surfaces, **scene.sources}.items()]
     )
     materialstring = " ".join((str(mat) for _, mat in scene.materials.items()))
-    print(materialstring)
     rad_render_options = []
     if ambbounce is not None:
         rad_render_options.extend(["-ab", str(ambbounce)])
@@ -641,7 +640,9 @@ def render(
     if radcmds[0].startswith("oconv"):
         print("rebuilding octree...")
         with open(octpath, "wb") as wtr:
-            sp.run(shlex.split(radcmds[0].split(">", 1)[0]), check=True, stdout=wtr)
+            _cmd = shlex.split(radcmds[0].split(">", 1)[0])
+            print(materialstring, _cmd)
+            sp.run(_cmd, check=True, stdout=wtr)
         _sidx = 1
     elif radcmds[0].startswith(("rm", "del")):
         sp.run(shlex.split(radcmds[0]), check=True)
