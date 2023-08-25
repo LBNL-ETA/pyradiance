@@ -1,0 +1,4 @@
+pytest
+auditwheel>=5.3
+wheel>=0.37
+requests>=2.27
