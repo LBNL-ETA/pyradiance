@@ -58,6 +58,7 @@ from .px import (
     pvaluer,
     pcond,
     pfilt,
+    ra_tiff,
 )
 
 from .rt import (
@@ -130,6 +131,7 @@ __all__ = [
     "pvaluer",
     "pcond",
     "pfilt",
+    "ra_tiff",
     "rcalc",
     "rcode_depth",
     "rcode_ident",

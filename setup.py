@@ -41,6 +41,7 @@ RADBINS = [
     'pkgBSDF',
     'pvalue',
     'rad',
+    'ra_tiff',
     'rcalc',
     'rcode_depth',
     'rcode_ident',
@@ -328,7 +329,7 @@ csources=[
     "Radiance/src/rt/Version.c",
     "Radiance/src/rt/pmapamb.c",
     "Radiance/src/rt/renderopts.c",
-] 
+]
 
 
 if platform.system().lower() == "linux":
@@ -344,10 +345,10 @@ export_symbols = [
     "SDevalBSDF",
     "SDsampBSDF",
     "SDdirectHemi",
-    "readobj", 
-    "objblock", 
-    "nobjects", 
-    "freeobjects", 
+    "readobj",
+    "objblock",
+    "nobjects",
+    "freeobjects",
     "viewfile",
     "abase_list",
     "c_sset",
@@ -447,7 +448,7 @@ class PyradianceBDistWheel(bdist_wheel):
         shutil.rmtree(self.dist_dir)
         shutil.move("wheelhouse", self.dist_dir)
         shutil.rmtree(radiance_dir)
-        
+
 
 class CTypesExtension(Extension):
     pass

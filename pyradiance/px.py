@@ -378,6 +378,7 @@ def ra_tiff(
     elif isinstance(inp, bytes):
         stdin = inp
         cmd.append("-")
+    cmd.append(str(out))
     pout = sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
     if out is None:
         return pout
