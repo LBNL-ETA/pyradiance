@@ -640,9 +640,9 @@ def render(
     if radcmds[0].startswith("oconv"):
         print("rebuilding octree...")
         with open(octpath, "wb") as wtr:
-            _cmd = shlex.split(radcmds[0].split(">", 1)[0])
-            print(radcmds[0])
-            sp.run(_cmd, check=True, stdout=wtr)
+            _cmd = radcmds[0].split(">", 1)[0]
+            print(_cmd.split())
+            sp.run(_cmd.split(), check=True, stdout=wtr)
         _sidx = 1
     elif radcmds[0].startswith(("rm", "del")):
         sp.run(shlex.split(radcmds[0]), check=True)
