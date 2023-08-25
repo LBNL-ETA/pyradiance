@@ -641,7 +641,7 @@ def render(
         print("rebuilding octree...")
         with open(octpath, "wb") as wtr:
             _cmd = shlex.split(radcmds[0].split(">", 1)[0])
-            print(materialstring, _cmd)
+            print(radcmds[0])
             sp.run(_cmd, check=True, stdout=wtr)
         _sidx = 1
     elif radcmds[0].startswith(("rm", "del")):
