@@ -210,6 +210,32 @@ RADLIB = [
 ]
 
 
+global_c = Path("global.c")
+with open(global_c, "w") as f:
+    f.write("""
+#include <signal.h>
+
+#include  "ray.h"
+
+char  *sigerr[32];			/* signal error messages */
+char  *errfile = NULL;			/* error output file */
+
+int  nproc = 1;				/* number of processes */
+
+int  inform = 'a';			/* input format */
+int  outform = 'a';			/* output format */
+char  *outvals = "v";			/* output specification */
+
+int  hresolu = 0;			/* horizontal (scan) size */
+int  vresolu = 0;			/* vertical resolution */
+
+int  imm_irrad = 0;			/* compute immediate irradiance? */
+int  lim_dist = 0;			/* limit distance? */
+
+char  *tralist[1024];		/* list of modifers to trace (or no) */
+int  traincl = -1;			/* include == 1, exclude == 0 */
+"""
+    )
 
 csources=[
     "Radiance/src/common/badarg.c",
@@ -255,7 +281,7 @@ csources=[
     "Radiance/src/common/octree.c",
     "Radiance/src/common/otypes.c",
     "Radiance/src/common/portio.c",
-    "Radiance/src/common/quit.c",
+    # "Radiance/src/common/quit.c",
     "Radiance/src/common/readfargs.c",
     "Radiance/src/common/readmesh.c",
     "Radiance/src/common/readobj.c",
@@ -323,6 +349,17 @@ csources=[
     "Radiance/src/rt/m_bsdf.c",
     "Radiance/src/rt/glass.c",
     "Radiance/src/rt/data.c",
+
+    "globals.c",
+    "Radiance/src/common/process.c",
+    "Radiance/src/rt/preload.c",
+    "Radiance/src/rt/duphead.c",
+    "Radiance/src/rt/persist.c",
+    "Radiance/src/rt/raypcalls.c",
+    "Radiance/src/rt/rayfifo.c",
+    "Radiance/src/rt/rtrace.c",
+    # "Radiance/src/rt/rtmain.c",
+
     "Radiance/src/rt/m_direct.c",
     "Radiance/src/rt/ambcomp.c",
     "Radiance/src/rt/ambient.c",
@@ -461,7 +498,9 @@ class build_ext(build_ext_orig):
             version = f.read().strip()
         with open("Radiance/src/rt/Version.c", "w") as wtr:
             wtr.write(f'char VersionID[] = "{version}";')
-        return super().build_extension(ext)
+        build = super().build_extension(ext)
+        global_c.unlink()
+        return build
 
     def get_export_symbols(self, ext):
         if self._ctypes:
