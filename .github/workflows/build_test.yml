@@ -8,6 +8,10 @@ on:
 
   # run this workflow manually from the Actions tab
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version'
+        required: false
 
 jobs:
   build_test_ubuntu:
