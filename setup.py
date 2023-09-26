@@ -19,6 +19,7 @@ RADTAG = "ee06fd82"
 RADBINS = [
     'bsdf2ttree',
     'bsdf2klems',
+    'bsdfquery',
     'cnt',
     'dctimestep',
     'evalglare',
