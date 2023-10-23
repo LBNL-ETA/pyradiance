@@ -22,6 +22,7 @@ RADBINS = [
     'cnt',
     'dctimestep',
     'evalglare',
+    'falsecolor',
     'getbbox',
     'getinfo',
     'genblinds',
