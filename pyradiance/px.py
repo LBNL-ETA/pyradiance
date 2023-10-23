@@ -427,3 +427,105 @@ def ra_ppm(
     elif isinstance(inp, bytes):
         stdin = inp
     return sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
+
+@handle_called_process_error
+def falsecolor(
+    inp: [Union[str, Path, bytes]],
+    pic_overlay: Optional[str] = None,
+    contour: Optional[str] = None,  
+    extrema: bool = False,
+    scale: Optional[str] = None,
+    digits: Optional[int] = None,
+    label: Optional[str] = None,
+    ndivs: Optional[int] = None,
+    lwidth: Optional[int] = None,
+    lheight: Optional[int] = None,
+    decades: Optional[int] = None,
+    multiplier: Optional[float] = None,
+    palette: Optional[str] = None,
+    redv: Optional[str] = None,
+    grnv: Optional[str] = None,
+    bluv: Optional[str] = None,
+) -> bytes:
+    """
+    Generate a falsecolor Radiance picture.
+
+    Args:
+        inp: Path or bytes to input picture file.
+        pic_overlay: Path to another picture to overlay with contours.
+        contour: Type of contour ('b' for bands, 'l' for lines, 'p' for posterization).
+        extrema: Flag to print extrema points on the brightest and darkest pixels.
+        scale: Scale for the false color (e.g., 'auto' or specific scale).
+        digits: Max number of decimal places for legend entries.
+        label: Label for the new image.
+        ndivs: Number of contours and corresponding legend entries.
+        lwidth: Width of the legend.
+        lheight: Height of the legend.
+        decades: Number of decades below the maximum scale for logarithmic mapping.
+        multiplier: Multiplier for the scale (e.g., to convert units).
+        palette: Color palette to use for false color.
+        redv: Expression for mapping values to red.
+        grnv: Expression for mapping values to green.
+        bluv: Expression for mapping values to blue.
+
+    Returns:
+        bytes: Output of falsecolor.
+    """
+    cmd = [str(BINPATH / "falsecolor")]
+
+    # In the man-page, it is mentioned that stdin is used if no input file is specified.
+    if isinstance(inp, str):
+        cmd.extend(["-i", inp])
+        stdin = None
+    else:
+        stdin = inp
+
+    if pic_overlay:
+        cmd.extend(["-p", pic_overlay])
+
+    if contour:
+        if contour in ['b', 'l', 'p']:
+            cmd.append(f"-c{contour}")
+        else:
+            raise ValueError("Invalid value for contour. Allowed values are 'b', 'l', or 'p'.")
+
+    if extrema:
+        cmd.append("-e")
+
+    if scale:
+        cmd.extend(["-s", scale])
+
+    if digits is not None:
+        cmd.extend(["-d", str(digits)])
+
+    if label:
+        cmd.extend(["-l", label])
+
+    if ndivs is not None:
+        cmd.extend(["-n", str(ndivs)])
+
+    if lwidth is not None:
+        cmd.extend(["-lw", str(lwidth)])
+
+    if lheight is not None:
+        cmd.extend(["-lh", str(lheight)])
+
+    if decades is not None:
+        cmd.extend(["-log", str(decades)])
+
+    if multiplier is not None:
+        cmd.extend(["-m", str(multiplier)])
+
+    if palette:
+        cmd.extend(["-pal", palette])
+
+    if redv:
+        cmd.extend(["-r", redv])
+
+    if grnv:
+        cmd.extend(["-g", grnv])
+
+    if bluv:
+        cmd.extend(["-b", bluv])
+
+    return sp.run(cmd, stdout=sp.PIPE, check=True, input=stdin).stdout
