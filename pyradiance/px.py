@@ -430,9 +430,9 @@ def ra_ppm(
 
 @handle_called_process_error
 def falsecolor(
-    inp: [Union[str, Path, bytes]],
+    inp: Union[str, Path, bytes],
     pic_overlay: Optional[str] = None,
-    contour: Optional[str] = None,  
+    contour: Optional[str] = None,
     extrema: bool = False,
     scale: Optional[str] = None,
     digits: Optional[int] = None,
@@ -474,8 +474,8 @@ def falsecolor(
     cmd = [str(BINPATH / "falsecolor")]
 
     # In the man-page, it is mentioned that stdin is used if no input file is specified.
-    if isinstance(inp, str):
-        cmd.extend(["-i", inp])
+    if isinstance(inp, (str, Path)):
+        cmd.extend(["-i", str(inp)])
         stdin = None
     else:
         stdin = inp
