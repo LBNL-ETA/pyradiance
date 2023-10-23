@@ -59,6 +59,7 @@ from .px import (
     pcond,
     pfilt,
     ra_tiff,
+    falsecolor,
 )
 
 from .rt import (
@@ -107,6 +108,7 @@ __all__ = [
     "cnt",
     "dctimestep",
     "evalglare",
+    "falsecolor"
     "genblinds",
     "genbsdf",
     "gendaylit",
