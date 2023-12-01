@@ -661,9 +661,12 @@ def render(
     options.update_from_dict(argdict)
     if params is not None:
         options.update(params)
-    return rtpict(
+    result = rtpict(
         aview, octpath, nproc=nproc, xres=xres, yres=yres, params=options.args()
     )
+    if result is None:
+        raise ValueError("rtpict returned None")
+    return result
 
 
 @handle_called_process_error
@@ -672,7 +675,7 @@ def rfluxmtx(
     surface: Optional[Union[str, Path]] = None,
     rays: Optional[bytes] = None,
     params: Optional[Sequence[str]] = None,
-    octree: Optional[Path] = None,
+    octree: Optional[Union[Path,str]] = None,
     scene: Optional[Sequence[Union[Path, str]]] = None,
 ) -> bytes:
     """Run rfluxmtx command.
