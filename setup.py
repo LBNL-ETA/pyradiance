@@ -14,7 +14,7 @@ from distutils.command.build_ext import build_ext as build_ext_orig
 from auditwheel.wheeltools import InWheel
 from wheel.bdist_wheel import bdist_wheel
 
-RADTAG = "ee06fd82"
+RADTAG = "31b8c139"
 
 RADBINS = [
     'bsdf2ttree',
