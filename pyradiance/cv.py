@@ -2,8 +2,8 @@
 Radiance conversion routines.
 """
 
-from pathlib import Path
 import subprocess as sp
+from pathlib import Path
 from typing import Optional, Sequence, Union
 
 from .anci import BINPATH, handle_called_process_error
@@ -42,6 +42,49 @@ def obj2rad(
         cmd.extend(["-o", objname])
     if mapfile is not None:
         cmd.extend(["-m", mapfile])
+    if isinstance(inp, bytes):
+        stdin = inp
+    else:
+        cmd.append(str(inp))
+    return sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
+
+
+@handle_called_process_error
+def obj2mesh(
+    inp: Union[bytes, str, Path],
+    matfiles: Optional[Sequence[str]] = None,
+    matlib: Optional[str] = None,
+    objlim: int = 9,
+    maxres: int = 16384,
+    silent: bool = False,
+    stats: bool = False,
+) -> bytes:
+    """Convert Wavefront .OBJ file to RADIANCE description.
+
+    Args:
+        inp: Path to OBJ file, or bytes
+        matfiles: Radiance material files to use
+        matlib: Radiance material library file, RAYPATH are searched
+        objlim: the maximum surface setsize for each voxel
+        maxres: Maximum octree resolution
+        silent: Suppress warnings
+        stats: Print statistics
+    Returns:
+        The converted RADIANCE scene description in bytes
+    """
+    stdin = None
+    cmd = [str(BINPATH / "obj2mesh")]
+    if silent:
+        cmd.append("-w")
+    if stats:
+        cmd.append("-v")
+    if matlib is not None:
+        cmd.extend(["-l", matlib])
+    cmd.extend(["-n", str(objlim)])
+    cmd.extend(["-r", str(maxres)])
+    if isinstance(matfiles, Sequence):
+        for matfile in matfiles:
+            cmd.extend(["-a", matfile])
     if isinstance(inp, bytes):
         stdin = inp
     else:

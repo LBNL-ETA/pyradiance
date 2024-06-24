@@ -4,76 +4,39 @@ modules that provide a high level interface to Radiance. It is designed to
 make Radiance easier to use and accessible to Python user.
 """
 
-
 import logging
 import os
 
 from .anci import BINPATH, write
-
-from .cal import (
-    cnt,
-    rlam,
-    total,
-    rcalc,
-)
-
+from .cal import cnt, rcalc, rlam, total
 from .cv import (
     bsdf2klems,
     bsdf2ttree,
     ies2rad,
     mgf2rad,
+    obj2mesh,
     obj2rad,
     pabopto2bsdf,
     pkgbsdf,
     robjutil,
 )
-
-from .gen import (
-    genblinds,
-    genbsdf,
-    gendaylit,
-    gendaymtx,
-    gensky,
-    mkillum,
-)
-
-from .lib import ABASELIST, BSDF, read_rad, get_view_resolu, spec_xyz, xyz_rgb
-
+from .gen import genblinds, genbsdf, gendaylit, gendaymtx, gensky, mkillum
+from .lib import ABASELIST, BSDF, get_view_resolu, read_rad, spec_xyz, xyz_rgb
 from .model import (
-    Sensor,
-    Scene,
-    View,
     Primitive,
+    Scene,
+    Sensor,
+    View,
     load_views,
-    parse_view,
     parse_primitive,
+    parse_view,
 )
-
-from .ot import (
-    oconv,
-)
-
-from .px import (
-    pvalue,
-    pvaluer,
-    pcond,
-    pfilt,
-    ra_tiff,
-    falsecolor,
-)
-
-from .rt import (
-    RcModifier,
-    mkpmap,
-    rcontrib,
-    rpict,
-    rtrace,
-)
-
-
+from .ot import oconv
 from .param import SamplingParameters
-
+from .px import falsecolor, pcond, pfilt, pvalue, pvaluer, ra_tiff
+from .rt import RcModifier, mkpmap, rcontrib, rpict, rtrace
 from .util import (
+    WrapBSDFInput,
     dctimestep,
     evalglare,
     get_header,
@@ -85,10 +48,9 @@ from .util import (
     render,
     rfluxmtx,
     rmtxop,
-    rtpict,
     rsensor,
+    rtpict,
     vwrays,
-    WrapBSDFInput,
     wrapbsdf,
     xform,
 )
@@ -108,7 +70,7 @@ __all__ = [
     "cnt",
     "dctimestep",
     "evalglare",
-    "falsecolor"
+    "falsecolor",
     "genblinds",
     "genbsdf",
     "gendaylit",
@@ -124,6 +86,7 @@ __all__ = [
     "mkillum",
     "mkpmap",
     "obj2rad",
+    "obj2mesh",
     "oconv",
     "pabopto2bsdf",
     "parse_primitive",
