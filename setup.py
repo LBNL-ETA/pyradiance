@@ -499,7 +499,7 @@ setup(
     name="pyradiance",
     author="LBNL",
     author_email="taoningwang@lbl.gov",
-    version="0.3.1",
+    version="0.4.0",
     description="Python interface for Radiance",
     long_description=Path("README.md").read_text(encoding="utf-8"),
     long_description_content_type="text/markdown",
