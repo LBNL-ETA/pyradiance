@@ -38,12 +38,12 @@ scene.add_view(aview)
 ```
 
 !!! note
-    Scene object here is only used for [render()](../reference/#pyradiance.render) function. Regular RADIANCE functions such as [rpict()](../reference/#pyradiance.rpict), 
-    [rtrace()](../reference/#pyradiance.rtrace), [rcontrib()](../reference/#pyradiance.rcontrib) 
+    Scene object here is only used for [render()](reference.md#pyradiance.render) function. Regular RADIANCE functions such as [rpict()](reference.md#pyradiance.rpict), 
+    [rtrace()](reference.md#pyradiance.rtrace), [rcontrib()](reference.md#pyradiance.rcontrib) 
     currently doesn't take `Scene` as input.  These 'raw' RADIANCE functions takes file paths as input instead, as they do in RADIANCE CLI.
 
 ## Rendering a scene
-A scene can be rendering using the [render()](../reference/#pyradiance.render) function. The `render()` function has a few optional arguments.
+A scene can be rendering using the [render()](reference.md#pyradiance.render) function. The `render()` function has a few optional arguments.
 RADIANCE, by default, uses zero ambient bounce, which we can overwrite by defining the `ambbounce` argument:
 ```python
 image = pr.render(scene, ambbounce=1)
@@ -56,8 +56,8 @@ We can visualize the image using popular computing and plotting library such as 
 ### Falscolor image
 Falsecolor-ing an image is a common practice in quantitative analysis. An falsecolor image maps the full range of an HDR image into a color scale.
 First, we convert our `image` into a numpy array. This is usually the first step before any analysis in Python, since most of the analysis and 
-visualization library recognize the `numpy.ndarray` object. We use [pvalue()](../reference/#pyradiance.pvalue) and 
-[get_image_dimension()](../reference/#pyradiance.get_image_dimensions) function for this step. 
+visualization library recognize the `numpy.ndarray` object. We use [pvalue()](reference.md#pyradiance.pvalue) and 
+[get_image_dimension()](reference.md#pyradiance.get_image_dimensions) function for this step. 
 ```python
 import numpy as np
 xres, yres = pr.get_image_dimensions(image)
