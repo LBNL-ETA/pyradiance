@@ -7,213 +7,211 @@ from pathlib import Path
 from typing import Dict
 
 import requests
-from setuptools import setup, Extension
-
-from distutils.command.build_ext import build_ext as build_ext_orig
-
 from auditwheel.wheeltools import InWheel
+from setuptools import Extension, setup
+from setuptools.command.build_ext import build_ext as build_ext_orig
 from wheel.bdist_wheel import bdist_wheel
 
-RADTAG = "31b8c139"
+RADTAG = "0c4048ad"
 
 RADBINS = [
-    'bsdf2ttree',
-    'bsdf2klems',
-    'bsdfquery',
-    'cnt',
-    'dctimestep',
-    'evalglare',
-    'falsecolor',
-    'getbbox',
-    'getinfo',
-    'genblinds',
-    'genBSDF',
-    'gendaylit',
-    'gendaymtx',
-    'gensky',
-    'ies2rad',
-    'mgf2rad',
-    'mkillum',
-    'obj2rad',
-    'oconv',
-    'pabopto2bsdf',
-    'pcomb',
-    'pcond',
-    'pfilt',
-    'pkgBSDF',
-    'pvalue',
-    'rad',
-    'ra_tiff',
-    'rcalc',
-    'rcode_depth',
-    'rcode_ident',
-    'rcode_norm',
-    'rcontrib',
-    'rfluxmtx',
-    'rlam',
-    'rmtxop',
-    'robjutil',
-    'rpict',
-    'rsensor',
-    'rtpict',
-    'rtrace',
-    'total',
-    'vwrays',
-    'vwright',
-    'wrapBSDF',
-    'xform',
+    "bsdf2ttree",
+    "bsdf2klems",
+    "bsdfquery",
+    "cnt",
+    "dctimestep",
+    "evalglare",
+    "falsecolor",
+    "getbbox",
+    "getinfo",
+    "genblinds",
+    "genBSDF",
+    "gendaylit",
+    "gendaymtx",
+    "gensky",
+    "ies2rad",
+    "mgf2rad",
+    "mkillum",
+    "obj2rad",
+    "obj2mesh",
+    "oconv",
+    "pabopto2bsdf",
+    "pcomb",
+    "pcond",
+    "pfilt",
+    "pkgBSDF",
+    "pvalue",
+    "rad",
+    "ra_tiff",
+    "rcalc",
+    "rcode_depth",
+    "rcode_ident",
+    "rcode_norm",
+    "rcontrib",
+    "rfluxmtx",
+    "rlam",
+    "rmtxop",
+    "robjutil",
+    "rpict",
+    "rsensor",
+    "rtpict",
+    "rtrace",
+    "total",
+    "vwrays",
+    "vwright",
+    "wrapBSDF",
+    "xform",
     # For Windows Perl scripts
-    'perl530',
-    'libgcc_s_seh-1',
-    'libstdc++-6',
-    'libwinpthread-1',
+    "perl530",
+    "libgcc_s_seh-1",
+    "libstdc++-6",
+    "libwinpthread-1",
 ]
 
 RADLIB = [
-    'Ashikhmin.cal',
-    'LaFortune.cal',
-    'LaFortune1.cal',
-    'WGMDaniso.cal',
-    'WGMDiso.cal',
-    'WINDOW6BSDFt.xml',
-    'WalterBSDF.cal',
-    'WalterBTDF.cal',
-    'ambient.fmt',
-    'ambpos.cal',
-    'bezier2.cal',
-    'blackbody.cal',
-    'blinds.cal',
-    'boxw.plt',
-    'bsdf2rad.cal',
-    'cartesian.plt',
-    'cct.cal',
-    'cielab.cal',
-    'cieluv.cal',
-    'cieresp.cal',
-    'circle.cal',
-    'clamp.cal',
-    'clockface.hex',
-    'clouds.cal',
-    'cmat.fmt',
-    'color.fmt',
-    'colorcal.csh',
-    'conv1.cal',
-    'conv2.cal',
-    'cri.cal',
-    'cubic.cal',
-    'curve.plt',
-    'denom.cal',
-    'disk2square.cal',
-    'errfile.fmt',
-    'ferwerda.cal',
-    'filt.cal',
-    'fisheye_corr.cal',
-    'fitSH.cal',
-    'fog.cal',
-    'fovsample.cal',
-    'function.plt',
-    'gauss.cal',
-    'gaussian.cal',
-    'genSH.cal',
-    'gensky+s.fmt',
-    'gensky-s.fmt',
-    'glaze1.cal',
-    'glaze2.cal',
-    'graypatch.cal',
-    'helvet.fnt',
-    'hermite.cal',
-    'hsv_rgb.cal',
-    'illum.cal',
-    'illum.fmt',
-    'illumcal.csh',
-    'klems_ang.cal',
-    'klems_full.cal',
-    'klems_half.cal',
-    'klems_quarter.cal',
-    'lamp.tab',
-    'landscape.cal',
-    'line.plt',
-    'log3G10.cal',
-    'lumdist.cal',
-    'macbeth.cal',
-    'mat3.cal',
-    'metals.cal',
-    'minimalBSDFt.xml',
-    'noise.cal',
-    'noise2.cal',
-    'noise3.cal',
-    'norm.cal',
-    'normcomp.cal',
-    'patch3w.cal',
-    'peerless.cal',
-    'perezlum.cal',
-    'perezlum_c.cal',
-    'picdiff.cal',
-    'polar.plt',
-    'polynomial.cal',
-    'pq.cal',
-    'printwarp.cal',
-    'quadratic.cal',
-    'rambpos.cal',
-    'rayinit.cal',
-    'reinhard.cal',
-    'reinhard.csh',
-    'reinhart.cal',
-    'reinhartb.cal',
-    'reinsrc.cal',
-    'rev.cal',
-    'rgb.cal',
-    'rgb_ycc.cal',
-    'root.cal',
-    'rskysrc.cal',
-    'scatter.plt',
-    'screen.cal',
-    'sf.cal',
-    'skybright.cal',
-    'source.cal',
-    'spharm.cal',
-    'sphsamp.cal',
-    'spline.cal',
-    'standard.plt',
-    'stdrefl.cal',
-    'sun.cal',
-    'sun2.cal',
-    'suncal.fmt',
-    'superellipsoid.cal',
-    'surf.cal',
-    'symbols.met',
-    'symbols.mta',
-    'testimg.cal',
-    'testsuncal.csh',
-    'tilt.cal',
-    'tmesh.cal',
-    'trans.cal',
-    'trans2.cal',
-    'tregenza.cal',
-    'tregsamp.dat',
-    'tregsrc.cal',
-    'trix.dat',
-    'triy.dat',
-    'triz.dat',
-    'tumblin.cal',
-    'uniq_rgb.cal',
-    'vchars.met',
-    'vchars.mta',
-    'veil.cal',
-    'view.fmt',
-    'view360stereo.cal',
-    'vl.cal',
-    'vonKries.cal',
-    'vwparab.cal',
-    'vwplanis.cal',
-    'window.cal',
-    'xyz_rgb.cal',
-    'xyz_srgb.cal',
+    "Ashikhmin.cal",
+    "LaFortune.cal",
+    "LaFortune1.cal",
+    "WGMDaniso.cal",
+    "WGMDiso.cal",
+    "WINDOW6BSDFt.xml",
+    "WalterBSDF.cal",
+    "WalterBTDF.cal",
+    "ambient.fmt",
+    "ambpos.cal",
+    "bezier2.cal",
+    "blackbody.cal",
+    "blinds.cal",
+    "boxw.plt",
+    "bsdf2rad.cal",
+    "cartesian.plt",
+    "cct.cal",
+    "cielab.cal",
+    "cieluv.cal",
+    "cieresp.cal",
+    "circle.cal",
+    "clamp.cal",
+    "clockface.hex",
+    "clouds.cal",
+    "cmat.fmt",
+    "color.fmt",
+    "colorcal.csh",
+    "conv1.cal",
+    "conv2.cal",
+    "cri.cal",
+    "cubic.cal",
+    "curve.plt",
+    "denom.cal",
+    "disk2square.cal",
+    "errfile.fmt",
+    "ferwerda.cal",
+    "filt.cal",
+    "fisheye_corr.cal",
+    "fitSH.cal",
+    "fog.cal",
+    "fovsample.cal",
+    "function.plt",
+    "gauss.cal",
+    "gaussian.cal",
+    "genSH.cal",
+    "gensky+s.fmt",
+    "gensky-s.fmt",
+    "glaze1.cal",
+    "glaze2.cal",
+    "graypatch.cal",
+    "helvet.fnt",
+    "hermite.cal",
+    "hsv_rgb.cal",
+    "illum.cal",
+    "illum.fmt",
+    "illumcal.csh",
+    "klems_ang.cal",
+    "klems_full.cal",
+    "klems_half.cal",
+    "klems_quarter.cal",
+    "lamp.tab",
+    "landscape.cal",
+    "line.plt",
+    "log3G10.cal",
+    "lumdist.cal",
+    "macbeth.cal",
+    "mat3.cal",
+    "metals.cal",
+    "minimalBSDFt.xml",
+    "noise.cal",
+    "noise2.cal",
+    "noise3.cal",
+    "norm.cal",
+    "normcomp.cal",
+    "patch3w.cal",
+    "peerless.cal",
+    "perezlum.cal",
+    "perezlum_c.cal",
+    "picdiff.cal",
+    "polar.plt",
+    "polynomial.cal",
+    "pq.cal",
+    "printwarp.cal",
+    "quadratic.cal",
+    "rambpos.cal",
+    "rayinit.cal",
+    "reinhard.cal",
+    "reinhard.csh",
+    "reinhart.cal",
+    "reinhartb.cal",
+    "reinsrc.cal",
+    "rev.cal",
+    "rgb.cal",
+    "rgb_ycc.cal",
+    "root.cal",
+    "rskysrc.cal",
+    "scatter.plt",
+    "screen.cal",
+    "sf.cal",
+    "skybright.cal",
+    "source.cal",
+    "spharm.cal",
+    "sphsamp.cal",
+    "spline.cal",
+    "standard.plt",
+    "stdrefl.cal",
+    "sun.cal",
+    "sun2.cal",
+    "suncal.fmt",
+    "superellipsoid.cal",
+    "surf.cal",
+    "symbols.met",
+    "symbols.mta",
+    "testimg.cal",
+    "testsuncal.csh",
+    "tilt.cal",
+    "tmesh.cal",
+    "trans.cal",
+    "trans2.cal",
+    "tregenza.cal",
+    "tregsamp.dat",
+    "tregsrc.cal",
+    "trix.dat",
+    "triy.dat",
+    "triz.dat",
+    "tumblin.cal",
+    "uniq_rgb.cal",
+    "vchars.met",
+    "vchars.mta",
+    "veil.cal",
+    "view.fmt",
+    "view360stereo.cal",
+    "vl.cal",
+    "vonKries.cal",
+    "vwparab.cal",
+    "vwplanis.cal",
+    "window.cal",
+    "xyz_rgb.cal",
+    "xyz_srgb.cal",
 ]
 
 
-
-csources=[
+csources = [
     "Radiance/src/common/badarg.c",
     "Radiance/src/common/bmalloc.c",
     "Radiance/src/common/bsdf.c",
@@ -337,7 +335,11 @@ csources=[
 if platform.system().lower() == "linux":
     csources += ["Radiance/src/common/strcmp.c", "Radiance/src/common/strlcpy.c"]
 elif platform.system().lower() == "windows":
-    csources += ["Radiance/src/common/strlcpy.c", "Radiance/src/common/timegm.c", "Radiance/src/common/fixargv0.c"]
+    csources += [
+        "Radiance/src/common/strlcpy.c",
+        "Radiance/src/common/timegm.c",
+        "Radiance/src/common/fixargv0.c",
+    ]
 
 # Need to explictly set these for Windows?
 export_symbols = [
@@ -357,6 +359,7 @@ export_symbols = [
     "c_ccvt",
     "cie_rgb",
 ]
+
 
 class PyradianceBDistWheel(bdist_wheel):
 
@@ -405,11 +408,13 @@ class PyradianceBDistWheel(bdist_wheel):
         dist_dir = Path(self.dist_dir)
         wheel_path = list(dist_dir.glob("*.whl"))[0]
         without_platform = "-".join(wheel_path.stem.split("-")[:2]) + "-py3-none-"
-        platform_wheel_path = os.path.join(self.dist_dir, without_platform + wheel["wheel"])
+        platform_wheel_path = os.path.join(
+            self.dist_dir, without_platform + wheel["wheel"]
+        )
         zip_name = f'Radiance_{RADTAG}_{wheel["zip_tag"]}.zip'
         if not os.path.exists(zip_name):
-            url = f'https://github.com/LBNL-ETA/Radiance/releases/download/{RADTAG}/{zip_name}'
-            with open(zip_name, 'wb') as wtr:
+            url = f"https://github.com/LBNL-ETA/Radiance/releases/download/{RADTAG}/{zip_name}"
+            with open(zip_name, "wb") as wtr:
                 wtr.write(requests.get(url).content)
         radiance_dir = "radiance"
         os.makedirs(radiance_dir, exist_ok=True)
@@ -436,7 +441,13 @@ class PyradianceBDistWheel(bdist_wheel):
                 for file in files:
                     from_path = os.path.join(dir_path, file)
                     to_path = Path(file).name
-                    if Path(file).stem in RADBINS and Path(file).suffix not in (".1", '.c', '.h', '.txt', '.mtx'):
+                    if Path(file).stem in RADBINS and Path(file).suffix not in (
+                        ".1",
+                        ".c",
+                        ".h",
+                        ".txt",
+                        ".mtx",
+                    ):
                         # Windows need .exe suffix
                         os.chmod(from_path, 0o755)
                         zip.write(from_path, f"pyradiance/bin/{to_path}")
@@ -445,7 +456,10 @@ class PyradianceBDistWheel(bdist_wheel):
         os.remove(wheel_path)
         for whlfile in list(dist_dir.glob("*.whl")):
             os.makedirs("wheelhouse", exist_ok=True)
-            with InWheel(in_wheel=str(whlfile), out_wheel=os.path.join("wheelhouse", os.path.basename(whlfile)),):
+            with InWheel(
+                in_wheel=str(whlfile),
+                out_wheel=os.path.join("wheelhouse", os.path.basename(whlfile)),
+            ):
                 print(f"Updating RECORD file of {whlfile}")
         shutil.rmtree(self.dist_dir)
         shutil.move("wheelhouse", self.dist_dir)
@@ -457,6 +471,10 @@ class CTypesExtension(Extension):
 
 
 class build_ext(build_ext_orig):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._ctypes = False
+
     def build_extension(self, ext):
         self._ctypes = isinstance(ext, CTypesExtension)
         with open("Radiance/src/rt/VERSION", "r") as f:
@@ -471,10 +489,10 @@ class build_ext(build_ext_orig):
             return export_symbols
         return super().get_export_symbols(ext)
 
-    def get_ext_filename(self, ext_name):
+    def get_ext_filename(self, fullname):
         if self._ctypes:
-            return ext_name + ".so"
-        return super().get_ext_filename(ext_name)
+            return fullname + ".so"
+        return super().get_ext_filename(fullname)
 
 
 setup(
