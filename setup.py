@@ -372,8 +372,10 @@ class PyradianceBDistWheel(bdist_wheel):
         shutil.rmtree("dist", ignore_errors=True)
         shutil.rmtree("pyradiance.egg-info", ignore_errors=True)
         super().run()
-        glibc_major, glibc_minor = platform.libc_ver()[1].split(".")
-        linux_name = f"manylinux_{glibc_major}_{glibc_minor}_x86_64"
+        if platform.system().lower() == "linux":
+            glibc_major, glibc_minor = platform.libc_ver()[1].split(".")
+        else:
+            glibc_major, glibc_minor = 0, 0
         wheels = {
             "darwin": {
                 "x86_64": {
@@ -387,7 +389,7 @@ class PyradianceBDistWheel(bdist_wheel):
             },
             "linux": {
                 "x86_64": {
-                    "wheel": linux_name + ".whl",
+                    "wheel": f"manylinux_{glibc_major}_{glibc_minor}_x86_64.whl",
                     "zip_tag": "Linux",
                 }
             },
