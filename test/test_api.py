@@ -1,12 +1,14 @@
 """
 Test pyradiance api
 """
+
 from datetime import datetime
 from pathlib import Path
 
+import pytest
+
 import pyradiance as pr
 from pyradiance import model, param
-import pytest
 
 
 @pytest.fixture
@@ -35,12 +37,12 @@ def test_load_scene(resources_dir: Path):
     """Test the load_scene function."""
     # assert load_scene('test') == 'test'
     scene = pr.Scene("test_scene")
-    scene.add_surface(str(resources_dir / "floor.rad"))
+    scene.add_surface(str(resources_dir / "floor 1.rad"))
     scene.add_surface(str(resources_dir / "ceiling.rad"))
     scene.add_material(str(resources_dir / "materials.mat"))
     scene.add_source(str(resources_dir / "sky.rad"))
     assert scene.sid == "test_scene"
-    assert str(resources_dir / "floor.rad") in scene.surfaces
+    assert str(resources_dir / "floor 1.rad") in scene.surfaces
     assert str(resources_dir / "ceiling.rad") in scene.surfaces
     assert str(resources_dir / "materials.mat") in scene.materials
     assert str(resources_dir / "sky.rad") in scene.sources
@@ -53,7 +55,7 @@ def test_render(resources_dir: Path):
         direction=(0, -1, 0),
     )
     scene = pr.Scene("test_scene")
-    scene.add_surface(resources_dir / "floor.rad")
+    scene.add_surface(resources_dir / "floor 1.rad")
     scene.add_surface(resources_dir / "ceiling.rad")
     scene.add_material(resources_dir / "materials.mat")
     scene.add_source(resources_dir / "sky.rad")
@@ -67,7 +69,7 @@ def test_rfluxmtx(resources_dir: Path):
     rays = b"1.0 1 1 0 0 1"
     scene = (
         resources_dir / "materials.mat",
-        resources_dir / "floor.rad",
+        resources_dir / "floor 1.rad",
         resources_dir / "ceiling.rad",
     )
     result = pr.rfluxmtx(receiver, rays=rays, scene=scene)
@@ -78,7 +80,7 @@ def test_read_rad(resources_dir: Path):
     """Test the read_rad function."""
     result = pr.read_rad(
         str(resources_dir / "materials.mat"),
-        str(resources_dir / "floor.rad"),
+        str(resources_dir / "floor 1.rad"),
         str(resources_dir / "ceiling.rad"),
     )
     assert len(result) > 0

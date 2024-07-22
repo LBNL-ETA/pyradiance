@@ -2,17 +2,18 @@
 Radiance utilities
 """
 
-from dataclasses import dataclass
 import os
-from pathlib import Path
+import shlex
 import subprocess as sp
 import sys
+from dataclasses import dataclass
+from pathlib import Path
 from typing import List, Optional, Sequence, Tuple, Union
 
 from .anci import BINPATH, handle_called_process_error
 from .model import View
-from .param import SamplingParameters, parse_rtrace_args
 from .ot import getbbox
+from .param import SamplingParameters, parse_rtrace_args
 
 
 @handle_called_process_error
@@ -588,9 +589,9 @@ def render(
     nproc = 1 if sys.platform == "win32" else nproc
     octpath = Path(f"{scene.sid}.oct")
     scenestring = " ".join(
-        [str(srf) for _, srf in {**scene.surfaces, **scene.sources}.items()]
+        f"'{str(srf)}'" for _, srf in {**scene.surfaces, **scene.sources}.items()
     )
-    materialstring = " ".join((str(mat) for _, mat in scene.materials.items()))
+    materialstring = " ".join(f"'{str(mat)}'" for _, mat in scene.materials.items())
     rad_render_options = []
     if ambbounce is not None:
         rad_render_options.extend(["-ab", str(ambbounce)])
@@ -640,7 +641,7 @@ def render(
         print("rebuilding octree...")
         with open(octpath, "wb") as wtr:
             _cmd = radcmds[0].split(">", 1)[0]
-            sp.run(_cmd.split(), check=True, stdout=wtr)
+            sp.run(shlex.split(_cmd), check=True, stdout=wtr)
         _sidx = 1
     elif radcmds[0].startswith(("rm", "del")):
         sp.run(radcmds[0].split(), check=True)
@@ -675,7 +676,7 @@ def rfluxmtx(
     surface: Optional[Union[str, Path]] = None,
     rays: Optional[bytes] = None,
     params: Optional[Sequence[str]] = None,
-    octree: Optional[Union[Path,str]] = None,
+    octree: Optional[Union[Path, str]] = None,
     scene: Optional[Sequence[Union[Path, str]]] = None,
 ) -> bytes:
     """Run rfluxmtx command.
