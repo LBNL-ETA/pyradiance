@@ -699,7 +699,10 @@ def rfluxmtx(
     if octree is not None:
         cmd.extend(["-i", str(octree)])
     if scene is not None:
-        cmd.extend(f"'{str(s)}'" for s in scene)
+        if sys.platform == "win32":
+            cmd.extend(f"'{str(s)}'" for s in scene)
+        else:
+            cmd.extend(str(s) for s in scene)
     return sp.run(cmd, check=True, stdout=sp.PIPE, input=rays).stdout
 
 
