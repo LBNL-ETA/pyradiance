@@ -589,9 +589,9 @@ def render(
     nproc = 1 if sys.platform == "win32" else nproc
     octpath = Path(f"{scene.sid}.oct")
     scenestring = " ".join(
-        f"'{str(srf)}'" for _, srf in {**scene.surfaces, **scene.sources}.items()
+        f'"{str(srf)}"' for _, srf in {**scene.surfaces, **scene.sources}.items()
     )
-    materialstring = " ".join(f"'{str(mat)}'" for _, mat in scene.materials.items())
+    materialstring = " ".join(f'"{str(mat)}"' for _, mat in scene.materials.items())
     rad_render_options = []
     if ambbounce is not None:
         rad_render_options.extend(["-ab", str(ambbounce)])
