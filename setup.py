@@ -12,7 +12,7 @@ from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext as build_ext_orig
 from wheel.bdist_wheel import bdist_wheel
 
-RADTAG = "0c4048ad"
+RADTAG = "f87961b0"
 
 RADBINS = [
     "bsdf2ttree",
@@ -28,7 +28,9 @@ RADBINS = [
     "genBSDF",
     "gendaylit",
     "gendaymtx",
+    "gensdaymtx",
     "gensky",
+    "genssky",
     "ies2rad",
     "mgf2rad",
     "mkillum",
@@ -137,6 +139,7 @@ RADLIB = [
     "macbeth.cal",
     "mat3.cal",
     "metals.cal",
+    "mie_ca.dat",
     "minimalBSDFt.xml",
     "noise.cal",
     "noise2.cal",

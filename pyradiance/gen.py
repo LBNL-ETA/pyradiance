@@ -1,9 +1,10 @@
 """
 Radiance generators and scene Manipulators
 """
+
+import subprocess as sp
 from datetime import datetime
 from pathlib import Path
-import subprocess as sp
 from typing import List, Optional, Sequence, Union
 
 from .anci import BINPATH, handle_called_process_error
@@ -295,6 +296,70 @@ def gendaymtx(
 
 
 @handle_called_process_error
+def gensdaymtx(
+    weather_data: Union[str, Path, bytes],
+    verbose: bool = False,
+    header: bool = True,
+    sun_only: bool = False,
+    sky_only: bool = False,
+    daylight_hours_only: bool = False,
+    ground_reflectance: Optional[List[float]] = None,
+    rotate: Optional[float] = None,
+    outform: Optional[str] = None,
+    onesun: bool = False,
+    mfactor: int = 1,
+):
+    """Generate an annual Perez sky matrix from a weather tape.
+
+    Args:
+        weather_data: weather data
+        mfactor: multiplication factor
+        verbose: verbose
+        header: header
+        sun_only: sun only
+        sky_only: sky only
+        daylight_hours_only: daylight hours only
+        ground_reflectance: ground color
+        rotate: rotate
+        outform: outform
+        onesun: onesun
+        solar_radiance: solar radiance
+
+    Returns:
+        bytes: output of gendaymtx
+    """
+    stdin = None
+    cmd = [str(BINPATH / "gensdaymtx")]
+    cmd.extend(["-m", str(mfactor)])
+    if verbose:
+        cmd.append("-v")
+    if not header:
+        cmd.append("-h")
+    if sun_only:
+        cmd.append("-d")
+    elif sky_only:
+        cmd.append("-s")
+    if onesun:
+        cmd.extend(["-5", ".533"])
+    if ground_reflectance:
+        cmd.extend(["-g", str(ground_reflectance)])
+    if daylight_hours_only:
+        cmd.append("-u")
+    if rotate is not None:
+        cmd.extend(["-r", str(rotate)])
+    if outform is not None:
+        cmd.append(f"-o{outform}")
+    if isinstance(weather_data, bytes):
+        stdin = weather_data
+    elif isinstance(weather_data, (str, Path)):
+        cmd.append(str(weather_data))
+    else:
+        raise TypeError("weather_data must be a string, Path, or bytes")
+    out = sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE, stderr=sp.PIPE)
+    return out.stdout
+
+
+@handle_called_process_error
 def gensky(
     dt: Optional[datetime] = None,
     latitude: Optional[float] = None,
@@ -382,6 +447,57 @@ def gensky(
         cmd.extend(["-R", str(horizontal_direct_irradiance)])
     if turbidity is not None:
         cmd.extend(["-t", str(turbidity)])
+    return sp.run(cmd, stderr=sp.PIPE, stdout=sp.PIPE, check=True).stdout
+
+
+@handle_called_process_error
+def genssky(
+    dt: datetime,
+    latitude: float = 37.7,
+    longitude: float = 122.2,
+    timezone: int = 120,
+    year: Optional[int] = None,
+    res: int = 64,
+    cloud_cover: float = 0.0,
+    ground_reflectance: float = 0.2,
+    broadband_aerosol_optical_depth: float = 0.115,
+    mie_file: Optional[str] = None,
+    out_dir: str = ".",
+    out_name: str = "out",
+) -> bytes:
+    """Generate a RADIANCE description of the spectral sky.
+
+    Args:
+        dt: datetime object, mutally exclusive with altitude and azimuth
+        latitude: latitude, only apply if dt is not None
+        longitude: longitude, only apply if dt is not None
+        timezone: timezone, only apply if dt is not None
+        year: year, only apply if dt is not None
+        cloud_cover: CIE overcast sky
+        ground_reflectance: ground reflectance
+        solar_radiance: solar radiance in watts/steradian/meter^2
+        horizontal_direct_irradiance: horizontal direct irradiance in watts/meter^2
+        turbidity: turbidity factor
+    Returns:
+        str: output of gensky
+    """
+    cmd = [str(BINPATH / "gensky")]
+    cmd.append(str(dt.month))
+    cmd.append(str(dt.day))
+    cmd.append(str(dt.hour + dt.minute / 60))
+    cmd.extend(["-a", str(latitude)])
+    cmd.extend(["-o", str(longitude)])
+    cmd.extend(["-m", str(timezone)])
+    cmd.extend(["-r", str(res)])
+    if year is not None:
+        cmd += ["-y", str(year)]
+    cmd.extend(["-c", str(cloud_cover)])
+    cmd.extend(["-d", str(broadband_aerosol_optical_depth)])
+    cmd.extend(["-g", str(ground_reflectance)])
+    if mie_file is not None:
+        cmd.extend(["-l", str(mie_file)])
+    cmd.extend(["-p", out_dir])
+    cmd.extend(["-f", out_name])
     return sp.run(cmd, stderr=sp.PIPE, stdout=sp.PIPE, check=True).stdout
 
 
