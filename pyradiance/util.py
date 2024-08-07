@@ -590,7 +590,7 @@ def render(
     scenestring = ""
     for _, srf in scene.surfaces.items():
         if not isinstance(srf, Primitive):
-            scenestring += f" {srf}"
+            scenestring += f' "{srf}"'
     materialstring = " ".join(f'"{str(mat)}"' for _, mat in scene.materials.items())
     rad_render_options = []
     if ambbounce is not None:
