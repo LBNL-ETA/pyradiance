@@ -3,7 +3,6 @@ Radiance utilities
 """
 
 import os
-import shlex
 import subprocess as sp
 import sys
 from dataclasses import dataclass
@@ -11,7 +10,7 @@ from pathlib import Path
 from typing import List, Optional, Sequence, Tuple, Union
 
 from .anci import BINPATH, handle_called_process_error
-from .model import View
+from .model import Primitive, View
 from .ot import getbbox
 from .param import SamplingParameters, parse_rtrace_args
 
@@ -588,9 +587,10 @@ def render(
     """
     nproc = 1 if sys.platform == "win32" else nproc
     octpath = Path(f"{scene.sid}.oct")
-    scenestring = " ".join(
-        f'"{str(srf)}"' for _, srf in {**scene.surfaces, **scene.sources}.items()
-    )
+    scenestring = ""
+    for _, srf in scene.surfaces.items():
+        if not isinstance(srf, Primitive):
+            scenestring += f" {srf}"
     materialstring = " ".join(f'"{str(mat)}"' for _, mat in scene.materials.items())
     rad_render_options = []
     if ambbounce is not None:
@@ -639,13 +639,13 @@ def render(
     _sidx = 0
     if radcmds[0].startswith("oconv"):
         print("rebuilding octree...")
-        with open(octpath, "wb") as wtr:
-            _cmd = radcmds[0].split(">", 1)[0]
-            sp.run(shlex.split(_cmd), check=True, stdout=wtr)
+        scene.build()
         _sidx = 1
     elif radcmds[0].startswith(("rm", "del")):
         sp.run(radcmds[0].split(), check=True)
         _sidx = 1
+    else:
+        raise NotImplementedError("Unsupported command line: " + "\n".join(radcmds))
     radcmds = [c for c in radcmds[_sidx:] if not c.startswith(("pfilt", "rm"))]
     argdict = parse_rtrace_args(" ".join(radcmds))
 
@@ -759,7 +759,7 @@ def rsensor(
     for i, sf in enumerate(sensor):
         if ray_count is not None:
             cmd.extend(["-rd", str(ray_count[i])])
-        if None not in (direct_ray, octree):
+        if (direct_ray is not None) and octree is not None:
             cmd.extend(["-dn", str(direct_ray[i])])
         if sensor_view is not None:
             cmd.append(str(sensor_view[i]))
