@@ -808,9 +808,27 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#pyradiance.gensdaymtx" class="md-nav__link">
+    <span class="md-ellipsis">
+      gensdaymtx
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pyradiance.gensky" class="md-nav__link">
     <span class="md-ellipsis">
       gensky
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.genssky" class="md-nav__link">
+    <span class="md-ellipsis">
+      genssky
     </span>
   </a>
   
@@ -1626,9 +1644,27 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#pyradiance.gensdaymtx" class="md-nav__link">
+    <span class="md-ellipsis">
+      gensdaymtx
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pyradiance.gensky" class="md-nav__link">
     <span class="md-ellipsis">
       gensky
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.genssky" class="md-nav__link">
+    <span class="md-ellipsis">
+      genssky
     </span>
   </a>
   
@@ -4912,6 +4948,227 @@ Perez models for direct and diffuse components.</p>
 <div class="doc doc-object doc-function">
 
 
+<h3 id="pyradiance.gensdaymtx" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">gensdaymtx</span><span class="p">(</span><span class="n">weather_data</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">sun_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sky_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">daylight_hours_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ground_reflectance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rotate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">outform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">onesun</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">mfactor</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">nthreads</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+      <p>Generate an annual Perez sky matrix from a weather tape.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>weather_data</code></td>
+            <td>
+                  <code><span title="typing.Union">Union</span>[str, <span title="pathlib.Path">Path</span>, bytes]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>weather data</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>mfactor</code></td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>multiplication factor</p>
+              </div>
+            </td>
+            <td>
+                  <code>1</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>verbose</code></td>
+            <td>
+                  <code>bool</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>verbose</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>header</code></td>
+            <td>
+                  <code>bool</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>header</p>
+              </div>
+            </td>
+            <td>
+                  <code>True</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>sun_only</code></td>
+            <td>
+                  <code>bool</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>sun only</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>sky_only</code></td>
+            <td>
+                  <code>bool</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>sky only</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>daylight_hours_only</code></td>
+            <td>
+                  <code>bool</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>daylight hours only</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>ground_reflectance</code></td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="typing.List">List</span>[float]]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>ground color</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>rotate</code></td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[float]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>rotate</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>outform</code></td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[str]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>outform</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>onesun</code></td>
+            <td>
+                  <code>bool</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>onesun</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>solar_radiance</code></td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>solar radiance</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>bytes</code></td>            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>output of gendaymtx</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h3 id="pyradiance.gensky" class="doc doc-heading">
             <code class="highlight language-python"><span class="n">gensky</span><span class="p">(</span><span class="n">dt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">latitude</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">longitude</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timezone</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">altitude</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">azimuth</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">year</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sunny_with_sun</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sunny_without_sun</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cloudy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">intermediate_with_sun</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">intermediate_without_sun</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">uniform</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ground_reflectance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">zenith_brightness</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">horizontal_brightness</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">solar_radiance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">horizontal_direct_irradiance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">turbidity</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
@@ -5198,6 +5455,177 @@ Perez models for direct and diffuse components.</p>
             </td>
             <td>
                   <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+      <p>Returns:
+    str: output of gensky</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="pyradiance.genssky" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">genssky</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="n">latitude</span><span class="o">=</span><span class="mf">37.7</span><span class="p">,</span> <span class="n">longitude</span><span class="o">=</span><span class="mf">122.2</span><span class="p">,</span> <span class="n">timezone</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">year</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">res</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">cloud_cover</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">ground_reflectance</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">broadband_aerosol_optical_depth</span><span class="o">=</span><span class="mf">0.115</span><span class="p">,</span> <span class="n">mie_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nthreads</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">out_dir</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="n">out_name</span><span class="o">=</span><span class="s1">&#39;out&#39;</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+      <p>Generate a RADIANCE description of the spectral sky.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code>dt</code></td>
+            <td>
+                  <code><span title="datetime.datetime">datetime</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>datetime object, mutally exclusive with altitude and azimuth</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>latitude</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>latitude, only apply if dt is not None</p>
+              </div>
+            </td>
+            <td>
+                  <code>37.7</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>longitude</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>longitude, only apply if dt is not None</p>
+              </div>
+            </td>
+            <td>
+                  <code>122.2</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>timezone</code></td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>timezone, only apply if dt is not None</p>
+              </div>
+            </td>
+            <td>
+                  <code>120</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>year</code></td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[int]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>year, only apply if dt is not None</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>cloud_cover</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>CIE overcast sky</p>
+              </div>
+            </td>
+            <td>
+                  <code>0.0</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>ground_reflectance</code></td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>ground reflectance</p>
+              </div>
+            </td>
+            <td>
+                  <code>0.2</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>solar_radiance</code></td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>solar radiance in watts/steradian/meter^2</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>horizontal_direct_irradiance</code></td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>horizontal direct irradiance in watts/meter^2</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>turbidity</code></td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>turbidity factor</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
             </td>
           </tr>
       </tbody>
