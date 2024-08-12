@@ -308,6 +308,7 @@ def gensdaymtx(
     outform: Optional[str] = None,
     onesun: bool = False,
     mfactor: int = 1,
+    nthreads: int = 1,
 ):
     """Generate an annual Perez sky matrix from a weather tape.
 
@@ -343,6 +344,7 @@ def gensdaymtx(
         cmd.extend(["-5", ".533"])
     if ground_reflectance:
         cmd.extend(["-g", str(ground_reflectance)])
+    cmd.extend(["-n", str(nthreads)])
     if daylight_hours_only:
         cmd.append("-u")
     if rotate is not None:
@@ -462,6 +464,7 @@ def genssky(
     ground_reflectance: float = 0.2,
     broadband_aerosol_optical_depth: float = 0.115,
     mie_file: Optional[str] = None,
+    nthreads: int = 1,
     out_dir: str = ".",
     out_name: str = "out",
 ) -> bytes:
@@ -481,13 +484,14 @@ def genssky(
     Returns:
         str: output of gensky
     """
-    cmd = [str(BINPATH / "gensky")]
+    cmd = [str(BINPATH / "genssky")]
     cmd.append(str(dt.month))
     cmd.append(str(dt.day))
     cmd.append(str(dt.hour + dt.minute / 60))
     cmd.extend(["-a", str(latitude)])
     cmd.extend(["-o", str(longitude)])
     cmd.extend(["-m", str(timezone)])
+    cmd.extend(["-n", str(nthreads)])
     cmd.extend(["-r", str(res)])
     if year is not None:
         cmd += ["-y", str(year)]
@@ -498,7 +502,7 @@ def genssky(
         cmd.extend(["-l", str(mie_file)])
     cmd.extend(["-p", out_dir])
     cmd.extend(["-f", out_name])
-    return sp.run(cmd, stderr=sp.PIPE, stdout=sp.PIPE, check=True).stdout
+    return sp.run(cmd, stderr=sp.PIPE, stdout=sp.PIPE, check=False).stdout
 
 
 @handle_called_process_error

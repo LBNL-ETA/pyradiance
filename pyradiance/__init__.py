@@ -20,7 +20,16 @@ from .cv import (
     pkgbsdf,
     robjutil,
 )
-from .gen import genblinds, genbsdf, gendaylit, gendaymtx, gensky, mkillum
+from .gen import (
+    genblinds,
+    genbsdf,
+    gendaylit,
+    gendaymtx,
+    gensdaymtx,
+    gensky,
+    genssky,
+    mkillum,
+)
 from .lib import ABASELIST, BSDF, get_view_resolu, read_rad, spec_xyz, xyz_rgb
 from .model import (
     Primitive,
@@ -75,7 +84,9 @@ __all__ = [
     "genbsdf",
     "gendaylit",
     "gendaymtx",
+    "gensdaymtx",
     "gensky",
+    "genssky",
     "get_header",
     "get_image_dimensions",
     "get_view_resolu",
