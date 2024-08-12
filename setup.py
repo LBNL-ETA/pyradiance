@@ -12,7 +12,7 @@ from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext as build_ext_orig
 from wheel.bdist_wheel import bdist_wheel
 
-RADTAG = "f87961b0"
+RADTAG = "a964f25c"
 
 RADBINS = [
     "bsdf2ttree",
@@ -506,7 +506,7 @@ setup(
     name="pyradiance",
     author="LBNL",
     author_email="taoningwang@lbl.gov",
-    version="0.4.2",
+    version="0.4.3",
     description="Python interface for Radiance",
     long_description=Path("README.md").read_text(encoding="utf-8"),
     long_description_content_type="text/markdown",
