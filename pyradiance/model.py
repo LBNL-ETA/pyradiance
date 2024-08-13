@@ -6,12 +6,14 @@ This module defines model data structure.
 """
 
 import argparse
-from dataclasses import dataclass
+import csv
 import os
-from pathlib import Path
 import re
+from dataclasses import dataclass
+from pathlib import Path
 from typing import Dict, List, Sequence, Tuple, Union
 
+from .lib import spec_xyz, xyz_rgb
 from .ot import oconv
 from .param import add_view_args
 
@@ -384,3 +386,63 @@ def load_views(file: Union[str, Path]) -> List[View]:
     with open(file) as f:
         lines = f.readlines()
     return [parse_view(line) for line in lines]
+
+
+def load_material_smd(
+    file: Path, roughness: float = 0.0, spectral=False, metal=False
+) -> list[Primitive]:
+    """Generate Radiance primitives from csv file from spectral
+    material database (spectraldb.com).
+
+    Args:
+        file: Path to .csv file
+        roughness: Roughtness of material
+        spectral: Output spectral primitives
+        metal: Material is metal
+    Returns:
+        A list of primitives
+    """
+
+    primitives: list[Primitive] = []
+
+    mmod: str = "void"
+    specular: float = 0.0
+    mid: str = file.stem.replace(" ", "_")
+    wvls: list[float] = []
+    scis: list[float] = []
+    sces: list[float] = []
+
+    with open(file, "r") as f:
+        reader = csv.reader(f)
+        next(reader)
+        for row in reader:
+            wvl, sci, sce = map(float, row)
+            wvls.append(wvl)
+            scis.append(sci / 100.0)
+            sces.append(sce / 100.0)
+
+    min_wvl = min(wvls)
+    max_wvl = max(wvls)
+
+    sce_x, sce_y, sce_z = spec_xyz(sces, min_wvl, max_wvl)
+    if all(scis):
+        _, sci_y, _ = spec_xyz(scis, min_wvl, max_wvl)
+        specular = sci_y - sce_y
+
+    mfargs: list[float] = []
+    pfargs: list[float] = []
+    if spectral:
+        pid = f"{mid}_spectrum"
+        mmod = pid
+        pfargs.extend([min_wvl, max_wvl])
+        pfargs.extend(sces)
+        pp = Primitive("void", "spectrum", pid, [], pfargs)
+        mfargs.extend([1.0, 1.0, 1.0, specular, roughness])
+        primitives.append(pp)
+    else:
+        r, g, b = xyz_rgb(sce_x, sce_y, sce_z)
+        mfargs.extend([r, g, b])
+        mfargs.extend([specular, roughness])
+
+    primitives.append(Primitive(mmod, "metal" if metal else "plastic", mid, [], mfargs))
+    return primitives
