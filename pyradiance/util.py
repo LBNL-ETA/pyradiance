@@ -559,6 +559,53 @@ def rcode_norm(
     return sp.run(cmd, stdout=sp.PIPE, input=stdin, check=True).stdout
 
 
+@handle_called_process_error
+def rcomb(
+    inps: Sequence[Union[str, Path, bytes]],
+    transform: Optional[Sequence[str]] = None,
+    transform_all: Optional[str] = None,
+    scale: Optional[Sequence[list[float]]] = None,
+    source: Optional[str] = None,
+    expression: Optional[str] = None,
+    concat: Optional[Sequence[str]] = None,
+    outform: Optional[str] = None,
+    header: bool = True,
+    silent: bool = False,
+) -> bytes:
+    """Combine multiple rasters."""
+    cmd = [str(BINPATH / "rcomb")]
+    stdin = None
+    if not header:
+        cmd.append("-h")
+    if silent:
+        cmd.append("-w")
+    if expression is not None:
+        cmd.extend(["-e", expression])
+    if concat is not None:
+        for c in concat:
+            cmd.extend(["-m", c])
+    if transform_all is not None:
+        cmd.extend(["-C", transform_all])
+    for i, inp in enumerate(inps):
+        if transform is not None:
+            cmd.extend(["-c", transform[i]])
+        if scale is not None:
+            cmd.extend(["-s", *map(str, scale[i])])
+        if source is not None:
+            cmd.extend(["-f", source[i]])
+        if outform:
+            cmd.append(f"-f{outform[i]}")
+        if isinstance(i, bytes):
+            if stdin is not None:
+                raise ValueError("Only one bytes input allowed")
+            stdin = i
+        elif isinstance(i, (str, Path)):
+            cmd.append(str(inp))
+        else:
+            raise TypeError("inp must be a string, Path, or bytes")
+    return sp.run(cmd, input=stdin, check=True, stdout=sp.PIPE).stdout
+
+
 def render(
     scene,
     view: Optional[View] = None,
@@ -644,8 +691,6 @@ def render(
     elif radcmds[0].startswith(("rm", "del")):
         sp.run(radcmds[0].split(), check=True)
         _sidx = 1
-    else:
-        raise NotImplementedError("Unsupported command line: " + "\n".join(radcmds))
     radcmds = [c for c in radcmds[_sidx:] if not c.startswith(("pfilt", "rm"))]
     argdict = parse_rtrace_args(" ".join(radcmds))
 
