@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 import pyradiance as pr
-from pyradiance import model, param
+from pyradiance import param, util
 
 
 @pytest.fixture
@@ -110,7 +110,7 @@ def test_BSDF(resources_dir: Path):
 
 def test_parse_view():
     inp_str = "-vta -vv 180 -vh 180 -vp 0 0 0 -vd 0 -1 0"
-    res = model.parse_view(inp_str)
+    res = util.parse_view(inp_str)
     assert res.position == [0, 0, 0]
     assert res.direction == [0, -1, 0]
     assert res.vtype == "a"
