@@ -31,15 +31,7 @@ from .gen import (
     mkillum,
 )
 from .lib import ABASELIST, BSDF, get_view_resolu, read_rad, spec_xyz, xyz_rgb
-from .model import (
-    Primitive,
-    Scene,
-    Sensor,
-    View,
-    load_views,
-    parse_primitive,
-    parse_view,
-)
+from .model import Primitive, Scene, Sensor, View
 from .ot import oconv
 from .param import SamplingParameters
 from .px import falsecolor, pcond, pfilt, pvalue, pvaluer, ra_tiff
@@ -51,6 +43,10 @@ from .util import (
     get_header,
     get_image_dimensions,
     getinfo,
+    load_material_smd,
+    load_views,
+    parse_primitive,
+    parse_view,
     rcode_depth,
     rcode_ident,
     rcode_norm,
@@ -93,6 +89,7 @@ __all__ = [
     "getinfo",
     "ies2rad",
     "load_views",
+    "load_material_smd",
     "mgf2rad",
     "mkillum",
     "mkpmap",
