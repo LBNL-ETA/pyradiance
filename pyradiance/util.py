@@ -1,8 +1,10 @@
 """
 Radiance utilities
 """
-
+import argparse
+import csv
 import os
+import re
 import subprocess as sp
 import sys
 from dataclasses import dataclass
@@ -10,9 +12,10 @@ from pathlib import Path
 from typing import List, Optional, Sequence, Tuple, Union
 
 from .anci import BINPATH, handle_called_process_error
+from .lib import spec_xyz, xyz_rgb
 from .model import Primitive, View
 from .ot import getbbox
-from .param import SamplingParameters, parse_rtrace_args
+from .param import SamplingParameters, add_view_args, parse_rtrace_args
 
 
 @handle_called_process_error
@@ -1093,3 +1096,130 @@ def xform(
     else:
         cmd.append(inp)
     return sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
+
+
+def load_material_smd(
+    file: Path, roughness: float = 0.0, spectral=False, metal=False
+) -> list[Primitive]:
+    """Generate Radiance primitives from csv file from spectral
+    material database (spectraldb.com).
+
+    Args:
+        file: Path to .csv file
+        roughness: Roughtness of material
+        spectral: Output spectral primitives
+        metal: Material is metal
+    Returns:
+        A list of primitives
+    """
+
+    primitives: list[Primitive] = []
+
+    mmod: str = "void"
+    specular: float = 0.0
+    mid: str = file.stem.replace(" ", "_")
+    wvls: list[float] = []
+    scis: list[float] = []
+    sces: list[float] = []
+
+    with open(file, "r") as f:
+        reader = csv.reader(f)
+        next(reader)
+        for row in reader:
+            wvl, sci, sce = map(float, row)
+            wvls.append(wvl)
+            scis.append(sci / 100.0)
+            sces.append(sce / 100.0)
+
+    min_wvl = min(wvls)
+    max_wvl = max(wvls)
+
+    sce_x, sce_y, sce_z = spec_xyz(sces, min_wvl, max_wvl)
+    if all(scis):
+        _, sci_y, _ = spec_xyz(scis, min_wvl, max_wvl)
+        specular = sci_y - sce_y
+
+    mfargs: list[float] = []
+    pfargs: list[float] = []
+    if spectral:
+        pid = f"{mid}_spectrum"
+        mmod = pid
+        pfargs.extend([min_wvl, max_wvl])
+        pfargs.extend(sces)
+        pp = Primitive("void", "spectrum", pid, [], pfargs)
+        mfargs.extend([1.0, 1.0, 1.0, specular, roughness])
+        primitives.append(pp)
+    else:
+        r, g, b = xyz_rgb(sce_x, sce_y, sce_z)
+        mfargs.extend([r, g, b])
+        mfargs.extend([specular, roughness])
+
+    primitives.append(Primitive(mmod, "metal" if metal else "plastic", mid, [], mfargs))
+    return primitives
+
+def parse_primitive(pstr: str) -> List[Primitive]:
+    """Parse Radiance primitives inside a file path into a list of dictionary.
+    Args:
+        pstr: A string of Radiance primitives.
+
+    Returns:
+        list of primitives
+    """
+    res = []
+    tokens = re.sub(r"#.+?\n", "", pstr).strip().split()
+    itokens = iter(tokens)
+    for t in itokens:
+        modifier, ptype, identifier = t, next(itokens), next(itokens)
+        nsarg = next(itokens)
+        sarg = [next(itokens) for _ in range(int(nsarg))]
+        next(itokens)
+        nrarg = next(itokens)
+        rarg = [float(next(itokens)) for _ in range(int(nrarg))]
+        res.append(Primitive(modifier, ptype, identifier, sarg, rarg))
+    return res
+
+
+def parse_view(vstr: str) -> View:
+    """Parse view string into a View object.
+
+    Args:
+        vstr: view parameters as a string
+
+    Returns:
+        A View object
+    """
+    args_list = vstr.strip().split()
+    vparser = argparse.ArgumentParser()
+    vparser = add_view_args(vparser)
+    args, _ = vparser.parse_known_args(args_list)
+    if args.vf is not None:
+        args, _ = vparser.parse_known_args(
+            args.vf.readline().strip().split(), namespace=args
+        )
+        args.vf.close()
+    return View(
+        position=args.vp,
+        direction=args.vd,
+        vtype=args.vt[-1],
+        horiz=args.vh,
+        vert=args.vv,
+        vfore=args.vo,
+        vaft=args.va,
+        hoff=args.vs,
+        voff=args.vl,
+    )
+
+
+def load_views(file: Union[str, Path]) -> List[View]:
+    """Load views from a file.
+    One view per line.
+
+    Args:
+        file: A file path to a view file.
+
+    Returns:
+        A view object.
+    """
+    with open(file) as f:
+        lines = f.readlines()
+    return [parse_view(line) for line in lines]
