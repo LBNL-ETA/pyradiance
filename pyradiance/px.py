@@ -2,11 +2,74 @@
 Radiance picture processing utilities.
 """
 
-from pathlib import Path
 import subprocess as sp
-from typing import List, Optional, Union
+from dataclasses import dataclass
+from pathlib import Path
+from typing import List, Optional, Sequence, Tuple, Union
 
 from .anci import BINPATH, handle_called_process_error
+
+
+@dataclass
+class PcombInput:
+    image: Union[Path, str, bytes]
+    original: bool = False
+    scaler: float = 1.0
+
+
+@handle_called_process_error
+def pcomb(
+    inputs: Sequence[PcombInput],
+    xres: Optional[int] = None,
+    yres: Optional[int] = None,
+    inform: str = "a",
+    fout: bool = True,
+    header: bool = False,
+    expression: Optional[str] = None,
+    source: Optional[str] = None,
+) -> bytes:
+    """combine Radiance pictures and/or float matrices"""
+    stdin = None
+    cmd = [str(BINPATH / "pcomb")]
+    if xres is not None:
+        cmd.extend(["-x", str(xres)])
+    if yres is not None:
+        cmd.extend(["-y", str(yres)])
+    if inform != "a":
+        cmd.extend(["-i", inform])
+    if fout:
+        cmd.append("-ff")
+    if header:
+        cmd.append("-h")
+    if expression is not None:
+        cmd.extend(["-e", expression])
+    if source is not None:
+        cmd.extend(["-f", source])
+    for input in inputs:
+        if input.original:
+            cmd.append("-o")
+        if input.scaler:
+            cmd.extend(["-s", str(input.scaler)])
+        if isinstance(input, bytes):
+            if stdin is not None:
+                raise ValueError("Only one bytes input is allowed with pcomb.")
+            stdin = input
+        elif isinstance(input, (str, Path)):
+            cmd.append(str(input))
+        else:
+            raise ValueError(f"Unsupported input type: {type(input)}")
+    return sp.check_output(cmd)
+
+
+@handle_called_process_error
+def pcompos(
+    inputs: Sequence[Union[Path, str, bytes]],
+    xres: Optional[int] = None,
+    yres: Optional[int] = None,
+) -> bytes:
+    """Composite Radiance pictures"""
+    cmd = [str(BINPATH / "pcompos")]
+    return sp.check_output(cmd)
 
 
 @handle_called_process_error
@@ -172,6 +235,47 @@ def pfilt(
     else:
         raise TypeError("image should be a string, Path, or bytes.")
     return sp.run(cmd, input=stdin, stdout=sp.PIPE, check=True).stdout
+
+
+@handle_called_process_error
+def psign(
+    text: str,
+    background: Tuple[float, float, float] = (1.0, 1.0, 1.0),
+    foreground: Tuple[float, float, float] = (0.0, 0.0, 0.0),
+    reads_to_right: bool = True,
+    reads_upwards: bool = False,
+    reads_to_left: bool = False,
+    reads_downwards: bool = False,
+    height: int = 32,
+    aspect: float = 1.67,
+    xsize: Optional[int] = None,
+    ysize: Optional[int] = None,
+    spacing: float = 0.0,
+    fontfile: str = "helvet.fnt",
+) -> bytes:
+    """product a Radiance picture from text"""
+    cmd = [str(BINPATH / "psign")]
+    cmd.extend(["-cb", str(background[0]), str(background[1]), str(background[2])])
+    cmd.extend(["-cf", str(foreground[0]), str(foreground[1]), str(foreground[2])])
+    if reads_to_right:
+        cmd.append("-dr")
+    elif reads_to_left:
+        cmd.append("-dl")
+    if reads_upwards:
+        cmd.append("-du")
+    elif reads_downwards:
+        cmd.append("-dd")
+    cmd.extend(["-h", str(height)])
+    cmd.extend(["-a", str(aspect)])
+    if xsize:
+        cmd.extend(["-x", str(xsize)])
+    if ysize:
+        cmd.extend(["-y", str(ysize)])
+    cmd.extend(["-s", str(spacing)])
+    if fontfile:
+        cmd.extend(["-f", fontfile])
+    cmd.append(text)
+    return sp.run(cmd, stdout=sp.PIPE, check=True).stdout
 
 
 @handle_called_process_error
@@ -428,6 +532,7 @@ def ra_ppm(
         stdin = inp
     return sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
 
+
 @handle_called_process_error
 def falsecolor(
     inp: Union[str, Path, bytes],
@@ -484,10 +589,12 @@ def falsecolor(
         cmd.extend(["-p", pic_overlay])
 
     if contour:
-        if contour in ['b', 'l', 'p']:
+        if contour in ["b", "l", "p"]:
             cmd.append(f"-c{contour}")
         else:
-            raise ValueError("Invalid value for contour. Allowed values are 'b', 'l', or 'p'.")
+            raise ValueError(
+                "Invalid value for contour. Allowed values are 'b', 'l', or 'p'."
+            )
 
     if extrema:
         cmd.append("-e")
