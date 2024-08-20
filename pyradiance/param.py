@@ -119,6 +119,10 @@ class SamplingParameters:
     dv = pbool("dv")
     bv = pbool("bv")
 
+    def __init__(self, **kwargs):
+        for key, val in kwargs.items():
+            self.update_key(key, val)
+
     def args(self):
         arglist = []
         for key, value in self.__dict__.items():
