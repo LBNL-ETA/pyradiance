@@ -619,6 +619,7 @@ def render(
     resolution: Optional[Tuple[int, int]] = None,
     ambbounce: Optional[int] = None,
     ambcache: bool = True,
+    spectral: bool = False,
     params: Optional[SamplingParameters] = None,
 ) -> bytes:
     """Render a scene.
@@ -710,8 +711,11 @@ def render(
     options.update_from_dict(argdict)
     if params is not None:
         options.update(params)
+    param_strs = options.args()
+    if spectral:
+        param_strs.append("-co+")
     result = rtpict(
-        aview, octpath, nproc=nproc, xres=xres, yres=yres, params=options.args()
+        aview, octpath, nproc=nproc, xres=xres, yres=yres, params=param_strs
     )
     if result is None:
         raise ValueError("rtpict returned None")
