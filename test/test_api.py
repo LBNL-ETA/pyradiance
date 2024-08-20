@@ -48,6 +48,21 @@ def test_load_scene(resources_dir: Path):
     assert str(resources_dir / "sky.rad") in scene.sources
 
 
+def test_load_scene_at_once(resources_dir: Path):
+    """Test the load_scene function."""
+    # assert load_scene('test') == 'test'
+    scene = pr.Scene(
+        "test_scene2",
+        surfaces=[str(resources_dir / "floor 1.rad")],
+        materials=[str(resources_dir / "materials.mat")],
+        sources=[str(resources_dir / "sky.rad")],
+    )
+    assert scene.sid == "test_scene2"
+    assert str(resources_dir / "floor 1.rad") in scene.surfaces
+    assert str(resources_dir / "materials.mat") in scene.materials
+    assert str(resources_dir / "sky.rad") in scene.sources
+
+
 def test_render(resources_dir: Path):
     """Test the render function."""
     aview = pr.View(
