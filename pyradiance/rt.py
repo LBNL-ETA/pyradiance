@@ -4,10 +4,10 @@ Radiannce rendering programs
 This module contains the main API for pyradiance.
 """
 
-from dataclasses import dataclass
-from pathlib import Path
 import subprocess as sp
 import sys
+from dataclasses import dataclass
+from pathlib import Path
 from typing import Optional, Sequence, Tuple, Union
 
 from .anci import BINPATH, handle_called_process_error
@@ -79,8 +79,8 @@ def mkpmap(
     contrib_map: Optional[Tuple[Union[Path, str], int]] = None,
     pre_global_map: Optional[Tuple[Union[Path, str], int, float]] = None,
     predistrib: Optional[float] = None,
-    rect_region: Tuple[float, float, float, float, float, float] = None,
-    sphere_region: Tuple[float, float, float, float] = None,
+    rect_region: Optional[Tuple[float, float, float, float, float, float]] = None,
+    sphere_region: Optional[Tuple[float, float, float, float]] = None,
     maxbounce: Optional[int] = None,
     maxprepass: Optional[int] = None,
     port_mod: Optional[Sequence[str]] = None,
