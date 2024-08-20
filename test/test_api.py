@@ -144,6 +144,8 @@ def test_param():
     params.co = True
     params.u = True
     assert params.args() == ["-aa", "2", "-i+", "-co+", "-u+"]
+    params2 = param.SamplingParameters(aa=2, i=True, co=True, u=True)
+    assert params2.args() == ["-aa", "2.0", "-i+", "-co+", "-u+"]
 
 
 def test_ra_tiff(tmpdir: Path, resources_dir: Path):
