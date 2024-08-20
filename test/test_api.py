@@ -132,6 +132,20 @@ def test_parse_opt():
     assert res == answer
 
 
+def test_param():
+    params = param.SamplingParameters()
+    params.aa = 2
+    assert params.aa == 2
+    with pytest.raises(ValueError):
+        params.ab = 0.1
+    with pytest.raises(ValueError):
+        params.av = (0.1, 0.2)
+    params.i = True
+    params.co = True
+    params.u = True
+    assert params.args() == ["-aa", "2", "-i+", "-co+", "-u+"]
+
+
 def test_ra_tiff(tmpdir: Path, resources_dir: Path):
     """Test the ra_tiff function."""
     hdr = resources_dir / "test.hdr"
