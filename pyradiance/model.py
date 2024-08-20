@@ -155,6 +155,7 @@ class Scene:
         "_views",
         "_sensors",
         "_changed",
+        "_octree",
     )
 
     def __init__(self, sid: str):
@@ -165,6 +166,7 @@ class Scene:
         if len(sid) < 0:
             raise ValueError("Scene id must be at least one character long")
         self._sid = sid
+        self._octree = f"{sid}.oct"
         self._materials: Dict[str, str] = {}
         self._surfaces: Dict[str, str] = {}
         self._views: List[View] = []
@@ -176,6 +178,13 @@ class Scene:
     def sid(self) -> str:
         """Scene id."""
         return self._sid
+
+    @property
+    def octree(self) -> str:
+        """Scene id."""
+        if self._changed:
+            self._build()
+        return self._octree
 
     @property
     def materials(self):

@@ -1,6 +1,7 @@
 """
 Radiance utilities
 """
+
 import argparse
 import csv
 import os
@@ -714,6 +715,7 @@ def render(
     param_strs = options.args()
     if spectral:
         param_strs.append("-co+")
+    scene.build()
     result = rtpict(
         aview, octpath, nproc=nproc, xres=xres, yres=yres, params=param_strs
     )
@@ -1160,6 +1162,7 @@ def load_material_smd(
 
     primitives.append(Primitive(mmod, "metal" if metal else "plastic", mid, [], mfargs))
     return primitives
+
 
 def parse_primitive(pstr: str) -> List[Primitive]:
     """Parse Radiance primitives inside a file path into a list of dictionary.
