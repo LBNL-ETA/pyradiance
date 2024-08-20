@@ -158,7 +158,7 @@ class Scene:
         "_octree",
     )
 
-    def __init__(self, sid: str):
+    def __init__(self, sid: str, **kwargs):
         """
         Args:
             sid: scene id
@@ -172,6 +172,9 @@ class Scene:
         self._views: List[View] = []
         self._sensors: List[Sequence[float]] = []
         self._sources: Dict[str, str] = {}
+        for key, vals in kwargs.items():
+            for val in vals:
+                self._add(val, key)
         self._changed = True
 
     @property
