@@ -10,12 +10,6 @@ from pathlib import Path
 from typing import NamedTuple
 
 
-class Levels:
-    HIGH = "H"
-    MEDIUM = "M"
-    LOW = "L"
-
-
 class ColorPrimaries(NamedTuple):
     xr: float
     yr: float
@@ -27,92 +21,103 @@ class ColorPrimaries(NamedTuple):
     yw: float
 
 
-class IntArg:
-    def __set_name__(self, owner, name):
-        self.name = name
+def pfloat(value_name):
+    def floating_getter(instance):
+        return instance.__dict__.get(value_name)
 
-    def __get__(self, obj, type=None) -> object:
-        return obj.__dict__.get(self.name)
-
-    def __set__(self, obj, value) -> None:
-        if not isinstance(value, int):
-            raise ValueError("ab has to be an integer")
-        self.value = value
-        obj.__dict__[self.name] = value
-
-
-class FloatArg:
-    def __set_name__(self, owner, name):
-        self.name = name
-
-    def __get__(self, obj, type=None) -> object:
-        return obj.__dict__.get(self.name)
-
-    def __set__(self, obj, value) -> None:
+    def floating_setter(instance, value):
         if not isinstance(value, (int, float)):
             raise ValueError("Value has to be a int or float")
-        self.value = value
-        obj.__dict__[self.name] = value
+        instance.__dict__[value_name] = value
+
+    return property(floating_getter, floating_setter)
 
 
-class Tuple3Arg:
-    def __set_name__(self, owner, name):
-        self.name = name
+def pint(value_name):
+    def integer_getter(instance):
+        return instance.__dict__.get(value_name)
 
-    def __get__(self, obj, type=None) -> object:
-        return obj.__dict__.get(self.name)
+    def integer_setter(instance, value):
+        if not isinstance(value, int):
+            raise ValueError("Value has to be an int")
+        instance.__dict__[value_name] = value
 
-    def __set__(self, obj, value) -> None:
-        if not isinstance(value, tuple):
-            raise ValueError(f"{self.name} has to be a tuple")
-        if not all(isinstance(i, (int, float)) for i in value):
-            raise ValueError(f"{self.name} inside has to be a integer or float")
-        if len(value) != 3:
-            raise ValueError(f"{self.name} has to be a tuple of length 3")
-        self.value = value
-        obj.__dict__[self.name] = value
+    return property(integer_getter, integer_setter)
 
 
-class PathArg:
-    def __set_name__(self, owner, name):
-        self.name = name
+def ppath(value_name):
+    def path_getter(instance):
+        return instance.__dict__.get(value_name)
 
-    def __get__(self, obj, type=None) -> object:
-        return obj.__dict__.get(self.name)
-
-    def __set__(self, obj, value) -> None:
+    def path_setter(instance, value):
         if not isinstance(value, (str, Path)):
-            raise ValueError(f"{self.name} has to be a string or Path")
-        # if not Path(value).exists():
-        # raise ValueError(f"{self.name} does not exist")
-        self.value = value
-        obj.__dict__[self.name] = value
+            raise ValueError("Value has to be a string or Path")
+        instance.__dict__[value_name] = value
+
+    return property(path_getter, path_setter)
+
+
+def ptuple(value_name, length):
+    def tuple_getter(instance):
+        return instance.__dict__.get(value_name)
+
+    def tuple_setter(instance, value):
+        if not isinstance(value, tuple):
+            raise ValueError("Value has to be a tuple")
+        if not all(isinstance(i, (int, float)) for i in value):
+            raise ValueError("Value inside has to be a integer or float")
+        if len(value) != length:
+            raise ValueError("Value has to be a tuple of length ", length)
+        instance.__dict__[value_name] = value
+
+    return property(tuple_getter, tuple_setter)
+
+
+def pbool(value_name):
+    def bool_getter(instance):
+        return instance.__dict__.get(value_name)
+
+    def bool_setter(instance, value):
+        if not isinstance(value, bool):
+            raise ValueError("Value has to be a bool")
+        instance.__dict__[value_name] = value
+
+    return property(bool_getter, bool_setter)
 
 
 class SamplingParameters:
-    aa = FloatArg()
-    ab = IntArg()
-    ad = IntArg()
-    ar = IntArg()
-    as_ = IntArg()
-    av = Tuple3Arg()
-    aw = IntArg()
-    af = PathArg()
-    dc = FloatArg()
-    dj = FloatArg()
-    dr = IntArg()
-    dp = IntArg()
-    ds = FloatArg()
-    dt = FloatArg()
-    lr = IntArg()
-    lw = FloatArg()
-    ms = FloatArg()
-    pa = FloatArg()
-    pj = FloatArg()
-    ps = IntArg()
-    pt = FloatArg()
-    ss = FloatArg()
-    st = FloatArg()
+    aa = pfloat("aa")
+    ab = pint("ab")
+    ad = pint("ad")
+    ar = pint("ar")
+    as_ = pint("as_")
+    av = ptuple("av", 3)
+    aw = pint("aw")
+    af = ppath("af")
+    cs = pint("cs")
+    cw = ptuple("cw", 2)
+    dc = pfloat("dc")
+    dj = pfloat("dj")
+    dr = pint("dr")
+    dp = pint("dp")
+    ds = pfloat("ds")
+    dt = pfloat("ds")
+    lr = pint("lr")
+    lw = pfloat("lw")
+    ms = pfloat("ms")
+    pa = pfloat("pa")
+    pc = ptuple("pc", 8)
+    pj = pfloat("pj")
+    ps = pint("ps")
+    pt = pfloat("pt")
+    ss = pfloat("ss")
+    st = pfloat("st")
+    u = pbool("u")
+    co = pbool("co")
+    i = pbool("i")
+    I = pbool("I")
+    dv = pbool("dv")
+    bv = pbool("bv")
 
     def args(self):
         arglist = []
@@ -123,8 +128,12 @@ class SamplingParameters:
                 arglist.extend([f"-{key}", *map(str, value)])
             elif key == "as_":
                 arglist.extend(["-as", str(value)])
+            elif isinstance(value, bool):
+                sign = "+" if value else "-"
+                arglist.append(f"-{key}{sign}")
             else:
                 arglist.extend([f"-{key}", str(value)])
+
         return arglist
 
     def update_key(self, key, val):
@@ -135,10 +144,12 @@ class SamplingParameters:
                 val = tuple(val)
         elif key == "af":
             val = Path(val.strip())
-        elif key in ("ab", "ad", "ar", "as", "aw", "dr", "dp", "lr", "ps"):
+        elif key in ("ab", "ad", "ar", "as", "aw", "dr", "dp", "lr", "ps", "cs"):
             val = int(val)
         elif key == "as":
             key += "_"
+        elif isinstance(val, bool):
+            val = val
         else:
             val = float(val)
         setattr(self, key, val)
@@ -215,12 +226,20 @@ def add_toggle_args(parser):
     parser.add_argument("-u+", action="store_true", dest="u", default=None)
     parser.add_argument("-u-", action="store_false", dest="u", default=None)
     parser.add_argument("-ld-", action="store_false", dest="ld", default=None)
+    parser.add_argument("-pY", action="store_true", dest="pY", default=None)
+    parser.add_argument("-pS", action="store_true", dest="pS", default=None)
+    parser.add_argument("-pM", action="store_true", dest="pM", default=None)
+    parser.add_argument("-pRGB", action="store_true", dest="pRGB", default=None)
+    parser.add_argument("-pXYZ", action="store_true", dest="pXYZ", default=None)
     parser.add_argument("-w", action="store_false", dest="w", default=None)
     parser.add_argument("-w-", action="store_false", dest="w", default=None)
     parser.add_argument("-w+", action="store_true", dest="w", default=None)
     parser.add_argument("-bv", action="store_true", dest="bv", default=None)
     parser.add_argument("-bv-", action="store_false", dest="bv", default=None)
     parser.add_argument("-bv+", action="store_true", dest="bv", default=None)
+    parser.add_argument("-co", action="store_true", dest="co", default=None)
+    parser.add_argument("-co-", action="store_false", dest="co", default=None)
+    parser.add_argument("-co+", action="store_true", dest="co", default=None)
     parser.add_argument("-dv", action="store_true", dest="dv", default=None)
     parser.add_argument("-dv-", action="store_false", dest="dv", default=None)
     parser.add_argument("-dv+", action="store_true", dest="dv", default=None)
@@ -239,6 +258,13 @@ def add_mist_args(parser):
     parser.add_argument("-ma", type=float, nargs=3, default=None)
     parser.add_argument("-mg", type=float, default=None)
     parser.add_argument("-ms", type=float, default=None)
+    return parser
+
+
+def add_spectrum_args(parser):
+    parser.add_argument("-cs", type=int, nargs=1, default=None)
+    parser.add_argument("-cw", type=float, nargs=2, default=None)
+    parser.add_argument("-pc", type=float, nargs=8, default=None)
     return parser
 
 
@@ -267,6 +293,7 @@ def parse_rpict_args(options: str) -> dict:
     parser = add_limit_args(parser)
     parser = add_specular_args(parser)
     parser = add_toggle_args(parser)
+    parser = add_spectrum_args(parser)
     parser.add_argument("-t", type=float, help="time between reports")
     args, _ = parser.parse_known_args(options.strip().split())
     odict = {k: v for k, v in vars(args).items() if v is not None}
@@ -280,6 +307,7 @@ def add_rtrace_args(parser):
     parser = add_limit_args(parser)
     parser = add_specular_args(parser)
     parser = add_toggle_args(parser)
+    parser = add_spectrum_args(parser)
     return parser
 
 
@@ -316,6 +344,7 @@ def parse_sim_args(options: str) -> dict:
     parser = add_specular_args(parser)
     parser = add_toggle_args(parser)
     parser = add_pixel_args(parser)
+    parser = add_spectrum_args(parser)
     parser.add_argument("-t", type=float, help="time between reports")
     args, _ = parser.parse_known_args(options.strip().split())
     odict = {k: v for k, v in vars(args).items() if v is not None}
