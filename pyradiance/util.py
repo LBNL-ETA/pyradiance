@@ -565,7 +565,7 @@ def rcode_norm(
 
 @dataclass
 class RcombInput:
-    __slots__ = ("inputs", "transform", "scale")
+    __slots__ = ("input", "transform", "scale")
     input: Union[str, Path, bytes]
     transform: Optional[str] = None
     scale: Optional[Sequence[float]] = None
