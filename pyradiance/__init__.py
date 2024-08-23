@@ -34,7 +34,7 @@ from .lib import ABASELIST, BSDF, get_view_resolu, read_rad, spec_xyz, xyz_rgb
 from .model import Primitive, Scene, Sensor, View
 from .ot import oconv
 from .param import SamplingParameters
-from .px import falsecolor, pcond, pfilt, pvalue, pvaluer, ra_tiff
+from .px import falsecolor, pcompos, pcond, pfilt, pvalue, pvaluer, ra_ppm, ra_tiff
 from .rt import RcModifier, mkpmap, rcontrib, rpict, rtrace
 from .util import (
     RcombInput,
@@ -101,12 +101,14 @@ __all__ = [
     "pabopto2bsdf",
     "parse_primitive",
     "parse_view",
+    "pcompos",
     "pkgbsdf",
     "pvalue",
     "pvaluer",
     "pcond",
     "pfilt",
     "ra_tiff",
+    "ra_ppm",
     "rcalc",
     "rcode_depth",
     "rcode_ident",

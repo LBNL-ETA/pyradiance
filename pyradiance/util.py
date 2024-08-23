@@ -41,6 +41,7 @@ def evalglare(
     source_color: Optional[Tuple[float, float, float]] = None,
 ):
     """Run evalglare on a Radiance image.
+
     Args:
         inp: input image
         view: view parameters
@@ -60,6 +61,7 @@ def evalglare(
         search_radius: search radius
         version: print version
         source_color: source color
+
     Returns:
         Evalglare output
     """
@@ -138,6 +140,7 @@ def dctimestep(
     ospec: Optional[str] = None,
 ) -> Optional[bytes]:
     """Call dctimestep to perform matrix multiplication.
+
     Args:
         mtx: input matrices
         nstep: number of steps
@@ -147,6 +150,7 @@ def dctimestep(
         inform: input format
         outform: output format
         ospec: output specification
+        
     Returns:
         bytes: output of dctimestep
     """
@@ -189,6 +193,7 @@ def getinfo(
     command: str = "",
 ) -> bytes:
     """Get header information from a Radiance file.
+
     Args:
         inputs: input file or bytes
         dimension_only: return only the dimension
@@ -197,6 +202,7 @@ def getinfo(
         replace: replace the header with this string
         append: append this string to the header
         command: command to use to get the header
+
     Returns:
         getinfo output
     """
@@ -225,8 +231,10 @@ def getinfo(
 
 def get_image_dimensions(image: Union[str, Path, bytes]) -> Tuple[int, int]:
     """Get the dimensions of an image.
+
     Args:
         image: image file or bytes
+
     Returns:
         Tuple[int, int]: width and height
     """
@@ -240,6 +248,7 @@ def get_header(inp, dimension: bool = False) -> bytes:
 
     Args:
         inp: input file or bytes
+
     Returns:
         bytes: header
     """
@@ -273,6 +282,7 @@ def rad(
         silent: suppress output
         varstr: list of variables to set
         cwd: working directory
+
     Returns:
         bytes: output of rad
     """
@@ -342,6 +352,7 @@ def rcode_depth(
         per_point: Set to True to compute per point instead of per pixel
         depth_file: depth file
         flush: Set to True to flush output
+
     Returns:
         bytes: output of rcode_depth
     """
@@ -421,6 +432,7 @@ def rcode_ident(
     flush: bool = False,
 ) -> bytes:
     """Store identifiers in an indexed map and retrieve from same
+
     Args:
         inp: input file or bytes
         index_size: index size
@@ -435,6 +447,7 @@ def rcode_ident(
         indexes: Set to True to instead list identifiers indexes on output
         per_point: Set to True to compute per point instead of per pixel
         flush: Set to True to flush output after each identifier
+
     Returns:
         bytes: output of rcode_ident
     """
@@ -504,6 +517,7 @@ def rcode_norm(
         decode: Set to True to decode instead
         per_point: Set to True to compute per point instead of per pixel
         flush: Set to True to flush output
+
     Returns:
         bytes: output of rcode_norm
     """
@@ -594,6 +608,7 @@ def rcomb(
         outform: output format
         header: include header
         silent: suppress output
+
     Returns:
         bytes: output of rcomb
     """
@@ -656,6 +671,7 @@ def render(
         ambbounce: Number of ambient bounces.
         ambcache: Use ambient cache.
         params: Sampling parameters.
+
     Returns:
         tuple[bytes, int, int]: output of render, width, height
     """
