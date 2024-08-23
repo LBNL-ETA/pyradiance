@@ -46,6 +46,7 @@ RADBINS = [
     "pvalue",
     "rad",
     "ra_tiff",
+    "ra_ppm",
     "rcalc",
     "rcode_depth",
     "rcode_ident",
