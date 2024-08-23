@@ -565,7 +565,6 @@ def rcode_norm(
 
 @dataclass
 class RcombInput:
-    __slots__ = ("input", "transform", "scale")
     input: Union[str, Path, bytes]
     transform: Optional[str] = None
     scale: Optional[Sequence[float]] = None
@@ -597,10 +596,10 @@ def rcomb(
             cmd.extend(["-m", c])
     if transform_all is not None:
         cmd.extend(["-C", transform_all])
-        if source is not None:
-            cmd.extend(["-f", source])
-        if outform:
-            cmd.append(f"-f{outform}")
+    if source is not None:
+        cmd.extend(["-f", source])
+    if outform:
+        cmd.append(f"-f{outform}")
     for inp in inps:
         if inp.transform is not None:
             cmd.extend(["-c", inp.transform])
