@@ -563,12 +563,19 @@ def rcode_norm(
     return sp.run(cmd, stdout=sp.PIPE, input=stdin, check=True).stdout
 
 
+@dataclass
+class RcombInput:
+    __slots__ = ("inputs", "transform", "scale")
+    input: Union[str, Path, bytes]
+    transform: Optional[str] = None
+    scale: Optional[Sequence[float]] = None
+
+
 @handle_called_process_error
 def rcomb(
-    inps: Sequence[Union[str, Path, bytes]],
-    transform: Optional[Sequence[str]] = None,
+    inps: Sequence[RcombInput],
+    transform: Optional[str] = None,
     transform_all: Optional[str] = None,
-    scale: Optional[Sequence[list[float]]] = None,
     source: Optional[str] = None,
     expression: Optional[str] = None,
     concat: Optional[Sequence[str]] = None,
@@ -590,23 +597,25 @@ def rcomb(
             cmd.extend(["-m", c])
     if transform_all is not None:
         cmd.extend(["-C", transform_all])
-    for i, inp in enumerate(inps):
-        if transform is not None:
-            cmd.extend(["-c", transform[i]])
-        if scale is not None:
-            cmd.extend(["-s", *map(str, scale[i])])
         if source is not None:
-            cmd.extend(["-f", source[i]])
+            cmd.extend(["-f", source])
         if outform:
-            cmd.append(f"-f{outform[i]}")
-        if isinstance(inp, bytes):
+            cmd.append(f"-f{outform}")
+    for inp in inps:
+        if inp.transform is not None:
+            cmd.extend(["-c", inp.transform])
+        if inp.scale is not None:
+            cmd.extend(["-s", *map(str, inp.scale)])
+        if isinstance(inp.input, bytes):
             if stdin is not None:
                 raise ValueError("Only one bytes input allowed")
-            stdin = inp
-        elif isinstance(inp, (str, Path)):
-            cmd.append(str(inp))
+            stdin = inp.input
+        elif isinstance(inp.input, (str, Path)):
+            cmd.append(str(inp.input))
         else:
             raise TypeError("inp must be a string, Path, or bytes")
+    if transform is not None:
+        cmd.extend(["-c", transform])
     return sp.run(cmd, input=stdin, check=True, stdout=sp.PIPE).stdout
 
 
