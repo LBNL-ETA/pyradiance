@@ -37,6 +37,7 @@ from .param import SamplingParameters
 from .px import falsecolor, pcond, pfilt, pvalue, pvaluer, ra_tiff
 from .rt import RcModifier, mkpmap, rcontrib, rpict, rtrace
 from .util import (
+    RcombInput,
     WrapBSDFInput,
     dctimestep,
     evalglare,
@@ -50,6 +51,7 @@ from .util import (
     rcode_depth,
     rcode_ident,
     rcode_norm,
+    rcomb,
     render,
     rfluxmtx,
     rmtxop,
@@ -110,6 +112,8 @@ __all__ = [
     "rcode_ident",
     "rcode_norm",
     "rcontrib",
+    "rcomb",
+    "RcombInput",
     "read_rad",
     "render",
     "rfluxmtx",
