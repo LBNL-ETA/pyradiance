@@ -599,11 +599,11 @@ def rcomb(
             cmd.extend(["-f", source[i]])
         if outform:
             cmd.append(f"-f{outform[i]}")
-        if isinstance(i, bytes):
+        if isinstance(inp, bytes):
             if stdin is not None:
                 raise ValueError("Only one bytes input allowed")
-            stdin = i
-        elif isinstance(i, (str, Path)):
+            stdin = inp
+        elif isinstance(inp, (str, Path)):
             cmd.append(str(inp))
         else:
             raise TypeError("inp must be a string, Path, or bytes")
