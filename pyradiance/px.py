@@ -64,12 +64,80 @@ def pcomb(
 @handle_called_process_error
 def pcompos(
     inputs: Sequence[Union[Path, str, bytes]],
+    pos: Optional[Sequence[Sequence[float]]] = None,
     xres: Optional[int] = None,
     yres: Optional[int] = None,
+    spacing: int = 0,
+    background: Optional[Tuple[float, float, float]] = None,
+    anchors: Optional[Sequence[str]] = None,
+    header: bool = True,
+    lower_threashold: Optional[float] = None,
+    upper_threshold: Optional[float] = None,
+    label: Optional[str] = None,
+    label_height: Optional[int] = None,
+    ncols: Optional[int] = None,
+    anchor_point: Optional[Sequence[str]] = None,
 ) -> bytes:
-    """Composite Radiance pictures"""
+    """Composite Radiance pictures
+
+    Args:
+        inputs: list of input files
+        pos: list of positions
+        xres: horizontal resolution
+        yres: vertical resolution
+        spacing: spacing between images
+        background: background color
+        anchors: list of anchors
+        header: set to False if want to reduce header
+        lower_threashold: lower threshold
+        upper_threshold: upper threshold
+        label: label
+        label_height: label height
+        ncols: number of columns
+        anchor_point: anchor point
+    Returns:
+        bytes: output of pcompos
+    """
     cmd = [str(BINPATH / "pcompos")]
-    return sp.check_output(cmd)
+    if ncols is not None:
+        cmd.extend(["-a", str(ncols)])
+        if spacing > 0:
+            cmd.extend(["-s", str(spacing)])
+        if anchor_point is not None:
+            cmd.extend(["-o", *anchor_point])
+    else:
+        if pos is None:
+            raise ValueError("Either pos or ncols must be specified")
+        if len(pos) != len(inputs):
+            raise ValueError("pos must have the same number of elements as inputs")
+        if xres is not None:
+            cmd.extend(["-x", str(xres)])
+        if yres is not None:
+            cmd.extend(["-y", str(yres)])
+        if background is not None:
+            cmd.extend(
+                ["-b", str(background[0]), str(background[1]), str(background[2])]
+            )
+        if lower_threashold is not None:
+            cmd.extend(["-t", str(lower_threashold)])
+        if upper_threshold is not None:
+            cmd.extend(["+t", str(upper_threshold)])
+        if label is not None:
+            if label == "":
+                cmd.append("-la")
+            else:
+                cmd.extend(["-l", label])
+            if label_height is not None:
+                cmd.extend(["-lh", str(label_height)])
+        if not header:
+            cmd.append("-h")
+        for i, input in enumerate(inputs):
+            if anchors is not None:
+                if anchors[i] is not None:
+                    cmd.append(f"={anchors[i]}")
+            cmd.append(str(input))
+            cmd.extend(list(map(str, pos[i])))
+    return sp.run(cmd, stdout=sp.PIPE).stdout
 
 
 @handle_called_process_error
