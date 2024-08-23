@@ -12,7 +12,7 @@ from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext as build_ext_orig
 from wheel.bdist_wheel import bdist_wheel
 
-RADTAG = "a964f25c"
+RADTAG = "f275c068"
 
 RADBINS = [
     "bsdf2ttree",
@@ -49,6 +49,7 @@ RADBINS = [
     "rcode_depth",
     "rcode_ident",
     "rcode_norm",
+    "rcomb",
     "rcontrib",
     "rfluxmtx",
     "rlam",
