@@ -113,6 +113,7 @@ def pcompos(
         bytes: output of pcompos
     """
     cmd = [str(BINPATH / "pcompos")]
+    stdin = None
     if ncols is not None:
         cmd.extend(["-a", str(ncols)])
         if spacing > 0:
@@ -149,9 +150,17 @@ def pcompos(
             if anchors is not None:
                 if anchors[i] is not None:
                     cmd.append(f"={anchors[i]}")
-            cmd.append(str(input))
+            if isinstance(input, (str, Path)):
+                cmd.append(str(input))
+            elif isinstance(input, bytes):
+                if stdin is not None:
+                    raise ValueError("Only one bytes input is allowed with pcompos.")
+                stdin = input
+                cmd.append("-")
+            else:
+                raise ValueError(f"Unsupported input type: {type(input)}")
             cmd.extend(list(map(str, pos[i])))
-    return sp.run(cmd, stdout=sp.PIPE).stdout
+    return sp.run(cmd, input=stdin, stdout=sp.PIPE).stdout
 
 
 @handle_called_process_error
