@@ -39,6 +39,7 @@ RADBINS = [
     "oconv",
     "pabopto2bsdf",
     "pcomb",
+    "pcompos",
     "pcond",
     "pfilt",
     "pkgBSDF",
