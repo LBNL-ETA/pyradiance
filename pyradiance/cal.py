@@ -2,8 +2,8 @@
 Radiance calculation utilites
 """
 
-from pathlib import Path
 import subprocess as sp
+from pathlib import Path
 from typing import Optional
 
 from .anci import BINPATH, handle_called_process_error
@@ -19,6 +19,7 @@ def cnt(
     Args:
         dims: list of dimensions
         shuffled: if True, the output will be shuffled
+
     Returns:
         bytes: output of cnt
 
@@ -52,7 +53,30 @@ def rcalc(
     exact_only=False,
     ignore_newlines=False,
     silent=False,
-):
+) -> bytes:
+    """
+    Run rcalc
+
+    Args:
+        inp: input data
+        sep: separator
+        inform: input format
+        incount: input count
+        outform: output format
+        passive: passive mode
+        pass_negative: pass negative
+        inlimit: input limit
+        outlimit: output limit
+        source: source file
+        expr: expression
+        assign: assign
+        exact_only: exact only
+        ignore_newlines: ignore newlines
+        silent: silent
+
+    Returns:
+        bytes: output of rcalc
+    """
     stdin = None
     cmd = [str(BINPATH / "rcalc")]
     if sep is not None:
@@ -177,6 +201,7 @@ def rlam(
     Args:
         inputs: list of input files or bytes. There can
         only be one bytes input.
+
     Returns:
         bytes: output of rlam
     """

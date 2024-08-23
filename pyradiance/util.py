@@ -1105,6 +1105,7 @@ def xform(
         mirrorx: Mirror the scene about the yz plane.
         mirrory: Mirror the scene about the xz plane.
         mirrorz: Mirror the scene about the xy plane.
+
     Returns:
         The transformed scene description in bytes
 
@@ -1153,6 +1154,7 @@ def load_material_smd(
         roughness: Roughtness of material
         spectral: Output spectral primitives
         metal: Material is metal
+
     Returns:
         A list of primitives
     """
@@ -1204,6 +1206,7 @@ def load_material_smd(
 
 def parse_primitive(pstr: str) -> List[Primitive]:
     """Parse Radiance primitives inside a file path into a list of dictionary.
+
     Args:
         pstr: A string of Radiance primitives.
 

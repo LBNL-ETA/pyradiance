@@ -235,6 +235,7 @@ def rcontrib(
     params: Optional[Sequence[str]] = None,
 ) -> bytes:
     """Run rcontrib command.
+
     Args:
         inp: A bytes object.
         octree: A path to octree file.
@@ -244,6 +245,7 @@ def rcontrib(
         inform: Input format.
         outform: Output format.
         params: A list of additional parameters.
+
     Returns:
         A bytes object.
     """
@@ -275,6 +277,7 @@ def rpict(
     params: Optional[Sequence[str]] = None,
 ) -> bytes:
     """Get rpict command.
+
     Args:
         view: A list of view parameters in strings.
         octree: A path to octree file.
@@ -283,6 +286,7 @@ def rpict(
         report: Report.
         report_file: Report file.
         params: A list of additional parameters.
+
     Returns:
         A bytes object.
     """
@@ -325,6 +329,7 @@ def rtrace(
     version: bool = False,
 ) -> bytes:
     """Run rtrace.
+
     Args:
         rays: A string of bytes representing the input rays.
         octree: Path to octree file.
@@ -348,6 +353,7 @@ def rtrace(
         yres: Y resolution of the output image.
         nproc: Number of processors to use.
         options: A SamplingParameters object.
+
     Returns:
         A string of bytes representing the output of rtrace.
     """

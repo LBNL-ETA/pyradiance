@@ -14,9 +14,11 @@ def getbbox(
     header: bool = False,
 ) -> List[float]:
     """Get axis-aligned bounding box of a Radiance scene.
+
     Args:
         path: path to Radiance scene
         header: include header
+
     Returns:
         list: bounding box
     """
@@ -31,12 +33,14 @@ def getbbox(
 @handle_called_process_error
 def oconv(*paths, warning=True, stdin=None, frozen: bool = False, octree=None) -> bytes:
     """Run Radiance oconv tool to build an octree.
+
     Args:
         paths: list of Radiance files
         warning: if False, warnings will be suppressed
         stdin: if not None, stdin will be used
         frozen: if True, the octree will be frozen
         octree: if provided, the resulting octree incorporate existing one
+
     Returns:
         bytes: output of oconv
     """

@@ -29,6 +29,7 @@ def obj2rad(
            "o" statements in the input file.  If this option is absent, and there
            are no "o" statements, obj2rad will attempt to name surfaces based
            on their group associations.
+
     Returns:
         The converted RADIANCE scene description in bytes
     """
@@ -69,6 +70,7 @@ def obj2mesh(
         maxres: Maximum octree resolution
         silent: Suppress warnings
         stats: Print statistics
+
     Returns:
         The converted RADIANCE scene description in bytes
     """
@@ -102,6 +104,7 @@ def pkgbsdf(
         xml: Path to XML files
         frozen: produce frozen octree instance for any detail geometry.
         stdout: print the output to stdout, only works for a single XML input.
+
     Returns:
         The output of the command
     """
@@ -152,6 +155,7 @@ def robjutil(
         epsilon: Coalesce vertices that are within the given epsilon
         triangulate: Turns all faces with 4 or more sides into triangles
         transform: Transform the input, using xform CLI syntax.
+
     Returns:
         The output of the command
     """
@@ -189,11 +193,13 @@ def robjutil(
 @handle_called_process_error
 def mgf2rad(*inp, matfile=None, mult=None, dist=None):
     """Convert Materials and Geometry Format file to RADIANCE description.
+
     Args:
         inp: Path to MGF file
         matfile: Path to material file where the translated materials will be written.
         mult: multiplier for all the emission values
         dist: glow distance (in meters) for all emitting surfaces.
+
     Returns:
         The output of the command
     """
@@ -242,6 +248,7 @@ def ies2rad(
         set_default_lamp_color: set default lamp color according to the entry for lamp in the lookup table.
         multiply_factor: multiply all output quantities by this factor. This is the best way to scale
             fixture brightness for different lamps.
+
     Returns:
         The output of the command
     """
@@ -305,6 +312,7 @@ def bsdf2klems(
         backward: generate backward matrixi (default=on).
         expr: expression to evaluate.
         file: file to write the output to
+
     Returns:
         The output of the command
     """
@@ -378,6 +386,7 @@ def bsdf2ttree(
         backward: generate backward matrixi (default=on).
         expr: expression to evaluate.
         file: file to write the output to
+
     Returns:
         Tensor tree BSDF XML in bytes
     """
@@ -449,6 +458,7 @@ def pabopto2bsdf(
            necessary to eliminate noise and edge effects that some measurements exhibit near grazing.
         reverse: reverses the assumed sample orientation front-to-back, and is discussed below under
             the "#intheta" header entry.
+
     Returns:
         SIR data in bytes
     """

@@ -92,6 +92,7 @@ def genbsdf(
         geom_unit: Set to a unit to use for geometry BSDF.
         dim: Set to a list of 6 numbers to use for geometry BSDF.
         kwargs: Additional parameters to pass to genBSDF.
+
     Returns:
         str: Output of genBSDF.
     """
@@ -172,6 +173,7 @@ def gendaylit(
         dirnormp: direct normal illuminance
         diffhorp: diffuse horizontal illuminance
         solar: if True, include solar position
+
     Returns:
         str: output of gendaylit
     """
@@ -405,6 +407,7 @@ def gensky(
         solar_radiance: solar radiance in watts/steradian/meter^2
         horizontal_direct_irradiance: horizontal direct irradiance in watts/meter^2
         turbidity: turbidity factor
+
     Returns:
         str: output of gensky
     """
@@ -481,6 +484,7 @@ def genssky(
         solar_radiance: solar radiance in watts/steradian/meter^2
         horizontal_direct_irradiance: horizontal direct irradiance in watts/meter^2
         turbidity: turbidity factor
+
     Returns:
         str: output of gensky
     """
@@ -519,6 +523,7 @@ def mkillum(
         octree: octree file
         nproc: number of processes
         params: additional parameters
+
     Returns:
         Output of mkillum in bytes
     """

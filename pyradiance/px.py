@@ -109,6 +109,7 @@ def pcompos(
         label_height: label height
         ncols: number of columns
         anchor_point: anchor point
+
     Returns:
         bytes: output of pcompos
     """
@@ -204,6 +205,7 @@ def pcond(
         primaries: Color primaries for color loss.
         macbeth: Macbeth chart file for color loss.
         mapfile: Color map file for color loss.
+
     Returns:
         bytes: output of pcond
     """
@@ -286,6 +288,7 @@ def pfilt(
         star_points: Number of points on a start pattern.
         star_spread: star pattern spread
         average_hot: average hot spots
+
     Returns:
         bytes: output of pfilt
     """
@@ -425,6 +428,7 @@ def pvalue(
         interleaving: if True, interleaving will be used
         brightness: if True, only brightness will be returned
         outprimary: output color primaries
+
     Returns:
         bytes: output of pvalue
     """
@@ -489,6 +493,7 @@ def pvaluer(
         header: Set to True if the picture file has a header. Default is False.
         primaries: List of primaries for XYZ calculation. Default is None.
         pxyz: Set to True to calculate XYZ values. Default is False.
+
     Returns:
         Bytes of the pvalue output
     """
@@ -551,6 +556,7 @@ def ra_tiff(
             to a RADIANCE picture. Default is False.
         xyze: Set to True to use XYZE output when invoking a reverse
             conversion. Default is False.
+
     Returns:
         bytes: output of ra_tiff
     """
@@ -619,6 +625,7 @@ def ra_ppm(
         exposure: Exposure value for the output image. Default is 0.
         ascii: Set to True to use ASCII Pixmap output. Default is False.
         outscale: Output scale value. Default is 255.
+
     Returns:
         bytes: output of ra_ppm
     """
