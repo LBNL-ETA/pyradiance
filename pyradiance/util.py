@@ -582,7 +582,21 @@ def rcomb(
     header: bool = True,
     silent: bool = False,
 ) -> bytes:
-    """Combine multiple rasters."""
+    """Combine multiple rasters.
+
+    Args:
+        inps: Sequence of RcombInput object
+        transform: transform
+        transform_all: transform all
+        source: source
+        expression: expression
+        concat: concat
+        outform: output format
+        header: include header
+        silent: suppress output
+    Returns:
+        bytes: output of rcomb
+    """
     cmd = [str(BINPATH / "rcomb")]
     stdin = None
     if not header:

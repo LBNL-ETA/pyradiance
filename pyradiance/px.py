@@ -28,7 +28,21 @@ def pcomb(
     expression: Optional[str] = None,
     source: Optional[str] = None,
 ) -> bytes:
-    """combine Radiance pictures and/or float matrices"""
+    """combine Radiance pictures and/or float matrices
+
+    Args:
+        inputs: list of PcombInput
+        xres: horizontal resolution
+        yres: vertical resolution
+        inform: input data format. Default is "a" for ascii.
+        fout: if True, write output to file
+        header: if True, write header
+        expression: expression
+        source: source
+
+    Returns:
+        bytes: output of pcomb
+    """
     stdin = None
     cmd = [str(BINPATH / "pcomb")]
     if xres is not None:
@@ -321,7 +335,26 @@ def psign(
     spacing: float = 0.0,
     fontfile: str = "helvet.fnt",
 ) -> bytes:
-    """product a Radiance picture from text"""
+    """product a Radiance picture from text
+
+    Args:
+        text: text
+        background: background color
+        foreground: foreground color
+        reads_to_right: reads to right
+        reads_upwards: reads upwards
+        reads_to_left: reads to left
+        reads_downwards: reads downwards
+        height: height
+        aspect: aspect
+        xsize: xsize
+        ysize: ysize
+        spacing: spacing
+        fontfile: fontfile
+
+    Returns:
+        bytes: output of psign
+    """
     cmd = [str(BINPATH / "psign")]
     cmd.extend(["-cb", str(background[0]), str(background[1]), str(background[2])])
     cmd.extend(["-cf", str(foreground[0]), str(foreground[1]), str(foreground[2])])
