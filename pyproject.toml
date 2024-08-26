@@ -2,3 +2,14 @@
 requires = ["setuptools>=61.0", "auditwheel>=5.3", "wheel>=0.37", "requests>=2.27"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "pyradiance"
+dynamic = ["version"]
+readme = "README.md"
+authors = [
+    {name = "LBNL", email = "taoningwang@lbl.gov"},
+]
+description = "Python wrapper for the validated RADIANCE ray-tracing engine"
+dependencies = [
+]
+license = {"file"= "license.txt"}
