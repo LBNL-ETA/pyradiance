@@ -22,9 +22,11 @@ from .cv import (
 )
 from .gen import (
     genblinds,
+    genbox,
     genbsdf,
     gendaylit,
     gendaymtx,
+    genrev,
     gensdaymtx,
     gensky,
     genssky,
@@ -79,9 +81,11 @@ __all__ = [
     "evalglare",
     "falsecolor",
     "genblinds",
+    "genbox",
     "genbsdf",
     "gendaylit",
     "gendaymtx",
+    "genrev",
     "gensdaymtx",
     "gensky",
     "genssky",

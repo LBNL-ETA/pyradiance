@@ -48,6 +48,40 @@ def genblinds(
             cmd.extend(["-r", str(rcurv)])
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
+@handle_called_process_error
+def genbox(
+    mat: str,
+    name: str,
+    xsiz: float,
+    ysiz: float,
+    zsiz: float,
+    inward: bool = False,
+    beveled: Optional[float] = None,
+    rounded: Optional[float] = None,
+    nsegs: Optional[int] = None,
+    smoothing: bool = False,
+    waveout: bool = False,
+) -> bytes:
+    cmd = [str(BINPATH / "genbox")]
+    cmd.append(mat)
+    cmd.append(name)
+    cmd.append(str(xsiz))
+    cmd.append(str(ysiz))
+    cmd.append(str(zsiz))
+    if inward:
+        cmd.append("-i")
+    if beveled is not None:
+        cmd.extend(["-b", str(beveled)])
+    if rounded is not None:
+        cmd.extend(["-r", str(rounded)])
+    if nsegs is not None:
+        cmd.extend(["-n", str(nsegs)])
+    if smoothing:
+        cmd.append("-s")
+    if waveout:
+        cmd.append("-o")
+    return sp.run(cmd, stdout=sp.PIPE).stdout
+
 
 @handle_called_process_error
 def genbsdf(
@@ -295,6 +329,31 @@ def gendaymtx(
         raise TypeError("weather_data must be a string, Path, or bytes")
     out = sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE, stderr=sp.PIPE)
     return out.stdout
+
+@handle_called_process_error
+def genrev(
+    mat: str,
+    name: str,
+    z_t: str,
+    r_t: str,
+    nseg: int,
+    expr: Optional[str] = None,
+    file: Optional[str] = None,
+    smooth: bool = False,
+) -> bytes:
+    cmd = [str(BINPATH/"genrev")]
+    cmd.append(mat)
+    cmd.append(name)
+    cmd.append(z_t)
+    cmd.append(r_t)
+    cmd.append(str(nseg))
+    if expr is not None:
+        cmd.extend(["-e", expr])
+    if file is not None:
+        cmd.extend(["-f", file])
+    if smooth:
+        cmd.append("-s")
+    return sp.run(cmd, stdout=sp.PIPE).stdout
 
 
 @handle_called_process_error

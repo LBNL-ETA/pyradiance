@@ -169,3 +169,16 @@ def test_ra_tiff(tmpdir: Path, resources_dir: Path):
     out = tmpdir / "test.tif"
     pr.ra_tiff(hdr, out=str(out))
     assert out.exists()
+
+def test_genbox():
+    out_bytes = pr.genbox("mat", "name", 1, 2, 3)
+    out_str = out_bytes.decode()
+    prims = pr.parse_primitive(out_str)
+    assert prims[0] == pr.Primitive("mat", "polygon", "name.1540", [], [1, 0, 0,1,0,3,0,0,3,0,0,0])
+
+
+def test_genrev():
+    out_bytes = pr.genrev("steel", "torus", "sin(2*PI*t)", "2+cos(2*PI*t)", 2)
+    out_str = out_bytes.decode()
+    prims = pr.parse_primitive(out_str)
+    assert prims[0] == pr.Primitive("steel", "ring", "torus.1", [], [0, 0,1.22464679915e-16,0,0,1,3,1])
