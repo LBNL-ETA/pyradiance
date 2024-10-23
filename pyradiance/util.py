@@ -10,7 +10,7 @@ import subprocess as sp
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, Sequence, Tuple, Union
+from typing import Optional, Sequence, Union
 
 from .anci import BINPATH, handle_called_process_error
 from .lib import spec_xyz, xyz_rgb
@@ -22,7 +22,7 @@ from .param import SamplingParameters, add_view_args, parse_rtrace_args
 @handle_called_process_error
 def evalglare(
     inp,
-    view: Optional[List[str]] = None,
+    view: Optional[list[str]] = None,
     detailed: bool = False,
     ev_only: bool = False,
     ev: Optional[float] = None,
@@ -38,7 +38,7 @@ def evalglare(
     bg_lum_mode: int = 0,
     search_radius: float = 0.2,
     version: bool = False,
-    source_color: Optional[Tuple[float, float, float]] = None,
+    source_color: Optional[tuple[float, float, float]] = None,
 ):
     """Run evalglare on a Radiance image.
 
@@ -229,7 +229,7 @@ def getinfo(
     return sp.run(cmd, input=stdin, capture_output=True, check=True).stdout
 
 
-def get_image_dimensions(image: Union[str, Path, bytes]) -> Tuple[int, int]:
+def get_image_dimensions(image: Union[str, Path, bytes]) -> tuple[int, int]:
     """Get the dimensions of an image.
 
     Args:
@@ -271,7 +271,7 @@ def rad(
     dryrun: bool = False,
     update: bool = False,
     silent: bool = False,
-    varstr: Optional[List[str]] = None,
+    varstr: Optional[list[str]] = None,
 ) -> bytes:
     """Render a RADIANCE scene
 
@@ -654,7 +654,7 @@ def render(
     variability: str = "Medium",
     detail: str = "Medium",
     nproc: int = 1,
-    resolution: Optional[Tuple[int, int]] = None,
+    resolution: Optional[tuple[int, int]] = None,
     ambbounce: Optional[int] = None,
     ambcache: bool = True,
     spectral: bool = False,
@@ -991,7 +991,7 @@ class WrapBSDFInput:
     rf: Optional[Union[str, Path]] = None
     rb: Optional[Union[str, Path]] = None
 
-    def args(self) -> List[str]:
+    def args(self) -> list[str]:
         """Return command as a list of strings."""
         arglist = ["-s", self.spectrum]
         if self.tf:
@@ -1069,10 +1069,91 @@ def wrapbsdf(
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
+class Xform:
+    def __init__(self, inp, expand_cmd:bool= True, invert:bool = False, iprefix:Optional[str]=None, modifier: Optional[str] = None):
+        """Transform a RADIANCE scene description
+
+        Notes:
+            Iterate and arrays are not supported.
+
+        Args:
+            inp: Input file or string
+            translate: Translation vector
+            expand_cmd: Set to True to expand command
+            iprefix: Prefix identifier
+            modifier: Set surface modifier to this name
+            invert: Invert surface normal
+        """
+        self.inp = inp
+        self.stdin = None
+        self.args = [str(BINPATH / "xform")]
+        if not expand_cmd:
+            self.args.append("-c")
+        if iprefix is not None:
+            self.args.extend(["-n", iprefix])
+        if modifier is not None:
+            self.args.extend(["-m", modifier])
+        if invert:
+            self.args.append("-I")
+
+    def translate(self, x:float, y:float, z:float):
+        self.args.extend(["-t", str(x), str(y), str(z)])
+        return self
+
+    def rotatex(self, deg:float):
+        self.args.extend(["-rx", str(deg)])
+        return self
+
+    def rotatey(self, deg:float):
+        self.args.extend(["-ry", str(deg)])
+        return self
+
+    def rotatez(self, deg:float):
+        self.args.extend(["-rz", str(deg)])
+        return self
+
+    def scale(self, ratio:float):
+        self.args.extend(["-s", str(ratio)])
+        return self
+
+    def mirrorx(self):
+        self.args.append("-mx")
+        return self
+
+    def mirrory(self):
+        self.args.append("-my")
+        return self
+
+    def mirrorz(self):
+        self.args.append("-mz")
+        return self
+
+    def array(self, number: int):
+        self.args.extend(["-a", str(number)])
+        return self
+
+    def iterate(self, number: int):
+        self.args.extend(["-i", str(number)])
+        return self
+
+    @handle_called_process_error
+    def _execute(self):
+        if isinstance(self.inp, bytes):
+            self.stdin = self.inp
+        else:
+            self.args.append(self.inp)
+        print(self.args)
+        return sp.run(self.args, check=True, input=self.stdin, stdout=sp.PIPE).stdout
+
+    def __call__(self):
+        return self._execute()
+
+
+
 @handle_called_process_error
 def xform(
     inp,
-    translate: Optional[Tuple[float, float, float]] = None,
+    translate: Optional[tuple[float, float, float]] = None,
     expand_cmd: bool = True,
     iprefix: Optional[str] = None,
     modifier: Optional[str] = None,
@@ -1110,6 +1191,7 @@ def xform(
         The transformed scene description in bytes
 
     """
+    print("This functino is deprecated, please use Xform() instead")
     stdin = None
     cmd = [str(BINPATH / "xform")]
     if not expand_cmd:
@@ -1204,7 +1286,7 @@ def load_material_smd(
     return primitives
 
 
-def parse_primitive(pstr: str) -> List[Primitive]:
+def parse_primitive(pstr: str) -> list[Primitive]:
     """Parse Radiance primitives inside a file path into a list of dictionary.
 
     Args:
@@ -1258,7 +1340,7 @@ def parse_view(vstr: str) -> View:
     )
 
 
-def load_views(file: Union[str, Path]) -> List[View]:
+def load_views(file: Union[str, Path]) -> list[View]:
     """Load views from a file.
     One view per line.
 

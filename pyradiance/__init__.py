@@ -61,7 +61,7 @@ from .util import (
     rtpict,
     vwrays,
     wrapbsdf,
-    xform,
+    Xform,
 )
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
@@ -142,6 +142,6 @@ __all__ = [
     "WrapBSDFInput",
     "wrapbsdf",
     "write",
-    "xform",
+    "Xform",
     "xyz_rgb",
 ]
