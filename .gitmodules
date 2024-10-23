@@ -2,3 +2,7 @@
 	path = Radiance
 	url = https://github.com/LBNL-ETA/Radiance
 	branch = master
+[submodule "src/Radiance"]
+	path = src/Radiance
+	url = https://github.com/lbnl-eta/radiance
+	branch = master
