@@ -64,7 +64,14 @@ jobs:
     - name: Download artifacts
       uses: actions/download-artifact@v4
       with:
-        path: dist
+        path: downloaded_dist
+
+    - name: Create dist directory
+      run: mkdir -p dist
+
+    - name: Move wheels to dist directory
+      run: |
+        find downloaded_dist -name "*.whl" -exec mv {} dist/ \;
 
     - name: Publish package distributions to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
