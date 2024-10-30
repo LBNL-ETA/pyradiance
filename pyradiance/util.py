@@ -39,6 +39,7 @@ def evalglare(
     search_radius: float = 0.2,
     version: bool = False,
     source_color: Optional[tuple[float, float, float]] = None,
+    fast: Optional[int] = None,
 ):
     """Run evalglare on a Radiance image.
 
@@ -80,6 +81,8 @@ def evalglare(
                 cmd.extend(["-i", str(ev)])
             else:
                 cmd.extend(["-I", *map(str, ev)])
+        if fast is not None:
+            cmd.append(f"-{fast}")
         if view is not None:
             cmd.extend(view)
         if check_file is not None:
