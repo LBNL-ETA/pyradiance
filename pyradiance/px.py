@@ -68,6 +68,7 @@ def pcomb(
             if stdin is not None:
                 raise ValueError("Only one bytes input is allowed with pcomb.")
             stdin = input
+            cmd.append("-")
         elif isinstance(input, (str, Path)):
             cmd.append(str(input))
         else:
