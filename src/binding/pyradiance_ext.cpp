@@ -13,7 +13,7 @@ namespace nb = nanobind;
 
 using namespace nb::literals;
 
-NB_MODULE(radiance, m) {
+NB_MODULE(radiance_ext, m) {
 
   m.doc() = "This is Radiance";
   nb::class_<RadSimulManager>(m, "RadSimulManager")
