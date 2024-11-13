@@ -30,13 +30,105 @@ find_package(Python 3.8
   REQUIRED COMPONENTS Interpreter Development.Module
   OPTIONAL_COMPONENTS Development.SABIModule)
 
+function(generate_version_file OUTPUT_FILE VERSION_FILE)
+    add_custom_command(
+        OUTPUT ${OUTPUT_FILE}
+        COMMAND ${CMAKE_COMMAND} 
+            -D VERSION_FILE=${VERSION_FILE}
+            -D OUTPUT_FILE=${OUTPUT_FILE}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/generate_version.cmake
+        DEPENDS ${VERSION_FILE} ${CMAKE_CURRENT_SOURCE_DIR}/generate_version.cmake
+        COMMENT "Generating Version.c"
+        VERBATIM
+    )
+endfunction()
+
+# Example usage:
+set(VERSION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/src/radiance/rt/VERSION")
+set(VERSION_C "${CMAKE_CURRENT_SOURCE_DIR}/src/radiance/rt/Version.c")
+
+
+# Generate Version.c
+generate_version_file(${VERSION_C} ${VERSION_FILE})
+
+# Create a target that depends on Version.c
+add_library(version_info OBJECT ${VERSION_C})
+
+# Add Version.c to your main target
+# Example: add_executable(your_app main.c $<TARGET_OBJECTS:version_info>)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Import nanobind through CMake's find_package mechanism
 find_package(nanobind CONFIG REQUIRED)
 
-include_directories(${CMAKE_CURRENT_LIST_DIR}/src/Radiance/src/common)
-include_directories(${CMAKE_CURRENT_LIST_DIR}/src/Radiance/src/rt)
+include_directories(${CMAKE_CURRENT_LIST_DIR}/src/radiance/common)
+include_directories(${CMAKE_CURRENT_LIST_DIR}/src/radiance/rt)
 
+add_library(common STATIC
+  src/radiance/common/abitmap.cpp
+  src/radiance/common/badarg.c
+  src/radiance/common/bmalloc.c
+  src/radiance/common/fgetline.c
+  src/radiance/common/bsdf.c
+  src/radiance/common/bsdf_m.c
+  src/radiance/common/bsdf_t.c
+  src/radiance/common/sceneio.c
+  src/radiance/common/caldefn.c
+  src/radiance/common/calexpr.c
+  src/radiance/common/calfunc.c
+  src/radiance/common/ccyrgb.c
+  src/radiance/common/color.c
+  src/radiance/common/ccolor.c
+  src/radiance/common/data.c
+  src/radiance/common/disk2square.c
+  src/radiance/common/dircode.c
+  src/radiance/common/ealloc.c
+  src/radiance/common/eputs.c
+  src/radiance/common/error.c
+  src/radiance/common/ezxml.c
+  src/radiance/common/readfargs.c
+  src/radiance/common/face.c
+  src/radiance/common/cone.c
+  src/radiance/common/font.c
+  src/radiance/common/readmesh.c
+  src/radiance/common/fdate.c
+  src/radiance/common/fgetval.c
+  src/radiance/common/getlibpath.c
+  src/radiance/common/tmesh.c
+  src/radiance/common/fgetword.c
+  src/radiance/common/zeroes.c
+  src/radiance/common/fputword.c
+  src/radiance/common/fvect.c
+  src/radiance/common/getpath.c
+  src/radiance/common/gethomedir.c
+  src/radiance/common/header.c
+  src/radiance/common/hilbert.c
+  src/radiance/common/instance.c
+  src/radiance/common/image.c
+  src/radiance/common/loadbsdf.c
+  src/radiance/common/lookup.c
+  src/radiance/common/mat4.c
+  src/radiance/common/mesh.c
+  src/radiance/common/modobject.c
+  src/radiance/common/multisamp.c
+  src/radiance/common/objset.c
+  src/radiance/common/octree.c
+  src/radiance/common/otypes.c
+  src/radiance/common/process.c
+  src/radiance/common/portio.c
+  src/radiance/common/readobj.c
+  src/radiance/common/resolu.c
+  src/radiance/common/savestr.c
+  src/radiance/common/savqstr.c
+  src/radiance/common/spec_rgb.c
+  src/radiance/common/tcos.c
+  src/radiance/common/urand.c
+  src/radiance/common/readoct.c
+  src/radiance/common/quit.c
+  src/radiance/common/words.c
+  src/radiance/common/wputs.c
+  src/radiance/common/xf.c
+)
 # We are now ready to compile the actual extension module
 nanobind_add_module(
   # Name of the extension
@@ -56,128 +148,131 @@ nanobind_add_module(
   NB_STATIC
 
   # Source code goes here
-  src/pyradiance_ext.cpp
+  src/binding/pyradiance_ext.cpp
 
-  src/Radiance/src/rt/RtraceSimulManager.cpp
+  src/radiance/rt/RtraceSimulManager.cpp
 
-  src/Radiance/src/common/badarg.c
-  src/Radiance/src/common/bmalloc.c
-  src/Radiance/src/common/fgetline.c
-  src/Radiance/src/common/bsdf.c
-  src/Radiance/src/common/bsdf_m.c
-  src/Radiance/src/common/bsdf_t.c
-  src/Radiance/src/common/sceneio.c
-  src/Radiance/src/common/caldefn.c
-  src/Radiance/src/common/calexpr.c
-  src/Radiance/src/common/calfunc.c
-  src/Radiance/src/common/ccyrgb.c
-  src/Radiance/src/common/color.c
-  src/Radiance/src/common/ccolor.c
-  src/Radiance/src/common/data.c
-  src/Radiance/src/common/disk2square.c
-  src/Radiance/src/common/dircode.c
-  src/Radiance/src/common/ealloc.c
-  src/Radiance/src/common/eputs.c
-  src/Radiance/src/common/error.c
-  src/Radiance/src/common/ezxml.c
-  src/Radiance/src/common/readfargs.c
-  src/Radiance/src/common/face.c
-  src/Radiance/src/common/cone.c
-  src/Radiance/src/common/font.c
-  src/Radiance/src/common/readmesh.c
-  src/Radiance/src/common/fdate.c
-  src/Radiance/src/common/fgetval.c
-  src/Radiance/src/common/getlibpath.c
-  src/Radiance/src/common/tmesh.c
-  src/Radiance/src/common/fgetword.c
-  src/Radiance/src/common/zeroes.c
-  src/Radiance/src/common/fputword.c
-  src/Radiance/src/common/fvect.c
-  src/Radiance/src/common/getpath.c
-  src/Radiance/src/common/gethomedir.c
-  src/Radiance/src/common/header.c
-  src/Radiance/src/common/hilbert.c
-  src/Radiance/src/common/instance.c
-  src/Radiance/src/common/image.c
-  src/Radiance/src/common/loadbsdf.c
-  src/Radiance/src/common/lookup.c
-  src/Radiance/src/common/mat4.c
-  src/Radiance/src/common/mesh.c
-  src/Radiance/src/common/modobject.c
-  src/Radiance/src/common/multisamp.c
-  src/Radiance/src/common/objset.c
-  src/Radiance/src/common/octree.c
-  src/Radiance/src/common/otypes.c
-  src/Radiance/src/common/process.c
-  src/Radiance/src/common/portio.c
-  src/Radiance/src/common/readobj.c
-  src/Radiance/src/common/resolu.c
-  src/Radiance/src/common/savestr.c
-  src/Radiance/src/common/savqstr.c
-  src/Radiance/src/common/spec_rgb.c
-  src/Radiance/src/common/tcos.c
-  src/Radiance/src/common/urand.c
-  src/Radiance/src/common/readoct.c
-  src/Radiance/src/common/quit.c
-  src/Radiance/src/common/words.c
-  src/Radiance/src/common/wputs.c
-  src/Radiance/src/common/xf.c
+  ${VERSION_C}
+  # src/radiance/common/abitmap.cpp
+  # src/radiance/common/badarg.c
+  # src/radiance/common/bmalloc.c
+  # src/radiance/common/fgetline.c
+  # src/radiance/common/bsdf.c
+  # src/radiance/common/bsdf_m.c
+  # src/radiance/common/bsdf_t.c
+  # src/radiance/common/sceneio.c
+  # src/radiance/common/caldefn.c
+  # src/radiance/common/calexpr.c
+  # src/radiance/common/calfunc.c
+  # src/radiance/common/ccyrgb.c
+  # src/radiance/common/color.c
+  # src/radiance/common/ccolor.c
+  # src/radiance/common/data.c
+  # src/radiance/common/disk2square.c
+  # src/radiance/common/dircode.c
+  # src/radiance/common/ealloc.c
+  # src/radiance/common/eputs.c
+  # src/radiance/common/error.c
+  # src/radiance/common/ezxml.c
+  # src/radiance/common/readfargs.c
+  # src/radiance/common/face.c
+  # src/radiance/common/cone.c
+  # src/radiance/common/font.c
+  # src/radiance/common/readmesh.c
+  # src/radiance/common/fdate.c
+  # src/radiance/common/fgetval.c
+  # src/radiance/common/getlibpath.c
+  # src/radiance/common/tmesh.c
+  # src/radiance/common/fgetword.c
+  # src/radiance/common/zeroes.c
+  # src/radiance/common/fputword.c
+  # src/radiance/common/fvect.c
+  # src/radiance/common/getpath.c
+  # src/radiance/common/gethomedir.c
+  # src/radiance/common/header.c
+  # src/radiance/common/hilbert.c
+  # src/radiance/common/instance.c
+  # src/radiance/common/image.c
+  # src/radiance/common/loadbsdf.c
+  # src/radiance/common/lookup.c
+  # src/radiance/common/mat4.c
+  # src/radiance/common/mesh.c
+  # src/radiance/common/modobject.c
+  # src/radiance/common/multisamp.c
+  # src/radiance/common/objset.c
+  # src/radiance/common/octree.c
+  # src/radiance/common/otypes.c
+  # src/radiance/common/process.c
+  # src/radiance/common/portio.c
+  # src/radiance/common/readobj.c
+  # src/radiance/common/resolu.c
+  # src/radiance/common/savestr.c
+  # src/radiance/common/savqstr.c
+  # src/radiance/common/spec_rgb.c
+  # src/radiance/common/tcos.c
+  # src/radiance/common/urand.c
+  # src/radiance/common/readoct.c
+  # src/radiance/common/quit.c
+  # src/radiance/common/words.c
+  # src/radiance/common/wputs.c
+  # src/radiance/common/xf.c
 
-  src/Radiance/src/rt/ambcomp.c
-  src/Radiance/src/rt/source.c
-  src/Radiance/src/rt/freeobjmem.c
-  src/Radiance/src/rt/srcobstr.c
-  src/Radiance/src/rt/srcsamp.c
-  src/Radiance/src/rt/preload.c
-  src/Radiance/src/rt/ambient.c
-  src/Radiance/src/rt/ambio.c
-  src/Radiance/src/rt/func.c
-  src/Radiance/src/rt/initotypes.c
-  src/Radiance/src/rt/dielectric.c
-  src/Radiance/src/rt/m_clip.c
-  src/Radiance/src/rt/mx_data.c
-  src/Radiance/src/rt/normal.c
-  src/Radiance/src/rt/glass.c
-  src/Radiance/src/rt/p_data.c
-  src/Radiance/src/rt/p_func.c
-  src/Radiance/src/rt/srcsupp.c
-  src/Radiance/src/rt/raytrace.c
-  src/Radiance/src/rt/rayfifo.c
-  # src/Radiance/src/rt/rtrace.c
-  src/Radiance/src/rt/fprism.c
-  src/Radiance/src/rt/ashikhmin.c
-  src/Radiance/src/rt/noise3.c
-  src/Radiance/src/rt/aniso.c
-  src/Radiance/src/rt/m_alias.c
-  src/Radiance/src/rt/m_brdf.c
-  src/Radiance/src/rt/m_bsdf.c
-  src/Radiance/src/rt/m_direct.c
-  src/Radiance/src/rt/m_mirror.c
-  src/Radiance/src/rt/m_mist.c
-  src/Radiance/src/rt/mx_func.c
-  src/Radiance/src/rt/o_cone.c
-  src/Radiance/src/rt/o_face.c
-  src/Radiance/src/rt/o_instance.c
-  src/Radiance/src/rt/o_mesh.c
-  src/Radiance/src/rt/text.c
-  src/Radiance/src/rt/sphere.c
-  src/Radiance/src/rt/t_data.c
-  src/Radiance/src/rt/t_func.c
-  src/Radiance/src/rt/virtuals.c
-  src/Radiance/src/rt/raycalls.c
-  src/Radiance/src/rt/raypcalls.c
+  src/radiance/rt/ambcomp.c
+  src/radiance/rt/source.c
+  src/radiance/rt/freeobjmem.c
+  src/radiance/rt/srcobstr.c
+  src/radiance/rt/srcsamp.c
+  src/radiance/rt/preload.c
+  src/radiance/rt/ambient.c
+  src/radiance/rt/ambio.c
+  src/radiance/rt/func.c
+  src/radiance/rt/initotypes.c
+  src/radiance/rt/dielectric.c
+  src/radiance/rt/m_clip.c
+  src/radiance/rt/mx_data.c
+  src/radiance/rt/normal.c
+  src/radiance/rt/glass.c
+  src/radiance/rt/p_data.c
+  src/radiance/rt/p_func.c
+  src/radiance/rt/srcsupp.c
+  src/radiance/rt/raytrace.c
+  src/radiance/rt/rayfifo.c
+  # src/radiance/rt/rtrace.c
+  src/radiance/rt/fprism.c
+  src/radiance/rt/ashikhmin.c
+  src/radiance/rt/noise3.c
+  src/radiance/rt/aniso.c
+  src/radiance/rt/m_alias.c
+  src/radiance/rt/m_brdf.c
+  src/radiance/rt/m_bsdf.c
+  src/radiance/rt/m_direct.c
+  src/radiance/rt/m_mirror.c
+  src/radiance/rt/m_mist.c
+  src/radiance/rt/mx_func.c
+  src/radiance/rt/o_cone.c
+  src/radiance/rt/o_face.c
+  src/radiance/rt/o_instance.c
+  src/radiance/rt/o_mesh.c
+  src/radiance/rt/text.c
+  src/radiance/rt/sphere.c
+  src/radiance/rt/t_data.c
+  src/radiance/rt/t_func.c
+  src/radiance/rt/virtuals.c
+  src/radiance/rt/raycalls.c
+  src/radiance/rt/raypcalls.c
 
-  src/Radiance/src/rt/pmapamb.c
-  src/Radiance/src/rt/pmapbias.c
-  src/Radiance/src/rt/pmapparm.c
-  src/Radiance/src/rt/pmapio.c
-  src/Radiance/src/rt/pmapdata.c
-  src/Radiance/src/rt/pmaptype.c
-  src/Radiance/src/rt/pmaprand.c
-  src/Radiance/src/rt/pmapray.c
-  src/Radiance/src/rt/pmapsrc.c
-  src/Radiance/src/rt/pmutil.c
+  src/radiance/rt/pmapamb.c
+  src/radiance/rt/pmapbias.c
+  src/radiance/rt/pmapparm.c
+  src/radiance/rt/pmapio.c
+  src/radiance/rt/pmapdata.c
+  src/radiance/rt/pmaptype.c
+  src/radiance/rt/pmaprand.c
+  src/radiance/rt/pmapray.c
+  src/radiance/rt/pmapsrc.c
+  src/radiance/rt/pmutil.c
 )
 
+target_link_libraries(radiance PRIVATE common)
 # Install directive for scikit-build-core
 install(TARGETS radiance LIBRARY DESTINATION pyradiance)

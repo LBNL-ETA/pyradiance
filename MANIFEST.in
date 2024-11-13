@@ -1,4 +1,0 @@
-include Radiance/src/common/*.h
-include Radiance/src/rt/*.h
-include Radiance/src/rt/*.c
-include Radiance/src/rt/VERSION
