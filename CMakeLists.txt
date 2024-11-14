@@ -47,6 +47,8 @@ endfunction()
 set(VERSION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/src/radiance/rt/VERSION")
 set(VERSION_C "${CMAKE_CURRENT_SOURCE_DIR}/src/radiance/rt/Version.c")
 
+add_compile_definitions(error=rad_error)
+
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
 set(CMAKE_BUILD_TYPE Debug)
 # Generate Version.c
