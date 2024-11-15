@@ -23,7 +23,6 @@ char errmsg[2048]; /* global error message buffer */
 
 void error(int etype, const char *emsg) /* report error, quit if necessary */
 {
-  fprintf(stderr, "entering\n");
   struct erract *ep;
 
   if ((etype < 0) | (etype >= NERRS))
