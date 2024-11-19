@@ -66,6 +66,7 @@ nanobind_add_module(
   src/binding/pyradiance_ext.cpp
 
   src/radiance/rt/RtraceSimulManager.cpp
+  src/radiance/rt/RdataShareFile.cpp
 )
 
 target_link_libraries(radiance_ext PRIVATE 
