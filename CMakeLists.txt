@@ -26,39 +26,13 @@ if (NOT SKBUILD)
 endif()
 
 # Try to import all Python components potentially needed by nanobind
-find_package(Python 3.8
+find_package(Python 3.9
   REQUIRED COMPONENTS Interpreter Development.Module
   OPTIONAL_COMPONENTS Development.SABIModule)
 
-function(generate_version_file OUTPUT_FILE VERSION_FILE)
-    add_custom_command(
-        OUTPUT ${OUTPUT_FILE}
-        COMMAND ${CMAKE_COMMAND} 
-            -D VERSION_FILE=${VERSION_FILE}
-            -D OUTPUT_FILE=${OUTPUT_FILE}
-            -P ${CMAKE_CURRENT_SOURCE_DIR}/generate_version.cmake
-        DEPENDS ${VERSION_FILE} ${CMAKE_CURRENT_SOURCE_DIR}/generate_version.cmake
-        COMMENT "Generating Version.c"
-        VERBATIM
-    )
-endfunction()
-
-# Example usage:
-set(VERSION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/src/radiance/rt/VERSION")
-set(VERSION_C "${CMAKE_CURRENT_SOURCE_DIR}/src/radiance/rt/Version.c")
-
 add_compile_definitions(error=rad_error)
-
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
-set(CMAKE_BUILD_TYPE Debug)
-# Generate Version.c
-generate_version_file(${VERSION_C} ${VERSION_FILE})
-
-# Create a target that depends on Version.c
-add_library(version_info OBJECT ${VERSION_C})
-
-# Add Version.c to your main target
-# Example: add_executable(your_app main.c $<TARGET_OBJECTS:version_info>)
+# set(CMAKE_BUILD_TYPE Debug)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Import nanobind through CMake's find_package mechanism
@@ -66,7 +40,6 @@ find_package(nanobind CONFIG REQUIRED)
 
 include_directories(${CMAKE_CURRENT_LIST_DIR}/src/radiance/common)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/src/radiance/rt)
-
 
 add_subdirectory(src/radiance/common)
 add_subdirectory(src/radiance/rt)
@@ -93,8 +66,6 @@ nanobind_add_module(
   src/binding/pyradiance_ext.cpp
 
   src/radiance/rt/RtraceSimulManager.cpp
-
-  # ${VERSION_C}
 )
 
 target_link_libraries(radiance_ext PRIVATE 
@@ -105,6 +76,3 @@ rtrad
 m)
 # Install directive for scikit-build-core
 install(TARGETS radiance_ext LIBRARY DESTINATION pyradiance)
-# if(UNIX)
-#     target_link_options(radiance_ext PRIVATE -Wl,--allow-multiple-definition)
-# endif()

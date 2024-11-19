@@ -48,7 +48,7 @@ from .px import (
     ra_ppm,
     ra_tiff,
 )
-from .radiance_ext import RtraceSimulManager
+from .radiance_ext import RTFlags, RtraceSimulManager
 from .rt import RcModifier, mkpmap, rcontrib, rpict, rtrace
 from .util import Xform  # load_material_smd,
 from .util import (
