@@ -1,20 +1,28 @@
-#include "RtraceSimulManager.h"
+#include <functional>
+#include <memory>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
 #include "RcontribSimulManager.h"
+#include "RdataShare.h"
+#include "RtraceSimulManager.h"
+#include "func.h"
 #include "otspecial.h"
 #include "otypes.h"
 #include "platform.h"
 #include "ray.h"
 #include "resolu.h"
 #include "source.h"
-#include <functional>
-#include <memory>
+
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
-#include <unordered_map>
-#include <utility>
-#include <vector>
+#include <nanobind/stl/string.h>
+#include <nanobind/stl/vector.h>
 
 namespace nb = nanobind;
+
+using OrigDirec = nb::ndarray<double, nb::shape<-1, 3>>;
 
 // Store callbacks globally (not ideal but works for now)
 static std::unordered_map<void *, std::shared_ptr<nb::callable>>
@@ -32,6 +40,39 @@ int callback_wrapper(RAY *r, void *cd) {
     return nb::cast<int>(result);
   } catch (const std::exception &e) {
     return -1;
+  }
+}
+
+// Global storage for the Python callback
+static std::shared_ptr<nb::callable> stored_cdsf_callback;
+
+// Global wrapper function that will be used as the function pointer
+RdataShare *python_cdsf_wrapper(const char *name, RCOutputOp op, size_t siz) {
+  if (!stored_cdsf_callback) {
+    return defDataShare(name, op, siz); // fallback to default
+  }
+
+  nb::gil_scoped_acquire acquire;
+  try {
+    nb::object result =
+        (*stored_cdsf_callback)(nb::cast(name), nb::cast(op), nb::cast(siz));
+    return nb::cast<RdataShare *>(result);
+  } catch (const std::exception &e) {
+    error(SYSTEM, e.what());
+    return nullptr;
+  }
+}
+
+// Add the function declaration here
+void rxcontrib(const int rstart = 0);
+
+void ndarray_to_fvect(const OrigDirec arr, FVECT *output) {
+  // Get data pointer and copy
+  const double *data = static_cast<const double *>(arr.data());
+  for (size_t i = 0; i < arr.shape(0); ++i) {
+    output[i][0] = data[i * 3];
+    output[i][1] = data[i * 3 + 1];
+    output[i][2] = data[i * 3 + 2];
   }
 }
 
@@ -102,18 +143,12 @@ NB_MODULE(radiance_ext, m) {
           nb::arg("orig_direc"), nb::arg("rID0") = 0)
       .def(
           "enqueue_bundle_array",
-          [](RtraceSimulManager &self,
-             const nb::ndarray<double, nb::shape<-1, 3>> &orig_direc,
+          [](RtraceSimulManager &self, const OrigDirec &orig_direc,
              RNUMBER rID0 = 0) {
-            std::vector<std::array<double, 3>> data;
-            /*auto arr = nb::cast<nb::ndarray<double>>(orig_direc);*/
-            if (orig_direc.ndim() != 2 || orig_direc.shape(1) != 3) {
-              throw std::runtime_error("NumPy array must be of shape (n, 3)");
-            }
+            FVECT *output;
+            ndarray_to_fvect(orig_direc, output);
             int n = orig_direc.shape(0) / 2;
-            const double(*orig_direc_ptr)[3] =
-                reinterpret_cast<const double(*)[3]>(orig_direc.data());
-            return self.EnqueueBundle(orig_direc_ptr, n, rID0);
+            return self.EnqueueBundle(output, n, rID0);
           },
           nb::arg("orig_direc"), nb::arg("rID0") = 0)
       .def("ready", &RtraceSimulManager::Ready)
@@ -137,49 +172,281 @@ NB_MODULE(radiance_ext, m) {
 
              self.SetTraceCall(callback_wrapper, key);
            })
+      .def(
+          "rtrace",
+          [](RtraceSimulManager &self, const OrigDirec &rays, const int nproc) {
+            const int flushIntvl = 0;
+            auto *ivbuf = (FVECT *)malloc(2 * sizeof(FVECT));
+            /* set up output */
+            if (castonly) {
+              nproc = 1;             /* don't bother multiprocessing */
+            } else if (nproc <= 0) { // need to get default for system?
+              nproc = RtraceSimulManager::GetNCores() + nproc;
+              if (nproc <= 0)
+                nproc = 1;
+            }
+            nproc = self.SetThreadCount(nproc);
+            putreal = putn;
+            self.SetCookedCall(printvals);
+            self.rtFlags |= RTdoFIFO;
+
+            int n = 1; /* process input rays */
+            int ti = 0;
+            bool pending = false;
+            while (raycount > 0) {
+              raycount--;
+              ivbuf[0][0] = vptr[ti];
+              ivbuf[0][1] = vptr[ti + 1];
+              ivbuf[0][2] = vptr[ti + 2];
+              ivbuf[1][0] = vptr[ti + 3];
+              ivbuf[1][1] = vptr[ti + 4];
+              ivbuf[1][2] = vptr[ti + 5];
+              ti += 6;
+              if (myRTmanager.EnqueueBundle(ivbuf, n) < n)
+                throw pybind11::value_error("ray queuing failure");
+              pending |= (n > 1); // time to flush output?
+              bool atZero = IsZeroVec(ivbuf[2 * n - 1]);
+              if (pending & (atZero | (n == flushIntvl))) {
+                if (myRTmanager.FlushQueue() <= 0)
+                  throw pybind11::value_error("ray flush error");
+                pending = false;
+              } else
+                pending |= !atZero;
+            }
+            if (myRTmanager.FlushQueue() < 0)
+              throw pybind11::value_error("final flush error");
+            free(ivbuf);
+            const int totRows = self.GetRowMax();
+            const int n2go = self.accum;
+            FVECT *odarr = (FVECT *)emalloc(sizeof(FVECT) * 2 * self.accum);
+            int r = 0;
+
+            while (r < totRows) { // loop until done
+              int ri = r * 2;
+              int ri1 = ri + 1;
+              for (int i = 0; i < n2go; i++) {
+                int ni = i * 2;
+                int ni1 = ni + 1;
+                odarr[ni][0] = rays(ri, 0);
+                odarr[ni][1] = rays(ri, 1);
+                odarr[ni][2] = rays(ri, 2);
+                odarr[ni1][0] = rays(ri1, 0);
+                odarr[ni1][1] = rays(ri1, 1);
+                odarr[ni1][2] = rays(ri1, 2);
+              }
+              if (self.ComputeRecord(odarr) <= 0)
+                return; // error reported, hopefully...
+              r++;
+              if (r == totRows)
+                self.FlushQueue();
+            }
+            efree(odarr);
+            return;
+          },
+          nb::arg("rays"))
+})
       .def("cleanup_callbacks", [](RtraceSimulManager &self) {
-        stored_callbacks.clear();
-        self.SetCookedCall(nullptr, nullptr);
-        self.SetTraceCall(nullptr, nullptr);
+  stored_callbacks.clear();
+  self.SetCookedCall(nullptr, nullptr);
+  self.SetTraceCall(nullptr, nullptr);
       });
 
-  nb::enum_<decltype(RTdoFIFO)>(m, "RTFlags")
-      .value("RTdoFIFO", RTdoFIFO)
-      .value("RTtraceSources", RTtraceSources)
-      .value("RTlimDist", RTlimDist)
-      .value("RTimmIrrad", RTimmIrrad)
-      .value("RTmask", RTmask);
+nb::enum_<decltype(RTdoFIFO)>(m, "RTFlags")
+    .value("RTdoFIFO", RTdoFIFO)
+    .value("RTtraceSources", RTtraceSources)
+    .value("RTlimDist", RTlimDist)
+    .value("RTimmIrrad", RTimmIrrad)
+    .value("RTmask", RTmask);
 
-  // For the callback handling
-  m.def("make_ray_report_callback", [](nb::callable callback) {
-    return [callback](RAY *r, void *cd) -> int {
-      nb::gil_scoped_acquire acquire;
-      try {
-        nb::object result = callback(nb::cast(r), nb::cast(cd));
-        return nb::cast<int>(result);
-      } catch (const std::exception &e) {
-        return -1;
-      }
-    };
-  });
+// For the callback handling
+m.def("make_ray_report_callback", [](nb::callable callback) {
+  return [callback](RAY *r, void *cd) -> int {
+    nb::gil_scoped_acquire acquire;
+    try {
+      nb::object result = callback(nb::cast(r), nb::cast(cd));
+      return nb::cast<int>(result);
+    } catch (const std::exception &e) {
+      return -1;
+    }
+  };
+});
 
-  nb::class_<RcontribOutput>(m, "RcontribOutput")
-      .def(nb::init<const char *>(), nb::arg("fnm") = nullptr)
-      .def("GetName", &RcontribOutput::GetName)
-      .def("SetRowsDone", &RcontribOutput::SetRowsDone)
-      .def("GetRow", &RcontribOutput::GetRow)
-      .def("InsertionP", &RcontribOutput::InsertionP)
-      .def("DoneRow", &RcontribOutput::DoneRow)
-      .def("Next",
-           static_cast<const RcontribOutput *(RcontribOutput::*)() const>(
-               &RcontribOutput::Next))
-      .def("Next", static_cast<RcontribOutput *(RcontribOutput::*)()>(
-                       &RcontribOutput::Next))
-      .def_ro("rData", &RcontribOutput::rData)
-      .def_ro("rowBytes", &RcontribOutput::rowBytes)
-      .def_ro("omod", &RcontribOutput::omod)
-      .def_ro("obin", &RcontribOutput::obin)
-      .def_ro("begData", &RcontribOutput::begData)
-      .def_ro("curRow", &RcontribOutput::curRow)
-      .def_ro("nRows", &RcontribOutput::nRows);
+m.attr("rt_do_fifo") = RTdoFIFO;
+m.attr("rt_trace_sources") = RTtraceSources;
+m.attr("rt_lim_dist") = RTlimDist;
+m.attr("rt_imm_irrad") = RTimmIrrad;
+m.attr("rt_mask") = RTmask;
+
+nb::enum_<RCOutputOp>(m, "RcOutputOp")
+    .value("rco_new", RCOnew)
+    .value("rco_force", RCOforce)
+    .value("rco_recover", RCOrecover);
+
+nb::class_<RcontribOutput>(m, "RcontribOutput")
+    .def(nb::init<const char *>(), nb::arg("fnm") = nullptr)
+    .def("get_name", &RcontribOutput::GetName)
+    .def("set_rows_done", &RcontribOutput::SetRowsDone)
+    .def("get_row", &RcontribOutput::GetRow)
+    .def("insertion_p", &RcontribOutput::InsertionP)
+    .def("done_row", &RcontribOutput::DoneRow)
+    .def("next", static_cast<const RcontribOutput *(RcontribOutput::*)() const>(
+                     &RcontribOutput::Next))
+    .def("next", static_cast<RcontribOutput *(RcontribOutput::*)()>(
+                     &RcontribOutput::Next))
+    .def_ro("r_data", &RcontribOutput::rData)
+    .def_ro("row_bytes", &RcontribOutput::rowBytes)
+    .def_ro("omod", &RcontribOutput::omod)
+    .def_ro("obin", &RcontribOutput::obin)
+    .def_ro("beg_data", &RcontribOutput::begData)
+    .def_ro("cur_row", &RcontribOutput::curRow)
+    .def_ro("n_rows", &RcontribOutput::nRows);
+
+nb::class_<RdataShare>(m, "RdataShare")
+    .def("get_name", &RdataShare::GetName)
+    .def("get_mode", &RdataShare::GetMode)
+    .def("get_size", &RdataShare::GetSize)
+    .def("get_type", &RdataShare::GetType)
+    .def("resize", &RdataShare::Resize)
+    .def("get_memory", &RdataShare::GetMemory)
+    .def("release_memory", &RdataShare::ReleaseMemory);
+
+// Bind default data share function
+m.def("default_data_share", &defDataShare,
+      "Default implementation of data share creation", nb::arg("name"),
+      nb::arg("op"), nb::arg("siz"));
+
+nb::class_<RcontribSimulManager>(m, "RcontribSimulManager")
+    .def(nb::init<const char *>(), nb::arg("octn") = nullptr)
+    .def("has_flag", &RcontribSimulManager::HasFlag)
+    .def("set_flag", &RcontribSimulManager::SetFlag, nb::arg("fl"),
+         nb::arg("val") = true)
+    .def("load_octree", &RcontribSimulManager::LoadOctree)
+    .def("new_header", &RcontribSimulManager::NewHeader,
+         nb::arg("inspec") = nullptr)
+    .def("add_header",
+         nb::overload_cast<const char *>(&RcontribSimulManager::AddHeader))
+    .def("get_head_len", &RcontribSimulManager::GetHeadLen)
+    .def("get_head_str",
+         nb::overload_cast<>(&RcontribSimulManager::GetHeadStr, nb::const_))
+    .def("get_head_str",
+         nb::overload_cast<const char *, bool>(
+             &RcontribSimulManager::GetHeadStr, nb::const_),
+         nb::arg("key"), nb::arg("inOK") = false)
+    .def("set_data_format", &RcontribSimulManager::SetDataFormat)
+    .def("get_format", &RcontribSimulManager::GetFormat,
+         nb::arg("siz") = nullptr)
+    .def(
+        "add_modifier",
+        [](RcontribSimulManager &self, const std::string &modn,
+           const std::string &outspec, const std::string &prms = "",
+           const std::string &binval = "", int bincnt = 1) {
+          return self.AddModifier(modn.c_str(), outspec.c_str(),
+                                  prms.empty() ? nullptr : prms.c_str(),
+                                  binval.empty() ? nullptr : binval.c_str(),
+                                  bincnt);
+        },
+        nb::arg("modn"), nb::arg("outspec"), nb::arg("prms") = "",
+        nb::arg("binval") = "", nb::arg("bincnt") = 1,
+        "Add a modifier to the simulation manager")
+    .def("add_mod_file", &RcontribSimulManager::AddModFile, nb::arg("modfn"),
+         nb::arg("outspec"), nb::arg("prms") = nullptr,
+         nb::arg("binval") = nullptr, nb::arg("bincnt") = 1)
+    .def(
+        "get_output",
+        [](RcontribSimulManager &self,
+           nb::object nm = nb::none()) -> const RcontribOutput * {
+          if (nm.is_none()) {
+            return self.GetOutput(nullptr);
+          }
+          static std::string name = nb::cast<std::string>(nm);
+          return self.GetOutput(name.c_str());
+        },
+        nb::arg("nm") = nb::none(), nb::rv_policy::reference_internal)
+    .def("prep_output", &RcontribSimulManager::PrepOutput)
+    .def("ready", &RcontribSimulManager::Ready)
+    .def("set_thread_count", &RcontribSimulManager::SetThreadCount,
+         nb::arg("nt") = 0)
+    .def("n_threads", &RcontribSimulManager::NThreads)
+    .def("get_row_max", &RcontribSimulManager::GetRowMax)
+    .def("get_row_count", &RcontribSimulManager::GetRowCount)
+    .def("get_row_finished", &RcontribSimulManager::GetRowFinished)
+    .def(
+        "compute_record",
+        [](RcontribSimulManager &self, OrigDirec &rays) {
+          FVECT *output;
+          ndarray_to_fvect(rays, output);
+          return self.ComputeRecord(output);
+        },
+        nb::arg("orig_direc"))
+    .def("flush_queue", &RcontribSimulManager::FlushQueue)
+    .def("reset_row", &RcontribSimulManager::ResetRow)
+    .def("clear_modifiers", &RcontribSimulManager::ClearModifiers)
+    .def("cleanup", &RcontribSimulManager::Cleanup,
+         nb::arg("everything") = false)
+    .def(
+        "contrib",
+        [](RcontribSimulManager &self, const OrigDirec &rays) {
+          const int totRows = self.GetRowMax();
+          const int n2go = self.accum;
+          FVECT *odarr = (FVECT *)emalloc(sizeof(FVECT) * 2 * self.accum);
+          int r = 0;
+
+          while (r < totRows) { // loop until done
+            int ri = r * 2;
+            int ri1 = ri + 1;
+            for (int i = 0; i < n2go; i++) {
+              int ni = i * 2;
+              int ni1 = ni + 1;
+              odarr[ni][0] = rays(ri, 0);
+              odarr[ni][1] = rays(ri, 1);
+              odarr[ni][2] = rays(ri, 2);
+              odarr[ni1][0] = rays(ri1, 0);
+              odarr[ni1][1] = rays(ri1, 1);
+              odarr[ni1][2] = rays(ri1, 2);
+            }
+            if (self.ComputeRecord(odarr) <= 0)
+              return; // error reported, hopefully...
+            r++;
+            if (r == totRows)
+              self.FlushQueue();
+          }
+          efree(odarr);
+          return;
+        },
+        nb::arg("rays"))
+    .def_rw("out_op", &RcontribSimulManager::outOp)
+    .def_prop_rw(
+        "cds_f",
+        [](RcontribSimulManager &self) -> nb::object {
+          return nb::cpp_function(
+              [func = self.cdsF](const char *name, RCOutputOp op, size_t size) {
+                return func(name, op, size);
+              });
+        },
+        [](RcontribSimulManager &self, RcreateDataShareF *func) {
+          self.cdsF = func;
+        })
+    .def_rw("xres", &RcontribSimulManager::xres)
+    .def_rw("yres", &RcontribSimulManager::yres)
+    .def_rw("accum", &RcontribSimulManager::accum)
+    .def("__enter__", [](RcontribSimulManager &self) { return &self; })
+    .def(
+        "__exit__",
+        [](RcontribSimulManager &self, nb::object type, nb::object value,
+           nb::object tb) -> bool {
+          self.Cleanup(true);
+          return false; // don't suppress exceptions
+        },
+        nb::arg("type") = nb::none(), nb::arg("value") = nb::none(),
+        nb::arg("traceback") = nb::none());
+
+m.def("initfunc", &initfunc);
+m.def("loadfunc", &loadfunc);
+m.def("eval", [](const char *expr) { return eval(const_cast<char *>(expr)); });
+m.def("set_eparams", &set_eparams);
+m.def("calcontext",
+      [](const char *cxt) { return calcontext(const_cast<char *>(cxt)); });
+
+m.def("rxcontrib", &rxcontrib);
+m.attr("RCCONTEXT") = nb::str(RCCONTEXT);
 }

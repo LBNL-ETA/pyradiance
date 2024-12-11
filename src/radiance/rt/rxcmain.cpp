@@ -35,7 +35,7 @@ RcontribSimulManager	myRCmanager;	// global rcontrib simulation manager
 				"Outputs=V,W\n" \
 				"OutputCS=RGB,spec\n"
 
-static void	rxcontrib(const int rstart = 0);
+void	rxcontrib(const int rstart = 0);
 
 static void
 printdefaults(void)			/* print default values to stdout */
@@ -96,17 +96,17 @@ sigdie(			/* set fatal signal */
 	sigerr[signo] = msg;
 }
 
-const char *
-formstr(int f)				// return format identifier
-{
-	switch (f) {
-	case 'a': return("ascii");
-	case 'f': return("float");
-	case 'd': return("double");
-	case 'c': return(NCSAMP==3 ? COLRFMT : SPECFMT);
-	}
-	return("unknown");
-}
+/*const char **/
+/*formstr(int f)				// return format identifier*/
+/*{*/
+/*	switch (f) {*/
+/*	case 'a': return("ascii");*/
+/*	case 'f': return("float");*/
+/*	case 'd': return("double");*/
+/*	case 'c': return(NCSAMP==3 ? COLRFMT : SPECFMT);*/
+/*	}*/
+/*	return("unknown");*/
+/*}*/
 
 /* set input/output format */
 static void

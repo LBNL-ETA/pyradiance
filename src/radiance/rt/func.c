@@ -193,7 +193,7 @@ memerr:
 
 
 void
-freefunc(			/* free memory associated with modifier */
+rad_freefunc(			/* free memory associated with modifier */
 	OBJREC  *m
 )
 {
@@ -280,7 +280,7 @@ worldfunc(			/* special function context sans object */
 
 void
 loadfunc(			/* load definition file */
-	char  *fname
+	const char  *fname
 )
 {
 	char  *ffname;

@@ -1,10 +1,8 @@
 # Define source file groups
 set(RTOBJ
     cone.c face.c 
-    # free_os.c 
     instance.c readobj.c readoct.c otypes.c
     objset.c octree.c readfargs.c modobject.c getlibpath.c
-    # addobjnotify.c 
     zeroes.c mesh.c readmesh.c tmesh.c sceneio.c
 )
 
@@ -26,15 +24,11 @@ set(STDOBJ
     unix_process.c process.c gethomedir.c getpath.c error.c savestr.c
     savqstr.c badarg.c fgetword.c words.c expandarg.c wordfile.c fgetval.c
     clip.c plocate.c eputs.c wputs.c quit.c lookup.c bmalloc.c
-    # loadvars.c 
-    tcos.c fputword.c 
-    # chanvalue.c 
-    dircode.c paths.c byteswap.c
-    cvtcmd.c dmessage.c
+    tcos.c fputword.c dircode.c paths.c byteswap.c cvtcmd.c dmessage.c
 )
 
 set(SYSOBJ
-    ealloc.c fdate.c portio.c myhostname.c erf.c strcmp.c strlcpy.c
+    ealloc.c fdate.c portio.c myhostname.c erf.c strcmp.c strlcpy.c strnstr.c
 )
 
 set(CPPOBJ
@@ -75,6 +69,9 @@ set_target_properties(cpprad PROPERTIES
     POSITION_INDEPENDENT_CODE ON
 )
 
+set_target_properties(rtrad PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+)
 # Special compile definitions
 target_compile_definitions(rtrad PRIVATE
     DEFPATH=":${CMAKE_INSTALL_PREFIX}/lib/ray"

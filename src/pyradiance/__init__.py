@@ -48,7 +48,18 @@ from .px import (
     ra_ppm,
     ra_tiff,
 )
-from .radiance_ext import RTFlags, RtraceSimulManager
+from .radiance_ext import (
+    RCCONTEXT,
+    RcontribSimulManager,
+    RcOutputOp,
+    RTFlags,
+    RtraceSimulManager,
+    calcontext,
+    eval,
+    initfunc,
+    loadfunc,
+    set_eparams,
+)
 from .rt import RcModifier, mkpmap, rcontrib, rpict, rtrace
 from .util import Xform  # load_material_smd,
 from .util import (
@@ -88,6 +99,7 @@ __all__ = [
     "cnt",
     "dctimestep",
     "evalglare",
+    "eval",
     "falsecolor",
     "genblinds",
     "genbox",

@@ -30,9 +30,11 @@ find_package(Python 3.9
   REQUIRED COMPONENTS Interpreter Development.Module
   OPTIONAL_COMPONENTS Development.SABIModule)
 
+# Avoiding name clashes
 add_compile_definitions(error=rad_error)
+
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
-# set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Debug)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Import nanobind through CMake's find_package mechanism
@@ -62,18 +64,14 @@ nanobind_add_module(
   # reusing a shared libnanobind across libraries
   NB_STATIC
 
-  # Source code goes here
-  src/binding/pyradiance_ext.cpp
-
   src/radiance/rt/RtraceSimulManager.cpp
+  src/radiance/rt/RcontribSimulManager.cpp
+  src/radiance/rt/RdataShareMap.cpp
   src/radiance/rt/RdataShareFile.cpp
+  src/radiance/rt/rxcmain.cpp
+  src/binding/pyradiance_ext.cpp
 )
-
-target_link_libraries(radiance_ext PRIVATE 
-raycalls 
-radiance 
-cpprad
-rtrad
-m)
+add_compile_options(-Wall -Wextra -Werror)
+target_link_libraries(radiance_ext PRIVATE raycalls radiance cpprad rtrad m)
 # Install directive for scikit-build-core
 install(TARGETS radiance_ext LIBRARY DESTINATION pyradiance)
