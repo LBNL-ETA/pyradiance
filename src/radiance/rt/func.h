@@ -27,10 +27,10 @@ extern XF  funcxf;		/* current transform */
 extern void	initfunc(void);
 extern void	set_eparams(const char *prms);
 extern MFUNC	*getfunc(OBJREC *m, int ff, unsigned int ef, int dofwd);
-extern void	freefunc(OBJREC *m);
+extern void	rad_freefunc(OBJREC *m);
 extern int	setfunc(OBJREC *m, RAY *r);
 extern int	worldfunc(const char *ctx, RAY *r);
-extern void	loadfunc(char *fname);
+extern void	loadfunc(const char *fname);
 
 	/* defined in noise3.c */
 extern void	setnoisefuncs(void);
