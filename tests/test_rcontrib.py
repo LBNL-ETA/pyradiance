@@ -4,6 +4,7 @@ import numpy as np
 
 import pyradiance as pr
 
+print(os.environ["RAYPATH"])
 rays = np.array(
     [
         [1.0, 2.0, 3.0],
@@ -21,7 +22,6 @@ pr.calcontext(pr.RCCONTEXT)
 
 ray_count = 1
 mgr = pr.RcontribSimulManager("test.oct")
-ds = mgr.cds_f("test2.mtx", pr.RcOutputOp.rco_new, 0)
 mgr.yres = int(rays.shape[0] / 2)
 mgr.set_data_format(ord("f"))
 mgr.accum = ray_count
@@ -32,7 +32,9 @@ bincnt = int(pr.eval("Nrbins") + 0.5)
 binval = "if(-Dx*0-Dy*0-Dz*-1,0,-1)"
 mgr.add_modifier(modn="groundglow", outspec=curout, binval="if(-Dx*0-Dy*0-Dz*-1,0,-1)")
 mgr.add_modifier("skyglow", outspec=curout, prms=params, binval="rbin", bincnt=bincnt)
-test = mgr.get_output()
+out = mgr.get_output()
 rval = mgr.prep_output()
-mgr.contrib(rays)
-breakpoint()
+mgr.rcontrib(rays)
+for i in range(out.n_rows):
+    data = out.r_data.get_memory(out.beg_data + i*out.row_bytes, out.row_bytes, pr.RDSread)
+    breakpoint()

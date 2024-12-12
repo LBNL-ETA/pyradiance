@@ -114,6 +114,11 @@ set(RLOBJS
     rayfifo.c
 )
 
+file(COPY rayinit.cal
+  DESTINATION ${PYTHON_INSTALL_DIR}/pyradiance/lib
+)
+
+
 # Create libraries
 add_library(radiance STATIC ${ROBJS})
 set_target_properties(radiance PROPERTIES

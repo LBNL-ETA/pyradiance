@@ -49,6 +49,7 @@ from .px import (
     ra_tiff,
 )
 from .radiance_ext import (
+    RDSread,
     RCCONTEXT,
     RcontribSimulManager,
     RcOutputOp,
