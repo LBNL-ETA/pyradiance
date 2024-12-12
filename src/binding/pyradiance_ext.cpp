@@ -172,50 +172,170 @@ NB_MODULE(radiance_ext, m) {
 
              self.SetTraceCall(callback_wrapper, key);
            })
-      .def(
-          "rtrace",
-          [](RtraceSimulManager &self, const OrigDirec &rays, const int nproc) {
-            const int flushIntvl = 0;
-            auto *ivbuf = (FVECT *)malloc(2 * sizeof(FVECT));
-            /* set up output */
-            if (castonly) {
-              nproc = 1;             /* don't bother multiprocessing */
-            } else if (nproc <= 0) { // need to get default for system?
-              nproc = RtraceSimulManager::GetNCores() + nproc;
-              if (nproc <= 0)
-                nproc = 1;
-            }
-            nproc = self.SetThreadCount(nproc);
-            putreal = putn;
-            self.SetCookedCall(printvals);
-            self.rtFlags |= RTdoFIFO;
+      .def("cleanup_callbacks", [](RtraceSimulManager &self) {
+        stored_callbacks.clear();
+        self.SetCookedCall(nullptr, nullptr);
+        self.SetTraceCall(nullptr, nullptr);
+      });
 
-            int n = 1; /* process input rays */
-            int ti = 0;
-            bool pending = false;
-            while (raycount > 0) {
-              raycount--;
-              ivbuf[0][0] = vptr[ti];
-              ivbuf[0][1] = vptr[ti + 1];
-              ivbuf[0][2] = vptr[ti + 2];
-              ivbuf[1][0] = vptr[ti + 3];
-              ivbuf[1][1] = vptr[ti + 4];
-              ivbuf[1][2] = vptr[ti + 5];
-              ti += 6;
-              if (myRTmanager.EnqueueBundle(ivbuf, n) < n)
-                throw pybind11::value_error("ray queuing failure");
-              pending |= (n > 1); // time to flush output?
-              bool atZero = IsZeroVec(ivbuf[2 * n - 1]);
-              if (pending & (atZero | (n == flushIntvl))) {
-                if (myRTmanager.FlushQueue() <= 0)
-                  throw pybind11::value_error("ray flush error");
-                pending = false;
-              } else
-                pending |= !atZero;
+  nb::enum_<decltype(RTdoFIFO)>(m, "RTFlags")
+      .value("RTdoFIFO", RTdoFIFO)
+      .value("RTtraceSources", RTtraceSources)
+      .value("RTlimDist", RTlimDist)
+      .value("RTimmIrrad", RTimmIrrad)
+      .value("RTmask", RTmask);
+
+  // For the callback handling
+  m.def("make_ray_report_callback", [](nb::callable callback) {
+    return [callback](RAY *r, void *cd) -> int {
+      nb::gil_scoped_acquire acquire;
+      try {
+        nb::object result = callback(nb::cast(r), nb::cast(cd));
+        return nb::cast<int>(result);
+      } catch (const std::exception &e) {
+        return -1;
+      }
+    };
+  });
+
+  m.attr("rt_do_fifo") = (int)RTdoFIFO;
+  m.attr("rt_trace_sources") = (int)RTtraceSources;
+  m.attr("rt_lim_dist") = (int)RTlimDist;
+  m.attr("rt_imm_irrad") = (int)RTimmIrrad;
+  m.attr("rt_mask") = (int)RTmask;
+
+  nb::enum_<RCOutputOp>(m, "RcOutputOp")
+      .value("rco_new", RCOnew)
+      .value("rco_force", RCOforce)
+      .value("rco_recover", RCOrecover);
+
+  nb::class_<RcontribOutput>(m, "RcontribOutput")
+      .def(nb::init<const char *>(), nb::arg("fnm") = nullptr)
+      .def("get_name", &RcontribOutput::GetName)
+      .def("set_rows_done", &RcontribOutput::SetRowsDone)
+      .def("get_row", &RcontribOutput::GetRow)
+      .def("insertion_p", &RcontribOutput::InsertionP)
+      .def("done_row", &RcontribOutput::DoneRow)
+      .def("next",
+           static_cast<const RcontribOutput *(RcontribOutput::*)() const>(
+               &RcontribOutput::Next))
+      .def("next", static_cast<RcontribOutput *(RcontribOutput::*)()>(
+                       &RcontribOutput::Next))
+      .def_ro("r_data", &RcontribOutput::rData)
+      .def_ro("row_bytes", &RcontribOutput::rowBytes)
+      .def_ro("omod", &RcontribOutput::omod)
+      .def_ro("obin", &RcontribOutput::obin)
+      .def_ro("beg_data", &RcontribOutput::begData)
+      .def_ro("cur_row", &RcontribOutput::curRow)
+      .def_ro("n_rows", &RcontribOutput::nRows);
+
+  m.attr("RDSexcl") = (int)RDSexcl;
+  m.attr("RDSextend") = (int)RDSextend;
+  m.attr("RDSread") = (int)RDSread;
+  m.attr("RDSwrite") = (int)RDSwrite;
+
+  nb::enum_<RDSType>(m, "RDSType")
+      .value("RDSTanonMap", RDSTanonMap)
+      .value("RDSTfileMap", RDSTfileMap)
+      .value("RDSTfile", RDSTfile)
+      .value("RDSTcust1", RDSTcust1)
+      .value("RDSTcust2", RDSTcust2)
+      .value("RDSTcust3", RDSTcust3)
+      .value("RDSTcust4", RDSTcust4);
+
+  nb::class_<RdataShare>(m, "RdataShare")
+      .def("get_name", &RdataShare::GetName)
+      .def("get_mode", &RdataShare::GetMode)
+      .def("get_size", &RdataShare::GetSize)
+      .def("get_type", &RdataShare::GetType)
+      .def("resize", &RdataShare::Resize)
+      /*.def("get_memory", &RdataShare::GetMemory)*/
+      .def("get_memory",
+           [](RdataShare &self, size_t offs, size_t len, int fl) {
+             void *data = self.GetMemory(offs, len, fl);
+             /*return nb::bytes(static_cast<char *>(data), len);*/
+             return nb::ndarray<nb::numpy, int>(static_cast<int *>(data),
+                                                {len / sizeof(int)} // shape
+             );
+           })
+      .def("release_memory", &RdataShare::ReleaseMemory);
+
+  // Bind default data share function
+  m.def("default_data_share", &defDataShare,
+        "Default implementation of data share creation", nb::arg("name"),
+        nb::arg("op"), nb::arg("siz"));
+
+  nb::class_<RcontribSimulManager>(m, "RcontribSimulManager")
+      .def(nb::init<const char *>(), nb::arg("octn") = nullptr)
+      .def("has_flag", &RcontribSimulManager::HasFlag)
+      .def("set_flag", &RcontribSimulManager::SetFlag, nb::arg("fl"),
+           nb::arg("val") = true)
+      .def("load_octree", &RcontribSimulManager::LoadOctree)
+      .def("new_header", &RcontribSimulManager::NewHeader,
+           nb::arg("inspec") = nullptr)
+      .def("add_header",
+           nb::overload_cast<const char *>(&RcontribSimulManager::AddHeader))
+      .def("get_head_len", &RcontribSimulManager::GetHeadLen)
+      .def("get_head_str",
+           nb::overload_cast<>(&RcontribSimulManager::GetHeadStr, nb::const_))
+      .def("get_head_str",
+           nb::overload_cast<const char *, bool>(
+               &RcontribSimulManager::GetHeadStr, nb::const_),
+           nb::arg("key"), nb::arg("inOK") = false)
+      .def("set_data_format", &RcontribSimulManager::SetDataFormat)
+      .def("get_format", &RcontribSimulManager::GetFormat,
+           nb::arg("siz") = nullptr)
+      .def(
+          "add_modifier",
+          [](RcontribSimulManager &self, const std::string &modn,
+             const std::string &outspec, const std::string &prms = "",
+             const std::string &binval = "", int bincnt = 1) {
+            return self.AddModifier(modn.c_str(), outspec.c_str(),
+                                    prms.empty() ? nullptr : prms.c_str(),
+                                    binval.empty() ? nullptr : binval.c_str(),
+                                    bincnt);
+          },
+          nb::arg("modn"), nb::arg("outspec"), nb::arg("prms") = "",
+          nb::arg("binval") = "", nb::arg("bincnt") = 1,
+          "Add a modifier to the simulation manager")
+      .def("add_mod_file", &RcontribSimulManager::AddModFile, nb::arg("modfn"),
+           nb::arg("outspec"), nb::arg("prms") = nullptr,
+           nb::arg("binval") = nullptr, nb::arg("bincnt") = 1)
+      .def(
+          "get_output",
+          [](RcontribSimulManager &self,
+             nb::object nm = nb::none()) -> const RcontribOutput * {
+            if (nm.is_none()) {
+              return self.GetOutput(nullptr);
             }
-            if (myRTmanager.FlushQueue() < 0)
-              throw pybind11::value_error("final flush error");
-            free(ivbuf);
+            static std::string name = nb::cast<std::string>(nm);
+            return self.GetOutput(name.c_str());
+          },
+          nb::arg("nm") = nb::none(), nb::rv_policy::reference_internal)
+      .def("prep_output", &RcontribSimulManager::PrepOutput)
+      .def("ready", &RcontribSimulManager::Ready)
+      .def("set_thread_count", &RcontribSimulManager::SetThreadCount,
+           nb::arg("nt") = 0)
+      .def("n_threads", &RcontribSimulManager::NThreads)
+      .def("get_row_max", &RcontribSimulManager::GetRowMax)
+      .def("get_row_count", &RcontribSimulManager::GetRowCount)
+      .def("get_row_finished", &RcontribSimulManager::GetRowFinished)
+      .def(
+          "compute_record",
+          [](RcontribSimulManager &self, OrigDirec &rays) {
+            FVECT *output;
+            ndarray_to_fvect(rays, output);
+            return self.ComputeRecord(output);
+          },
+          nb::arg("orig_direc"))
+      .def("flush_queue", &RcontribSimulManager::FlushQueue)
+      .def("reset_row", &RcontribSimulManager::ResetRow)
+      .def("clear_modifiers", &RcontribSimulManager::ClearModifiers)
+      .def("cleanup", &RcontribSimulManager::Cleanup,
+           nb::arg("everything") = false)
+      .def(
+          "rcontrib",
+          [](RcontribSimulManager &self, const OrigDirec &rays) {
             const int totRows = self.GetRowMax();
             const int n2go = self.accum;
             FVECT *odarr = (FVECT *)emalloc(sizeof(FVECT) * 2 * self.accum);
@@ -244,209 +364,41 @@ NB_MODULE(radiance_ext, m) {
             return;
           },
           nb::arg("rays"))
-})
-      .def("cleanup_callbacks", [](RtraceSimulManager &self) {
-  stored_callbacks.clear();
-  self.SetCookedCall(nullptr, nullptr);
-  self.SetTraceCall(nullptr, nullptr);
-      });
+      .def_rw("out_op", &RcontribSimulManager::outOp)
+      .def_prop_rw(
+          "cds_f",
+          [](RcontribSimulManager &self) -> nb::object {
+            return nb::cpp_function([func = self.cdsF](const char *name,
+                                                       RCOutputOp op,
+                                                       size_t size) {
+              return func(name, op, size);
+            });
+          },
+          [](RcontribSimulManager &self, RcreateDataShareF *func) {
+            self.cdsF = func;
+          })
+      .def_rw("xres", &RcontribSimulManager::xres)
+      .def_rw("yres", &RcontribSimulManager::yres)
+      .def_rw("accum", &RcontribSimulManager::accum)
+      .def("__enter__", [](RcontribSimulManager &self) { return &self; })
+      .def(
+          "__exit__",
+          [](RcontribSimulManager &self, nb::object type, nb::object value,
+             nb::object tb) -> bool {
+            self.Cleanup(true);
+            return false; // don't suppress exceptions
+          },
+          nb::arg("type") = nb::none(), nb::arg("value") = nb::none(),
+          nb::arg("traceback") = nb::none());
 
-nb::enum_<decltype(RTdoFIFO)>(m, "RTFlags")
-    .value("RTdoFIFO", RTdoFIFO)
-    .value("RTtraceSources", RTtraceSources)
-    .value("RTlimDist", RTlimDist)
-    .value("RTimmIrrad", RTimmIrrad)
-    .value("RTmask", RTmask);
+  m.def("initfunc", &initfunc);
+  m.def("loadfunc", &loadfunc);
+  m.def("eval",
+        [](const char *expr) { return eval(const_cast<char *>(expr)); });
+  m.def("set_eparams", &set_eparams);
+  m.def("calcontext",
+        [](const char *cxt) { return calcontext(const_cast<char *>(cxt)); });
 
-// For the callback handling
-m.def("make_ray_report_callback", [](nb::callable callback) {
-  return [callback](RAY *r, void *cd) -> int {
-    nb::gil_scoped_acquire acquire;
-    try {
-      nb::object result = callback(nb::cast(r), nb::cast(cd));
-      return nb::cast<int>(result);
-    } catch (const std::exception &e) {
-      return -1;
-    }
-  };
-});
-
-m.attr("rt_do_fifo") = RTdoFIFO;
-m.attr("rt_trace_sources") = RTtraceSources;
-m.attr("rt_lim_dist") = RTlimDist;
-m.attr("rt_imm_irrad") = RTimmIrrad;
-m.attr("rt_mask") = RTmask;
-
-nb::enum_<RCOutputOp>(m, "RcOutputOp")
-    .value("rco_new", RCOnew)
-    .value("rco_force", RCOforce)
-    .value("rco_recover", RCOrecover);
-
-nb::class_<RcontribOutput>(m, "RcontribOutput")
-    .def(nb::init<const char *>(), nb::arg("fnm") = nullptr)
-    .def("get_name", &RcontribOutput::GetName)
-    .def("set_rows_done", &RcontribOutput::SetRowsDone)
-    .def("get_row", &RcontribOutput::GetRow)
-    .def("insertion_p", &RcontribOutput::InsertionP)
-    .def("done_row", &RcontribOutput::DoneRow)
-    .def("next", static_cast<const RcontribOutput *(RcontribOutput::*)() const>(
-                     &RcontribOutput::Next))
-    .def("next", static_cast<RcontribOutput *(RcontribOutput::*)()>(
-                     &RcontribOutput::Next))
-    .def_ro("r_data", &RcontribOutput::rData)
-    .def_ro("row_bytes", &RcontribOutput::rowBytes)
-    .def_ro("omod", &RcontribOutput::omod)
-    .def_ro("obin", &RcontribOutput::obin)
-    .def_ro("beg_data", &RcontribOutput::begData)
-    .def_ro("cur_row", &RcontribOutput::curRow)
-    .def_ro("n_rows", &RcontribOutput::nRows);
-
-nb::class_<RdataShare>(m, "RdataShare")
-    .def("get_name", &RdataShare::GetName)
-    .def("get_mode", &RdataShare::GetMode)
-    .def("get_size", &RdataShare::GetSize)
-    .def("get_type", &RdataShare::GetType)
-    .def("resize", &RdataShare::Resize)
-    .def("get_memory", &RdataShare::GetMemory)
-    .def("release_memory", &RdataShare::ReleaseMemory);
-
-// Bind default data share function
-m.def("default_data_share", &defDataShare,
-      "Default implementation of data share creation", nb::arg("name"),
-      nb::arg("op"), nb::arg("siz"));
-
-nb::class_<RcontribSimulManager>(m, "RcontribSimulManager")
-    .def(nb::init<const char *>(), nb::arg("octn") = nullptr)
-    .def("has_flag", &RcontribSimulManager::HasFlag)
-    .def("set_flag", &RcontribSimulManager::SetFlag, nb::arg("fl"),
-         nb::arg("val") = true)
-    .def("load_octree", &RcontribSimulManager::LoadOctree)
-    .def("new_header", &RcontribSimulManager::NewHeader,
-         nb::arg("inspec") = nullptr)
-    .def("add_header",
-         nb::overload_cast<const char *>(&RcontribSimulManager::AddHeader))
-    .def("get_head_len", &RcontribSimulManager::GetHeadLen)
-    .def("get_head_str",
-         nb::overload_cast<>(&RcontribSimulManager::GetHeadStr, nb::const_))
-    .def("get_head_str",
-         nb::overload_cast<const char *, bool>(
-             &RcontribSimulManager::GetHeadStr, nb::const_),
-         nb::arg("key"), nb::arg("inOK") = false)
-    .def("set_data_format", &RcontribSimulManager::SetDataFormat)
-    .def("get_format", &RcontribSimulManager::GetFormat,
-         nb::arg("siz") = nullptr)
-    .def(
-        "add_modifier",
-        [](RcontribSimulManager &self, const std::string &modn,
-           const std::string &outspec, const std::string &prms = "",
-           const std::string &binval = "", int bincnt = 1) {
-          return self.AddModifier(modn.c_str(), outspec.c_str(),
-                                  prms.empty() ? nullptr : prms.c_str(),
-                                  binval.empty() ? nullptr : binval.c_str(),
-                                  bincnt);
-        },
-        nb::arg("modn"), nb::arg("outspec"), nb::arg("prms") = "",
-        nb::arg("binval") = "", nb::arg("bincnt") = 1,
-        "Add a modifier to the simulation manager")
-    .def("add_mod_file", &RcontribSimulManager::AddModFile, nb::arg("modfn"),
-         nb::arg("outspec"), nb::arg("prms") = nullptr,
-         nb::arg("binval") = nullptr, nb::arg("bincnt") = 1)
-    .def(
-        "get_output",
-        [](RcontribSimulManager &self,
-           nb::object nm = nb::none()) -> const RcontribOutput * {
-          if (nm.is_none()) {
-            return self.GetOutput(nullptr);
-          }
-          static std::string name = nb::cast<std::string>(nm);
-          return self.GetOutput(name.c_str());
-        },
-        nb::arg("nm") = nb::none(), nb::rv_policy::reference_internal)
-    .def("prep_output", &RcontribSimulManager::PrepOutput)
-    .def("ready", &RcontribSimulManager::Ready)
-    .def("set_thread_count", &RcontribSimulManager::SetThreadCount,
-         nb::arg("nt") = 0)
-    .def("n_threads", &RcontribSimulManager::NThreads)
-    .def("get_row_max", &RcontribSimulManager::GetRowMax)
-    .def("get_row_count", &RcontribSimulManager::GetRowCount)
-    .def("get_row_finished", &RcontribSimulManager::GetRowFinished)
-    .def(
-        "compute_record",
-        [](RcontribSimulManager &self, OrigDirec &rays) {
-          FVECT *output;
-          ndarray_to_fvect(rays, output);
-          return self.ComputeRecord(output);
-        },
-        nb::arg("orig_direc"))
-    .def("flush_queue", &RcontribSimulManager::FlushQueue)
-    .def("reset_row", &RcontribSimulManager::ResetRow)
-    .def("clear_modifiers", &RcontribSimulManager::ClearModifiers)
-    .def("cleanup", &RcontribSimulManager::Cleanup,
-         nb::arg("everything") = false)
-    .def(
-        "contrib",
-        [](RcontribSimulManager &self, const OrigDirec &rays) {
-          const int totRows = self.GetRowMax();
-          const int n2go = self.accum;
-          FVECT *odarr = (FVECT *)emalloc(sizeof(FVECT) * 2 * self.accum);
-          int r = 0;
-
-          while (r < totRows) { // loop until done
-            int ri = r * 2;
-            int ri1 = ri + 1;
-            for (int i = 0; i < n2go; i++) {
-              int ni = i * 2;
-              int ni1 = ni + 1;
-              odarr[ni][0] = rays(ri, 0);
-              odarr[ni][1] = rays(ri, 1);
-              odarr[ni][2] = rays(ri, 2);
-              odarr[ni1][0] = rays(ri1, 0);
-              odarr[ni1][1] = rays(ri1, 1);
-              odarr[ni1][2] = rays(ri1, 2);
-            }
-            if (self.ComputeRecord(odarr) <= 0)
-              return; // error reported, hopefully...
-            r++;
-            if (r == totRows)
-              self.FlushQueue();
-          }
-          efree(odarr);
-          return;
-        },
-        nb::arg("rays"))
-    .def_rw("out_op", &RcontribSimulManager::outOp)
-    .def_prop_rw(
-        "cds_f",
-        [](RcontribSimulManager &self) -> nb::object {
-          return nb::cpp_function(
-              [func = self.cdsF](const char *name, RCOutputOp op, size_t size) {
-                return func(name, op, size);
-              });
-        },
-        [](RcontribSimulManager &self, RcreateDataShareF *func) {
-          self.cdsF = func;
-        })
-    .def_rw("xres", &RcontribSimulManager::xres)
-    .def_rw("yres", &RcontribSimulManager::yres)
-    .def_rw("accum", &RcontribSimulManager::accum)
-    .def("__enter__", [](RcontribSimulManager &self) { return &self; })
-    .def(
-        "__exit__",
-        [](RcontribSimulManager &self, nb::object type, nb::object value,
-           nb::object tb) -> bool {
-          self.Cleanup(true);
-          return false; // don't suppress exceptions
-        },
-        nb::arg("type") = nb::none(), nb::arg("value") = nb::none(),
-        nb::arg("traceback") = nb::none());
-
-m.def("initfunc", &initfunc);
-m.def("loadfunc", &loadfunc);
-m.def("eval", [](const char *expr) { return eval(const_cast<char *>(expr)); });
-m.def("set_eparams", &set_eparams);
-m.def("calcontext",
-      [](const char *cxt) { return calcontext(const_cast<char *>(cxt)); });
-
-m.def("rxcontrib", &rxcontrib);
-m.attr("RCCONTEXT") = nb::str(RCCONTEXT);
+  m.def("rxcontrib", &rxcontrib);
+  m.attr("RCCONTEXT") = nb::str(RCCONTEXT);
 }
