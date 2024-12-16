@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.21 2024/11/09 00:10:49 greg Exp $";
+static const char RCSid[] = "$Id: RtraceSimulManager.cpp,v 2.24 2024/11/20 17:46:25 greg Exp $";
 #endif
 /*
  *  RtraceSimulManager.cpp
@@ -181,8 +181,7 @@ RadSimulManager::GetNCores()
 int
 RadSimulManager::SetThreadCount(int nt)
 {
-	if (!Ready())
-		return 0;
+	if (!Ready()) return 0;
 
 	if (nt <= 0) nt = castonly ? 1 : GetNCores();
 
@@ -196,33 +195,18 @@ RadSimulManager::SetThreadCount(int nt)
 	return NThreads();
 }
 
-// Assign ray to subthread (fails if NThreads()<2)
-bool
-RadSimulManager::SplitRay(RAY *r)
-{
-	if (!ray_pnprocs || ThreadsAvailable() < 1)
-		return false;
-
-	return (ray_psend(r) > 0);
-}
-
 // Process a ray (in subthread), optional result
-bool
+int
 RadSimulManager::ProcessRay(RAY *r)
 {
-	if (!Ready()) return false;
+	if (!Ready()) return -1;
 
 	if (!ray_pnprocs) {	// single-threaded mode?
 		samplendx++;
 		rayvalue(r);
-		return true;
+		return 1;
 	}
-	int	rv = ray_pqueue(r);
-	if (rv < 0) {
-		error(WARNING, "ray tracing process(es) died");
-		return false;
-	}
-	return (rv > 0);
+	return ray_pqueue(r);
 }
 
 // Wait for next result (or fail)
@@ -247,15 +231,6 @@ RadSimulManager::Cleanup(bool everything)
 	else
 		ray_pdone(everything);
 	return 0;
-}
-
-// How many threads are currently unoccupied?
-int
-RadSimulManager::ThreadsAvailable() const
-{
-	if (!ray_pnprocs) return 1;
-
-	return ray_pnidle;
 }
 
 // Global pointer to simulation manager for trace call-back (only one)
@@ -327,8 +302,9 @@ RtraceSimulManager::UpdateMode()
 	if ((trace != RTracer) & (ray_fifo_out != Rfifout)) {
 		ourRTsimMan = NULL;
 	} else if (ourRTsimMan != this) {
-		if (ourRTsimMan)
+		if (ourRTsimMan) {
 			error(WARNING, "Competing top-level simulation managers?");
+		}
 		ourRTsimMan = this;
 	}
 	return true;
@@ -340,13 +316,19 @@ extern "C" int	m_normal(OBJREC *m, RAY *r);
 static void
 rayirrad(RAY *r)
 {
-					/* pretend we hit surface */
-	r->rxt = r->rot = 1e-5;
-	VSUM(r->rop, r->rorg, r->rdir, r->rot);
-	r->ron[0] = -r->rdir[0];
-	r->ron[1] = -r->rdir[1];
-	r->ron[2] = -r->rdir[2];
+					/* orientation -> normal */
+	VCOPY(r->ron, r->rdir);
+					/* pretend normal incidence */
+	r->rdir[0] = -r->ron[0];
+	r->rdir[1] = -r->ron[1];
+	r->rdir[2] = -r->ron[2];
 	r->rod = 1.0;
+					/* counterfeit other params */
+	r->rxt = r->rot = 1e-4;
+					/* move comfortably above sample pos. */
+	VSUM(r->rop, r->rorg, r->ron, r->rot);
+					/* leap-frog for pretend origin */
+	VSUM(r->rorg, r->rop, r->ron, r->rot);
 					/* compute result */
 	r->revf = raytrace;
 	m_normal(&Lamb, r);
@@ -373,8 +355,7 @@ RtraceSimulManager::EnqueueBundle(const FVECT orig_direc[], int n, RNUMBER rID0)
 	int	nqueued = 0;
 	RAY	res;
 
-	if (!Ready())
-		return -1;
+	if (!Ready()) return -1;
 
 	if (castonly && !cookedCall)
 		error(INTERNAL, "EnqueueBundle() called in castonly mode without cookedCall");
@@ -405,8 +386,12 @@ RtraceSimulManager::EnqueueBundle(const FVECT orig_direc[], int n, RNUMBER rID0)
 				if (ray_fifo_in(&res) < 0)
 					return -1;
 				sendRes = false;
-			} else
-				sendRes &= ProcessRay(&res);
+			} else {
+				int	rv = ProcessRay(&res);
+				if (rv < 0)
+					return -1;
+				sendRes &= (rv > 0);
+			}
 		} else if (ThreadsAvailable() < NThreads() &&
 				FlushQueue() < 0)
 			return -1;

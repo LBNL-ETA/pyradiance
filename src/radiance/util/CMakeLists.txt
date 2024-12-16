@@ -1,4 +1,4 @@
-file(COPY
+install(FILES
   ambpos.cal
   disk2square.cal
   hsv_rgb.cal
@@ -10,6 +10,6 @@ file(COPY
   reinhartb.cal
   tregsamp.dat
   WINDOW6BSDFt.xml
-  DESTINATION ${PYTHON_INSTALL_DIR}/pyradiance/lib
+  DESTINATION ${SKBUILD_PLATLIB_DIR}/pyradiance/lib
 )
 
