@@ -1,0 +1,20 @@
+void glow skyglow
+0
+0
+4 1 1 1 0
+
+void glow groundglow
+0
+0
+4 1 1 1 0
+
+skyglow source sky
+0
+0
+4 0 0 1 180
+
+groundglow source ground
+0
+0
+4 0 0 -1 180
+

@@ -45,26 +45,14 @@ rays = [
     [0.0, 1.0, 0.0],  # Ray 2 origin and direction
 ]
 
+pr.set_ab(1)
 mgr = pr.RtraceSimulManager()
 mgr.load_octree("test.oct")
 mgr.set_thread_count(2)
 mgr.set_cooked_call(cooked_callback)
 mgr.set_trace_call(trace_callback)
-mgr.rt_flags = pr.RTFlags.RTdoFIFO.value
+mgr.rt_flags = pr.RTdoFIFO
 mgr.enqueue_bundle(rays)
 mgr.flush_queue()
 mgr.cleanup(True)
 del mgr
-
-# ray_count = 1
-# mgr = pr.RcontribSimulManager("test.oct")
-# mgr.set_flag()
-# mgr.yres = 2
-# mgr.set_data_format("f")
-# mgr.accum = ray_count
-# # mgr.add_modifier(mod_name, curout, prms, binval, bincnt)
-# if not mgr.get_output():
-#     raise RuntimeError("Missing modifier")
-# mgr.prep_output()
-# mgr.compute_record()
-# del mgr

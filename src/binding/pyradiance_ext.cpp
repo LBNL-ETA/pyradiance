@@ -1,3 +1,4 @@
+#include <cstring>
 #include <functional>
 #include <memory>
 #include <unordered_map>
@@ -24,11 +25,9 @@ namespace nb = nanobind;
 
 using OrigDirec = nb::ndarray<double, nb::shape<-1, 3>>;
 
-// Store callbacks globally (not ideal but works for now)
 static std::unordered_map<void *, std::shared_ptr<nb::callable>>
     stored_callbacks;
 
-// Function that will be called from C++
 int callback_wrapper(RAY *r, void *cd) {
   auto it = stored_callbacks.find(cd);
   if (it == stored_callbacks.end())
@@ -43,10 +42,8 @@ int callback_wrapper(RAY *r, void *cd) {
   }
 }
 
-// Global storage for the Python callback
 static std::shared_ptr<nb::callable> stored_cdsf_callback;
 
-// Global wrapper function that will be used as the function pointer
 RdataShare *python_cdsf_wrapper(const char *name, RCOutputOp op, size_t siz) {
   if (!stored_cdsf_callback) {
     return defDataShare(name, op, siz); // fallback to default
@@ -63,22 +60,116 @@ RdataShare *python_cdsf_wrapper(const char *name, RCOutputOp op, size_t siz) {
   }
 }
 
-// Add the function declaration here
-void rxcontrib(const int rstart = 0);
-
-void ndarray_to_fvect(const OrigDirec arr, FVECT *output) {
-  // Get data pointer and copy
-  const double *data = static_cast<const double *>(arr.data());
+void ndarray_to_fvect(const OrigDirec &arr, FVECT *output) {
   for (size_t i = 0; i < arr.shape(0); ++i) {
-    output[i][0] = data[i * 3];
-    output[i][1] = data[i * 3 + 1];
-    output[i][2] = data[i * 3 + 2];
+    output[i][0] = arr(i, 0);
+    output[i][1] = arr(i, 1);
+    output[i][2] = arr(i, 2);
   }
+}
+
+extern char *progname;
+
+// Function to append an item to amblist
+void append_amblist(const nb::str &value) {
+  for (int i = 0; i < 256; ++i) {
+    if (amblist[i] == nullptr) {
+      amblist[i] = strdup(value.c_str());
+      return;
+    }
+  }
+  throw nb::value_error("Amblist is full");
+}
+
+// Template for get and set operations
+template <typename T>
+void define_get_set(nb::module_ &m, const char *name, T &var) {
+  std::string get_name = "get_" + std::string(name);
+  std::string set_name = "set_" + std::string(name);
+  m.def(get_name.c_str(), [&var]() { return var; });
+  m.def(set_name.c_str(), [&var](T v) { var = v; });
 }
 
 NB_MODULE(radiance_ext, m) {
 
   m.doc() = "Radiance extension";
+
+  define_get_set<int>(m, "u", rand_samp);
+
+  define_get_set<int>(m, "bv", backvis);
+
+  define_get_set<double>(m, "dt", shadthresh);
+  define_get_set<double>(m, "dc", shadcert);
+  define_get_set<double>(m, "dj", dstrsrc);
+  define_get_set<int>(m, "dr", directrelay);
+  define_get_set<int>(m, "dp", vspretest);
+  define_get_set<int>(m, "dv", directvis);
+  define_get_set<double>(m, "ds", srcsizerat);
+
+  define_get_set<double>(m, "st", specthresh);
+  define_get_set<double>(m, "ss", specjitter);
+
+  define_get_set<int>(m, "lr", maxdepth);
+  define_get_set<double>(m, "lw", minweight);
+
+  define_get_set<int>(m, "aw", ambvwt);
+  define_get_set<double>(m, "aa", ambacc);
+  define_get_set<int>(m, "ar", ambres);
+  define_get_set<int>(m, "ad", ambdiv);
+  define_get_set<int>(m, "as", ambssamp);
+  define_get_set<int>(m, "ab", ambounce);
+  define_get_set<int>(m, "ai", ambincl);
+
+  m.def("get_av",
+        []() { return nb::make_tuple(ambval[0], ambval[1], ambval[2]); });
+  m.def("set_av", [](double v1, double v2, double v3) {
+    ambval[0] = v1;
+    ambval[1] = v2, ambval[2] = v3;
+  });
+
+  m.def("get_amblist", []() {
+    nb::list result;
+    for (int i = 0; i < AMBLLEN + 1; i++) {
+      if (amblist[i] != nullptr) {
+        result.append(amblist[i]);
+      } else {
+        break;
+      }
+    }
+    return result;
+  });
+
+  m.def("append_amblist", &append_amblist);
+  m.def("extend_amblist", [](const nb::list &values) {
+    for (const auto &value : values) {
+      append_amblist(nb::cast<nb::str>(value));
+    }
+  });
+
+  m.def("remove_last_amblist", []() {
+    int last_index = -1;
+    for (int i = AMBLLEN; i >= 0; --i) {
+      if (amblist[i] != nullptr) {
+        last_index = i;
+        break;
+      }
+    }
+    if (last_index == -1) {
+      throw nb::value_error("Amblist is empty");
+    }
+    free(amblist[last_index]);
+    amblist[last_index] = nullptr;
+  });
+
+  m.def("clear_amblist", []() {
+    for (int i = 0; i < AMBLLEN + 1; ++i) {
+      if (amblist[i] != nullptr) {
+        free(amblist[i]);
+        amblist[i] = nullptr;
+      }
+    }
+  });
+
   nb::class_<RAY>(m, "RAY")
       .def(nb::init<>())
       .def_prop_ro("rorg",
@@ -113,6 +204,26 @@ NB_MODULE(radiance_ext, m) {
       .def_prop_ro("rcol", [](const RAY &r) -> nb::tuple {
         return nb::make_tuple(r.rcol[0], r.rcol[1], r.rcol[2]);
       });
+
+  m.def(
+      "setspectrsamp",
+      [](const std::vector<int> &cn, const std::vector<float> &wlpt) -> int {
+        // Convert std::vector to C-style arrays if necessary
+        int cn_array[4] = {0}; // Initialize with zeros
+        float wlpt_array[4] = {0};
+
+        // Copy vector data to array. Note: This assumes cn and wlpt vectors
+        // have at least 4 elements.
+        for (int i = 0; i < 4; ++i) {
+          cn_array[i] = cn[i];
+          wlpt_array[i] = wlpt[i];
+        }
+
+        // Call the actual C++ function
+        return setspectrsamp(cn_array, wlpt_array);
+      },
+      nb::arg("cn"), nb::arg("wlpt"),
+      "Assign spectral sampling, returns 1 if good, -1 if bad.");
 
   nb::class_<RtraceSimulManager>(m, "RtraceSimulManager")
 
@@ -172,42 +283,25 @@ NB_MODULE(radiance_ext, m) {
 
              self.SetTraceCall(callback_wrapper, key);
            })
+      .def_rw("rt_flags", &RtraceSimulManager::rtFlags)
       .def("cleanup_callbacks", [](RtraceSimulManager &self) {
         stored_callbacks.clear();
         self.SetCookedCall(nullptr, nullptr);
         self.SetTraceCall(nullptr, nullptr);
       });
 
-  nb::enum_<decltype(RTdoFIFO)>(m, "RTFlags")
-      .value("RTdoFIFO", RTdoFIFO)
-      .value("RTtraceSources", RTtraceSources)
-      .value("RTlimDist", RTlimDist)
-      .value("RTimmIrrad", RTimmIrrad)
-      .value("RTmask", RTmask);
+  m.attr("RTdoFIFO") = (int)RTdoFIFO;
+  m.attr("RTtraceSources") = (int)RTtraceSources;
+  m.attr("RTlimDist") = (int)RTlimDist;
+  m.attr("RTimmIrrad") = (int)RTimmIrrad;
+  m.attr("RTmask") = (int)RTmask;
 
-  // For the callback handling
-  m.def("make_ray_report_callback", [](nb::callable callback) {
-    return [callback](RAY *r, void *cd) -> int {
-      nb::gil_scoped_acquire acquire;
-      try {
-        nb::object result = callback(nb::cast(r), nb::cast(cd));
-        return nb::cast<int>(result);
-      } catch (const std::exception &e) {
-        return -1;
-      }
-    };
-  });
-
-  m.attr("rt_do_fifo") = (int)RTdoFIFO;
-  m.attr("rt_trace_sources") = (int)RTtraceSources;
-  m.attr("rt_lim_dist") = (int)RTlimDist;
-  m.attr("rt_imm_irrad") = (int)RTimmIrrad;
-  m.attr("rt_mask") = (int)RTmask;
+  m.attr("RCcontrib") = (int)RTmask + 1;
 
   nb::enum_<RCOutputOp>(m, "RcOutputOp")
-      .value("rco_new", RCOnew)
-      .value("rco_force", RCOforce)
-      .value("rco_recover", RCOrecover);
+      .value("NEW", RCOnew)
+      .value("FORCE", RCOforce)
+      .value("RECOVER", RCOrecover);
 
   nb::class_<RcontribOutput>(m, "RcontribOutput")
       .def(nb::init<const char *>(), nb::arg("fnm") = nullptr)
@@ -249,14 +343,10 @@ NB_MODULE(radiance_ext, m) {
       .def("get_size", &RdataShare::GetSize)
       .def("get_type", &RdataShare::GetType)
       .def("resize", &RdataShare::Resize)
-      /*.def("get_memory", &RdataShare::GetMemory)*/
       .def("get_memory",
            [](RdataShare &self, size_t offs, size_t len, int fl) {
              void *data = self.GetMemory(offs, len, fl);
-             /*return nb::bytes(static_cast<char *>(data), len);*/
-             return nb::ndarray<nb::numpy, int>(static_cast<int *>(data),
-                                                {len / sizeof(int)} // shape
-             );
+             return nb::bytes(static_cast<char *>(data), len);
            })
       .def("release_memory", &RdataShare::ReleaseMemory);
 
@@ -266,6 +356,7 @@ NB_MODULE(radiance_ext, m) {
         nb::arg("op"), nb::arg("siz"));
 
   nb::class_<RcontribSimulManager>(m, "RcontribSimulManager")
+      .def(nb::init<>())
       .def(nb::init<const char *>(), nb::arg("octn") = nullptr)
       .def("has_flag", &RcontribSimulManager::HasFlag)
       .def("set_flag", &RcontribSimulManager::SetFlag, nb::arg("fl"),
@@ -312,6 +403,29 @@ NB_MODULE(radiance_ext, m) {
             return self.GetOutput(name.c_str());
           },
           nb::arg("nm") = nb::none(), nb::rv_policy::reference_internal)
+      .def(
+          "get_output_array",
+          [](RcontribSimulManager &self,
+             nb::object nm = nb::none()) -> nb::list {
+            const RcontribOutput *out;
+            if (nm.is_none()) {
+              out = self.GetOutput(nullptr);
+            } else {
+              static std::string name = nb::cast<std::string>(nm);
+              out = self.GetOutput(name.c_str());
+            }
+
+            nb::list result_list;
+            for (int i = 0; i < out->nRows; i++) {
+              void *data = out->rData->GetMemory(
+                  out->begData + i * out->rowBytes, out->rowBytes, RDSread);
+              nb::ndarray data_arr = nb::ndarray<nb::numpy, float>(
+                  static_cast<float *>(data), {out->rowBytes / sizeof(float)});
+              result_list.append(data_arr);
+            }
+            return result_list;
+          },
+          nb::arg("nm") = nb::none(), nb::rv_policy::reference_internal)
       .def("prep_output", &RcontribSimulManager::PrepOutput)
       .def("ready", &RcontribSimulManager::Ready)
       .def("set_thread_count", &RcontribSimulManager::SetThreadCount,
@@ -322,9 +436,13 @@ NB_MODULE(radiance_ext, m) {
       .def("get_row_finished", &RcontribSimulManager::GetRowFinished)
       .def(
           "compute_record",
-          [](RcontribSimulManager &self, OrigDirec &rays) {
-            FVECT *output;
+          [](RcontribSimulManager &self, const OrigDirec &rays) {
+            FVECT *output = (FVECT *)emalloc(sizeof(FVECT) * rays.shape(0));
+	    printf("yres: %d\n", self.yres);
             ndarray_to_fvect(rays, output);
+            for (int i = 0; i < rays.shape(0); i++) {
+              printf("%f %f %f\n", output[i][0], output[i][1], output[i][2]);
+            }
             return self.ComputeRecord(output);
           },
           nb::arg("orig_direc"))
@@ -340,13 +458,15 @@ NB_MODULE(radiance_ext, m) {
             const int n2go = self.accum;
             FVECT *odarr = (FVECT *)emalloc(sizeof(FVECT) * 2 * self.accum);
             int r = 0;
+            int ri, ri1 = 0;
+            int ni, ni1 = 0;
 
             while (r < totRows) { // loop until done
-              int ri = r * 2;
-              int ri1 = ri + 1;
+              ri = r * 2;
+              ri1 = ri + 1;
               for (int i = 0; i < n2go; i++) {
-                int ni = i * 2;
-                int ni1 = ni + 1;
+                ni = i * 2;
+                ni1 = ni + 1;
                 odarr[ni][0] = rays(ri, 0);
                 odarr[ni][1] = rays(ri, 1);
                 odarr[ni][2] = rays(ri, 2);
@@ -378,7 +498,7 @@ NB_MODULE(radiance_ext, m) {
             self.cdsF = func;
           })
       .def_rw("xres", &RcontribSimulManager::xres)
-      .def_rw("yres", &RcontribSimulManager::yres)
+      .def_prop_rw("yres", [](RcontribSimulManager &self){return self.yres;}, [](RcontribSimulManager &self, int val){self.yres=val;})
       .def_rw("accum", &RcontribSimulManager::accum)
       .def("__enter__", [](RcontribSimulManager &self) { return &self; })
       .def(
@@ -399,6 +519,5 @@ NB_MODULE(radiance_ext, m) {
   m.def("calcontext",
         [](const char *cxt) { return calcontext(const_cast<char *>(cxt)); });
 
-  m.def("rxcontrib", &rxcontrib);
   m.attr("RCCONTEXT") = nb::str(RCCONTEXT);
 }

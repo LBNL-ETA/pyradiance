@@ -114,8 +114,8 @@ set(RLOBJS
     rayfifo.c
 )
 
-file(COPY rayinit.cal
-  DESTINATION ${PYTHON_INSTALL_DIR}/pyradiance/lib
+install(FILES rayinit.cal
+  DESTINATION ${SKBUILD_PLATLIB_DIR}/pyradiance/lib
 )
 
 

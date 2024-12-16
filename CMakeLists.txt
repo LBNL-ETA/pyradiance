@@ -31,13 +31,14 @@ find_package(Python 3.9
   OPTIONAL_COMPONENTS Development.SABIModule)
 
 # Get the Python installation directory
-execute_process(
-    COMMAND "${Python_EXECUTABLE}" -c "import site; print(site.getsitepackages()[0])"
-    OUTPUT_VARIABLE PYTHON_INSTALL_DIR
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
+# execute_process(
+#     COMMAND "${Python_EXECUTABLE}" -c "import site; print(site.getsitepackages()[0])"
+#     OUTPUT_VARIABLE PYTHON_INSTALL_DIR
+#     OUTPUT_STRIP_TRAILING_WHITESPACE
+# )
 
 # Avoiding name clashes
+message(SKBUILD_PLATLIB_DIR="${SKBUILD_PLATLIB_DIR}")
 add_compile_definitions(error=rad_error)
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
@@ -45,7 +46,8 @@ set(CMAKE_BUILD_TYPE Debug)
 
 # message(PYTHON_INSTALL_DIR="${PYTHON_INSTALL_DIR}")
 install(DIRECTORY
-    DESTINATION ${PYTHON_INSTALL_DIR}/pyradiance/lib
+    # DESTINATION ${PYTHON_INSTALL_DIR}/pyradiance/lib
+    DESTINATION ${SKBUILD_PLATLIB_DIR}/pyradiance/lib
 )
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -82,9 +84,10 @@ nanobind_add_module(
   src/radiance/rt/RcontribSimulManager.cpp
   src/radiance/rt/RdataShareMap.cpp
   src/radiance/rt/RdataShareFile.cpp
-  src/radiance/rt/rxcmain.cpp
+  # src/radiance/rt/rxcmain.cpp
   src/binding/pyradiance_ext.cpp
 )
+
 add_compile_options(-Wall -Wextra -Werror)
 target_link_libraries(radiance_ext PRIVATE raycalls radiance cpprad rtrad m)
 # Install directive for scikit-build-core
