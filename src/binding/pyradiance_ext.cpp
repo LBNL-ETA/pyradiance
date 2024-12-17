@@ -24,6 +24,8 @@
 namespace nb = nanobind;
 
 using OrigDirec = nb::ndarray<double, nb::shape<-1, 3>>;
+using COLOR3 = nb::ndarray<float, nb::numpy, nb::shape<3>, nb::c_contig>;
+
 
 static std::unordered_map<void *, std::shared_ptr<nb::callable>>
     stored_callbacks;
@@ -438,7 +440,6 @@ NB_MODULE(radiance_ext, m) {
           "compute_record",
           [](RcontribSimulManager &self, const OrigDirec &rays) {
             FVECT *output = (FVECT *)emalloc(sizeof(FVECT) * rays.shape(0));
-	    printf("yres: %d\n", self.yres);
             ndarray_to_fvect(rays, output);
             for (int i = 0; i < rays.shape(0); i++) {
               printf("%f %f %f\n", output[i][0], output[i][1], output[i][2]);
@@ -498,7 +499,7 @@ NB_MODULE(radiance_ext, m) {
             self.cdsF = func;
           })
       .def_rw("xres", &RcontribSimulManager::xres)
-      .def_prop_rw("yres", [](RcontribSimulManager &self){return self.yres;}, [](RcontribSimulManager &self, int val){self.yres=val;})
+      .def_rw("yres", &RcontribSimulManager::yres)
       .def_rw("accum", &RcontribSimulManager::accum)
       .def("__enter__", [](RcontribSimulManager &self) { return &self; })
       .def(
@@ -520,4 +521,12 @@ NB_MODULE(radiance_ext, m) {
         [](const char *cxt) { return calcontext(const_cast<char *>(cxt)); });
 
   m.attr("RCCONTEXT") = nb::str(RCCONTEXT);
+  m.def(
+      "cie_rgb",
+      [](const COLOR3 xyz) {
+        std::array<float, 3> rgb = {0, 0, 0};
+        cie_rgb(rgb.data(), xyz.data());
+        return COLOR3(rgb.data());
+      },
+      "Convert CIE color to standard RGB");
 }
