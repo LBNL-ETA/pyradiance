@@ -2,40 +2,10 @@ cmake_minimum_required(VERSION 3.15...3.26)
 
 project(pyradiance LANGUAGES CXX C)
 
-if (NOT SKBUILD)
-  message(WARNING "\
-  This CMake file is meant to be executed using 'scikit-build'. Running
-  it directly will almost certainly not produce the desired result. If
-  you are a user trying to install this package, please use the command
-  below, which will install all necessary build dependencies, compile
-  the package in an isolated environment, and then install it.
-  =====================================================================
-   $ pip install .
-  =====================================================================
-  If you are a software developer, and this is your own package, then
-  it is usually much more efficient to install the build dependencies
-  in your environment once and use the following command that avoids
-  a costly creation of a new virtual environment at every compilation:
-  =====================================================================
-   $ pip install nanobind scikit-build-core[pyproject]
-   $ pip install --no-build-isolation -ve .
-  =====================================================================
-  You may optionally add -Ceditable.rebuild=true to auto-rebuild when
-  the package is imported. Otherwise, you need to re-run the above
-  after editing C++ files.")
-endif()
-
 # Try to import all Python components potentially needed by nanobind
 find_package(Python 3.9
   REQUIRED COMPONENTS Interpreter Development.Module
   OPTIONAL_COMPONENTS Development.SABIModule)
-
-# Get the Python installation directory
-# execute_process(
-#     COMMAND "${Python_EXECUTABLE}" -c "import site; print(site.getsitepackages()[0])"
-#     OUTPUT_VARIABLE PYTHON_INSTALL_DIR
-#     OUTPUT_STRIP_TRAILING_WHITESPACE
-# )
 
 # Avoiding name clashes
 message(SKBUILD_PLATLIB_DIR="${SKBUILD_PLATLIB_DIR}")
@@ -44,15 +14,65 @@ add_compile_definitions(error=rad_error)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
 set(CMAKE_BUILD_TYPE Debug)
 
-# message(PYTHON_INSTALL_DIR="${PYTHON_INSTALL_DIR}")
 install(DIRECTORY
-    # DESTINATION ${PYTHON_INSTALL_DIR}/pyradiance/lib
     DESTINATION ${SKBUILD_PLATLIB_DIR}/pyradiance/lib
+    DESTINATION ${SKBUILD_PLATLIB_DIR}/pyradiance/bin
 )
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Import nanobind through CMake's find_package mechanism
 find_package(nanobind CONFIG REQUIRED)
+
+# add_compile_options(-Wall -Wextra -Werror)
+add_compile_options(-Wall )
+if(MSVC)
+	add_compile_options(
+	    /O2             # Maximum optimization
+	    /Oi            # Enable intrinsic functions
+	    /Ot            # Favor fast code
+	    /Oy            # Omit frame pointers
+	    /GL            # Whole program optimization
+	    /Qpar          # Auto-parallelizer
+	    /fp:fast       # Fast floating-point model
+	    /arch:AVX2     # Use AVX2 instructions (modify based on target CPU)
+	    /GT            # Fiber-safe optimizations
+	    /GF            # String pooling
+	)
+	# Global link options
+	add_link_options(
+	    /LTCG          # Link-time code generation
+	)
+
+else() # GCC/Clang (Linux, macOS, MinGW)
+	add_compile_options(
+	    -O3                    # Maximum optimization
+	    -flto                  # Link-time optimization
+	    -march=native          # Optimize for local machine architecture
+	    -ffast-math            # Fast math operations
+	    -funroll-loops         # Unroll loops
+	    -fomit-frame-pointer   # Omit frame pointer
+	    -ffunction-sections    # Place each function in its own section
+	    -fdata-sections        # Place each data item in its own section
+	)
+
+	if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+	    add_compile_options(
+		-fdevirtualize-at-ltrans  # Better devirtualization with LTO
+		-fipa-pta                 # More aggressive function analysis
+	    )
+	endif()
+
+	add_link_options(
+	    -flto
+	    -Wl,--gc-sections     # Remove unused code sections
+	)
+
+	if(APPLE)
+	    add_compile_options(
+		-momit-leaf-frame-pointer
+	    )
+	endif()
+endif()
 
 include_directories(${CMAKE_CURRENT_LIST_DIR}/src/radiance/common)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/src/radiance/rt)
@@ -84,11 +104,10 @@ nanobind_add_module(
   src/radiance/rt/RcontribSimulManager.cpp
   src/radiance/rt/RdataShareMap.cpp
   src/radiance/rt/RdataShareFile.cpp
-  # src/radiance/rt/rxcmain.cpp
   src/binding/pyradiance_ext.cpp
 )
 
-add_compile_options(-Wall -Wextra -Werror)
+
 target_link_libraries(radiance_ext PRIVATE raycalls radiance cpprad rtrad m)
 # Install directive for scikit-build-core
 install(TARGETS radiance_ext LIBRARY DESTINATION pyradiance)
