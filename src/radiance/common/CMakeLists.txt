@@ -24,7 +24,7 @@ set(STDOBJ
     unix_process.c process.c gethomedir.c getpath.c error.c savestr.c
     savqstr.c badarg.c fgetword.c words.c expandarg.c wordfile.c fgetval.c
     clip.c plocate.c eputs.c wputs.c quit.c lookup.c bmalloc.c
-    tcos.c fputword.c dircode.c paths.c byteswap.c cvtcmd.c dmessage.c
+    tcos.c fputword.c dircode.c paths.c byteswap.c cvtcmd.c dmessage.c chanvalue.c loadvars.c
 )
 
 set(SYSOBJ
