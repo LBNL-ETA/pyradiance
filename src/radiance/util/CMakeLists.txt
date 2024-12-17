@@ -1,3 +1,33 @@
+add_executable(evalglare evalglare.c pictool.c)
+target_link_libraries(evalglare PRIVATE rtrad reetz m)
+
+add_executable(dctimestep dctimestep.c cmbsdf.c cmatrix.c)
+target_link_libraries(dctimestep PRIVATE rtrad m)
+
+add_executable(getinfo getinfo.c)
+target_link_libraries(getinfo PRIVATE rtrad m)
+
+add_executable(rad rad.c)
+target_link_libraries(rad PRIVATE radiance rtrad m)
+
+add_executable(vwrays vwrays.c)
+target_link_libraries(vwrays PRIVATE rtrad m)
+
+add_executable(rttree_reduce rttree_reduce.c)
+target_link_libraries(rttree_reduce rtrad)
+
+add_executable(rmtxop rmtxop.c rmatrix.c cmbsdf.c cmatrix.c)
+target_link_libraries(rmtxop PRIVATE rtrad m)
+
+add_executable(rcomb rcomb.c rmatrix.c cmbsdf.c cmatrix.c)
+target_link_libraries(rcomb PRIVATE radiance rtrad m)
+
+add_executable(wrapBSDF wrapBSDF.c)
+target_link_libraries(wrapBSDF rtrad m)
+
+add_executable(rfluxmtx rfluxmtx.c)
+target_link_libraries(rfluxmtx PRIVATE rtrad m)
+
 install(FILES
   ambpos.cal
   disk2square.cal
@@ -13,3 +43,16 @@ install(FILES
   DESTINATION ${SKBUILD_PLATLIB_DIR}/pyradiance/lib
 )
 
+install(TARGETS
+  evalglare
+  dctimestep
+  getinfo
+  rad
+  rcomb
+  rfluxmtx
+  rmtxop
+  rttree_reduce
+  vwrays
+  wrapBSDF
+  DESTINATION ${SKBUILD_PLATLIB_DIR}/pyradiance/bin
+)
