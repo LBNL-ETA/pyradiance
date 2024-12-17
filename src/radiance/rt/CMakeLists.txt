@@ -1,8 +1,12 @@
+
 function(generate_version_file OUTPUT_FILE VERSION_FILE)
+
+    configure_file(${VERSION_FILE} ${CMAKE_CURRENT_BINARY_DIR}/RADVERSION COPYONLY)
+
     add_custom_command(
         OUTPUT ${OUTPUT_FILE}
         COMMAND ${CMAKE_COMMAND} 
-            -D VERSION_FILE=${VERSION_FILE}
+	    -D VERSION_FILE=${CMAKE_CURRENT_BINARY_DIR}/RADVERSION
             -D OUTPUT_FILE=${OUTPUT_FILE}
             -P ${CMAKE_CURRENT_SOURCE_DIR}/generate_version.cmake
         DEPENDS ${VERSION_FILE} ${CMAKE_CURRENT_SOURCE_DIR}/generate_version.cmake
@@ -10,6 +14,7 @@ function(generate_version_file OUTPUT_FILE VERSION_FILE)
         VERBATIM
     )
 endfunction()
+
 
 # generate version.c
 set(VERSION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/VERSION")
