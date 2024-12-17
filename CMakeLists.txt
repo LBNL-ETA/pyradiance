@@ -20,7 +20,11 @@ install(DIRECTORY
 )
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-# Import nanobind through CMake's find_package mechanism
+
+execute_process(
+COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
+OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE nanobind_ROOT)
+
 find_package(nanobind CONFIG REQUIRED)
 
 # add_compile_options(-Wall -Wextra -Werror)
