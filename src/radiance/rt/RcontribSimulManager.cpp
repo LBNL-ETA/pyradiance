@@ -237,7 +237,6 @@ RcontribSimulManager::AddModifier(const char *modn, const char *outspec,
 		return false;
 	}
 	if (!lp->key)	{		// create new entry
-		printf("Creating new entry for: %s\n", modn);
 		lp->key = strcpy((char *)emalloc(strlen(modn)+1), modn);
   }
 
