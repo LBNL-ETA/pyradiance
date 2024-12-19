@@ -7,7 +7,9 @@
 
 #include "RcontribSimulManager.h"
 #include "RdataShare.h"
+#include "RpictSimulManager.h"
 #include "RtraceSimulManager.h"
+#include "color.h"
 #include "func.h"
 #include "otspecial.h"
 #include "otypes.h"
@@ -257,10 +259,13 @@ NB_MODULE(radiance_ext, m) {
           "enqueue_bundle_array",
           [](RtraceSimulManager &self, const OrigDirec &orig_direc,
              RNUMBER rID0 = 0) {
-            FVECT *output;
+            FVECT *output =
+                (FVECT *)emalloc(sizeof(FVECT) * orig_direc.shape(0));
             ndarray_to_fvect(orig_direc, output);
             int n = orig_direc.shape(0) / 2;
-            return self.EnqueueBundle(output, n, rID0);
+            int ok = self.EnqueueBundle(output, n, rID0);
+            free(output);
+            return ok;
           },
           nb::arg("orig_direc"), nb::arg("rID0") = 0)
       .def("ready", &RtraceSimulManager::Ready)
@@ -504,6 +509,113 @@ NB_MODULE(radiance_ext, m) {
           },
           nb::arg("type") = nb::none(), nb::arg("value") = nb::none(),
           nb::arg("traceback") = nb::none());
+
+  nb::enum_<RenderDataType>(m, "RenderDataType")
+      .value("RDTnone", RDTnone)
+      .value("RDTscolor", RDTscolor)
+      .value("RDTrgb", RDTrgb)
+      .value("RDTxyz", RDTxyz)
+      .value("RDTscolr", RDTscolr)
+      .value("RDTrgbe", RDTrgbe)
+      .value("RDTxyze", RDTxyze)
+      .value("RDTcolorM", RDTcolorM)
+      .value("RDTdfloat", RDTdfloat)
+      .value("RDTdshort", RDTdshort)
+      .value("RDTdepthM", RDTdepthM);
+
+  nb::class_<PixelAccess>(m, "PixelAccess")
+      .def(nb::init<>())
+      .def(nb::init<COLORV *, int, float *>(), nb::arg("rp"),
+           nb::arg("ystride"), nb::arg("zp") = nullptr)
+      .def(nb::init<COLRV *, int, float *>(), nb::arg("bp"), nb::arg("ystride"),
+           nb::arg("zp") = nullptr)
+      .def(nb::init<COLRV *, int, short *>(), nb::arg("bp"), nb::arg("ystride"),
+           nb::arg("dp"))
+      .def(nb::init<COLORV *, int, short *>(), nb::arg("rp"),
+           nb::arg("ystride"), nb::arg("dp"))
+      .def("init",
+           nb::overload_cast<COLORV *, int, float *>(&PixelAccess::Init))
+      .def("init", nb::overload_cast<COLRV *, int, float *>(&PixelAccess::Init))
+      .def("init", nb::overload_cast<COLRV *, int, short *>(&PixelAccess::Init))
+      .def("init",
+           nb::overload_cast<COLORV *, int, short *>(&PixelAccess::Init))
+      /*.def("set_color_space",*/
+      /*     [](PixelAccess &self, RenderDataType cs, nb::object pr) {*/
+      /*       if (pr.is_none()) {*/
+      /*         return self.SetColorSpace(cs, NULL);*/
+      /*       }*/
+      /*       RGBPRIMP pr2 = nb::cast<RGBPRIMP>(pr);*/
+      /*       return self.SetColorSpace(cs, pr2);*/
+      /*     })*/
+      .def("color_space", &PixelAccess::ColorSpace)
+      /*.def(*/
+      /*    "primaries",*/
+      /*    [](PixelAccess &self) {*/
+      /*      RGBPRIMP result = self.Primaries();*/
+      /*      return nb::ndarray<nb::numpy, float, nb::shape<2>>(result);*/
+      /*    },*/
+      /*    nb::rv_policy::reference_internal)*/
+      .def("nc", &PixelAccess::NC)
+      .def("depth_type", &PixelAccess::DepthType)
+      .def("get_row_stride", &PixelAccess::GetRowStride)
+      .def("set_pixel",
+           nb::overload_cast<int, int, const RAY *>(&PixelAccess::SetPixel))
+      .def("set_pixel", nb::overload_cast<int, int, const COLORV *, float>(
+                            &PixelAccess::SetPixel))
+      .def("get_pixel", &PixelAccess::GetPixel)
+      .def("copy_pixel", &PixelAccess::CopyPixel);
+
+  nb::class_<RpictSimulManager>(m, "RpictSimulManager")
+      .def(nb::init<>())
+      .def(nb::init<const char *>(), nb::arg("octn") = nullptr)
+      .def("load_octree", &RpictSimulManager::LoadOctree)
+      .def("new_header", &RpictSimulManager::NewHeader,
+           nb::arg("inspec") = nullptr)
+      .def("add_header",
+           nb::overload_cast<const char *>(&RpictSimulManager::AddHeader))
+      .def("get_head_len", &RpictSimulManager::GetHeadLen)
+      .def("get_head_str",
+           nb::overload_cast<>(&RpictSimulManager::GetHeadStr, nb::const_))
+      .def("get_head_str",
+           nb::overload_cast<const char *, bool>(&RpictSimulManager::GetHeadStr,
+                                                 nb::const_),
+           nb::arg("key"), nb::arg("inOK") = false)
+      .def("ready", &RpictSimulManager::Ready)
+      .def("pre_view", &RpictSimulManager::PreView)
+      .def("get_width", &RpictSimulManager::GetWidth)
+      .def("get_height", &RpictSimulManager::GetHeight)
+      .def("t_width", &RpictSimulManager::TWidth)
+      .def("t_height", &RpictSimulManager::THeight)
+      .def("render_tile",
+           nb::overload_cast<COLORV *, int, float *, const int *>(
+               &RpictSimulManager::RenderTile))
+      .def("render_tile", nb::overload_cast<COLRV *, int, float *, const int *>(
+                              &RpictSimulManager::RenderTile))
+      .def("render_tile", nb::overload_cast<COLRV *, int, short *, const int *>(
+                              &RpictSimulManager::RenderTile))
+      .def("render_tile",
+           nb::overload_cast<COLORV *, int, short *, const int *>(
+               &RpictSimulManager::RenderTile))
+      .def("render_frame", &RpictSimulManager::RenderFrame)
+      .def("resume_frame", &RpictSimulManager::RenderFrame)
+      .def("set_thread_count", &RpictSimulManager::SetThreadCount,
+           nb::arg("nt") = 0)
+      .def("set_reference_depth",
+           nb::overload_cast<const char *>(
+               &RpictSimulManager::SetReferenceDepth),
+           nb::arg("dstr") = 0)
+      .def("set_reference_depth",
+           nb::overload_cast<double, const char *>(
+               &RpictSimulManager::SetReferenceDepth),
+           nb::arg("dref"), nb::arg("unit") = nullptr)
+      .def("get_reference_depth",
+           [](RpictSimulManager &self, const char *du) {
+             return self.GetReferenceDepth(const_cast<char *>(du));
+           })
+      .def("new_frame",
+           [](RpictSimulManager &self, const VIEW &v, int xydim[2], double *ap,
+              const int *tgrid) { return self.NewFrame(v, xydim, ap, tgrid); })
+      .def("n_threads", &RpictSimulManager::NThreads);
 
   m.def("initfunc", &initfunc);
   m.def("loadfunc", &loadfunc);
