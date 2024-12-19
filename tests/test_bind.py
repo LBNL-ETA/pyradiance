@@ -1,5 +1,7 @@
 import pyradiance as pr
 
+results = []
+
 
 def cooked_callback(ray, client_data):
     print("\nCooked callback called!")
@@ -12,6 +14,7 @@ def cooked_callback(ray, client_data):
         print(f"Ray number: {ray.rno}")
         print(f"Ray type: {ray.rtype}")
         print(f"Radiance {ray.rcol}")
+        results.append(ray.rcol)
     except Exception as e:
         print(f"Error in cooked callback: {e}")
         import traceback
@@ -56,3 +59,4 @@ mgr.enqueue_bundle(rays)
 mgr.flush_queue()
 mgr.cleanup(True)
 del mgr
+print(results)

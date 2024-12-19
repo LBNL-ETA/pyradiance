@@ -108,10 +108,22 @@ nanobind_add_module(
   src/radiance/rt/RcontribSimulManager.cpp
   src/radiance/rt/RdataShareMap.cpp
   src/radiance/rt/RdataShareFile.cpp
-  src/binding/pyradiance_ext.cpp
+  src/binding/radiance_ext.cpp
+)
+
+nanobind_add_module(
+	bsdf
+
+	STABLE_ABI
+
+	NB_STATIC
+
+	src/binding/bsdf_ext.cpp
 )
 
 
 target_link_libraries(radiance_ext PRIVATE raycalls radiance cpprad rtrad m)
+target_link_libraries(bsdf PRIVATE rtrad m)
 # Install directive for scikit-build-core
 install(TARGETS radiance_ext LIBRARY DESTINATION pyradiance)
+install(TARGETS bsdf LIBRARY DESTINATION pyradiance)

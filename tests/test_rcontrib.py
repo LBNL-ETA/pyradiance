@@ -6,9 +6,9 @@ import pyradiance as pr
 
 rays = np.array(
     [
-        [0, 0, 0],
+        [10, 10, 3],
         [0.0, 0.0, 1.0],  # Ray 1 origin and direction
-        [4.0, 5.0, 6.0],
+        [4.0, 5.0, 3.0],
         [0.0, 0.0, 1.0],  # Ray 2 origin and direction
     ]
 )
@@ -30,7 +30,7 @@ pr.set_lr(-10)
 pr.set_lw(2e-3)
 pr.set_ar(256)
 pr.set_ad(350)
-pr.set_ab(1)
+pr.set_ab(6)
 cndx = [0, 1, 2, 3]
 wlpart = [780, 588, 480, 380]
 mgr = pr.RcontribSimulManager()
