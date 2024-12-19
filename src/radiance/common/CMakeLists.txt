@@ -21,14 +21,14 @@ set(UTLOBJ
 set(STDOBJ
     fgetline.c fropen.c linregr.c xf.c mat4.c invmat4.c fvect.c urand.c
     urind.c calexpr.c caldefn.c calfunc.c calprnt.c biggerlib.c multisamp.c
-    unix_process.c process.c gethomedir.c getpath.c error.c savestr.c
+    process.c gethomedir.c getpath.c error.c savestr.c
     savqstr.c badarg.c fgetword.c words.c expandarg.c wordfile.c fgetval.c
     clip.c plocate.c eputs.c wputs.c quit.c lookup.c bmalloc.c
     tcos.c fputword.c dircode.c paths.c byteswap.c cvtcmd.c dmessage.c chanvalue.c loadvars.c
 )
 
 set(SYSOBJ
-    ealloc.c fdate.c portio.c myhostname.c erf.c strcmp.c strlcpy.c strnstr.c
+    ealloc.c fdate.c portio.c myhostname.c erf.c strcmp.c
 )
 
 set(CPPOBJ
@@ -46,6 +46,17 @@ set(WFOBJ
 set(REETZOBJ
     g3affine.c g3flist.c g3sphere.c g3vector.c gbasic.c muc_randvar.c
 )
+
+if(UNIX)
+	list(APPEND STDOBJ unix_process.c)
+  if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+	list(APPEND SYSOBJ strnstr.c strlcpy.c)
+  endif()
+else()
+	list(APPEND STDOBJ win_process.c win_popen.c win_usleep.c)
+	list(APPEND SYSOBJ strnstr.c strlcpy.c)
+endif()
+
 
 # Create libraries
 add_library(rtrad STATIC
