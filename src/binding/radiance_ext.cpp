@@ -211,18 +211,14 @@ NB_MODULE(radiance_ext, m) {
   m.def(
       "setspectrsamp",
       [](const std::vector<int> &cn, const std::vector<float> &wlpt) -> int {
-        // Convert std::vector to C-style arrays if necessary
-        int cn_array[4] = {0}; // Initialize with zeros
+        int cn_array[4] = {0};
         float wlpt_array[4] = {0};
 
-        // Copy vector data to array. Note: This assumes cn and wlpt vectors
-        // have at least 4 elements.
         for (int i = 0; i < 4; ++i) {
           cn_array[i] = cn[i];
           wlpt_array[i] = wlpt[i];
         }
 
-        // Call the actual C++ function
         return setspectrsamp(cn_array, wlpt_array);
       },
       nb::arg("cn"), nb::arg("wlpt"),
@@ -460,7 +456,7 @@ NB_MODULE(radiance_ext, m) {
             int ri, ri1 = 0;
             int ni, ni1 = 0;
 
-            while (r < totRows) { // loop until done
+            while (r < totRows) {
               ri = r * 2;
               ri1 = ri + 1;
               for (int i = 0; i < n2go; i++) {
