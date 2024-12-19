@@ -26,7 +26,6 @@ namespace nb = nanobind;
 using OrigDirec = nb::ndarray<double, nb::shape<-1, 3>>;
 using COLOR3 = nb::ndarray<float, nb::numpy, nb::shape<3>, nb::c_contig>;
 
-
 static std::unordered_map<void *, std::shared_ptr<nb::callable>>
     stored_callbacks;
 
@@ -407,8 +406,7 @@ NB_MODULE(radiance_ext, m) {
           nb::arg("nm") = nb::none(), nb::rv_policy::reference_internal)
       .def(
           "get_output_array",
-          [](RcontribSimulManager &self,
-             nb::object nm = nb::none()) -> nb::list {
+          [](RcontribSimulManager &self, nb::object nm = nb::none()) {
             const RcontribOutput *out;
             if (nm.is_none()) {
               out = self.GetOutput(nullptr);
@@ -417,15 +415,10 @@ NB_MODULE(radiance_ext, m) {
               out = self.GetOutput(name.c_str());
             }
 
-            nb::list result_list;
-            for (int i = 0; i < out->nRows; i++) {
-              void *data = out->rData->GetMemory(
-                  out->begData + i * out->rowBytes, out->rowBytes, RDSread);
-              nb::ndarray data_arr = nb::ndarray<nb::numpy, float>(
-                  static_cast<float *>(data), {out->rowBytes / sizeof(float)});
-              result_list.append(data_arr);
-            }
-            return result_list;
+            void *data = out->rData->GetMemory(
+                out->begData, out->rowBytes * out->nRows, RDSread);
+            return nb::ndarray<nb::numpy, float, nb::ndim<2>>(
+                data, {out->nRows, out->rowBytes / sizeof(float)});
           },
           nb::arg("nm") = nb::none(), nb::rv_policy::reference_internal)
       .def("prep_output", &RcontribSimulManager::PrepOutput)
