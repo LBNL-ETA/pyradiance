@@ -129,8 +129,10 @@ add_library(radiance STATIC ${ROBJS})
 set_target_properties(radiance PROPERTIES
     POSITION_INDEPENDENT_CODE ON
 )
+target_include_directories(radiance PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
 
 add_library(raycalls STATIC ${RLOBJS})
 set_target_properties(raycalls PROPERTIES
     POSITION_INDEPENDENT_CODE ON
 )
+target_include_directories(raycalls PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)

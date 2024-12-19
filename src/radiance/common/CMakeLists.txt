@@ -57,7 +57,6 @@ else()
 	list(APPEND SYSOBJ strnstr.c strlcpy.c)
 endif()
 
-
 # Create libraries
 add_library(rtrad STATIC
     ${RTOBJ}
@@ -66,6 +65,9 @@ add_library(rtrad STATIC
     ${STDOBJ}
     ${SYSOBJ}
 )
+
+target_include_directories(rtrad PRIVATE ${CMAKE_CURRENT_SRC_DIR})
+
 
 set_target_properties(rtrad PROPERTIES
     POSITION_INDEPENDENT_CODE ON
