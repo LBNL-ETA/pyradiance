@@ -1,0 +1,195 @@
+#ifndef lint
+static const char	RCSid[] = "$Id: calc.c,v 1.10 2023/09/26 18:09:08 greg Exp $";
+#endif
+/*
+ *  calc.c - simple algebraic desk calculator program.
+ *
+ *     4/1/86
+ */
+
+#include  <stdlib.h>
+#include  <setjmp.h>
+#include  <ctype.h>
+
+#include  "rtio.h"
+#include  "rterror.h"
+#include  "calcomp.h"
+
+#define  MAXRES		100
+
+double  result[MAXRES];
+int	nres = 0;
+
+jmp_buf  env;
+int  recover = 0;
+
+
+int
+main(int argc, char *argv[])
+{
+	char  expr[2048];
+	char  *epos;
+	FILE  *fp;
+	int  i;
+	char  *cp;
+
+	esupport |= E_VARIABLE|E_INCHAN|E_FUNCTION;
+	esupport &= ~(E_REDEFW|E_RCONST|E_OUTCHAN);
+#ifdef  BIGGERLIB
+	biggerlib();
+#endif
+	varset("PI", ':', 3.14159265358979323846);
+
+	for (i = 1; i < argc; i++) {
+		cp = getpath(argv[i], getrlibpath(), 0);
+		if (cp == NULL) {
+			eputs(argv[0]);
+			eputs(": cannot find file '");
+			eputs(argv[i]);
+			eputs("'\n");
+			quit(1);
+		}
+		fcompile(cp);
+	}
+	setjmp(env);
+	recover = 1;
+	eclock++;
+
+	epos = expr;
+	while (fgets(epos, sizeof(expr)-(epos-expr), stdin) != NULL) {
+		while (*epos && *epos != '\n')
+			epos++;
+		if (*epos && epos > expr && epos[-1] == '\\') {
+			epos[-1] = ' ';
+			continue;		/* escaped newline */
+		}
+		while (epos > expr && isspace(epos[-1]))
+			epos--;			/* eliminate end spaces */
+		*epos = '\0';
+		epos = expr;
+		switch (expr[0]) {
+		case '\0':
+			continue;
+		case '?':
+			for (cp = expr+1; isspace(*cp); cp++)
+				;
+			if (*calcontext(NULL))
+				printf("context is: %s\n", calcontext(NULL));
+			if (*cp)
+				dprint(cp, stdout);
+			else
+				dprint(NULL, stdout);
+			continue;
+		case '>':
+			for (cp = expr+1; isspace(*cp); cp++)
+				;
+			if (!*cp) {
+				eputs("file name required\n");
+				continue;
+			}
+			if ((fp = fopen(cp, "w")) == NULL) {
+				eputs(cp);
+				eputs(": cannot open\n");
+				continue;
+			}
+			dprint(NULL, fp);
+			fclose(fp);
+			continue;
+		case '<':
+			for (cp = expr+1; isspace(*cp); cp++)
+				;
+			if (!*cp) {
+				eputs("file name required\n");
+				continue;
+			}
+			cp = getpath(cp, getrlibpath(), 0);
+			if (cp == NULL) {
+				eputs("cannot find file\n");
+				continue;
+			}
+			fcompile(cp);
+			eclock++;
+			continue;
+		case '[':
+			for (cp = expr+1; isspace(*cp); cp++)
+				;
+			if (!isalpha(*cp)) {
+				eputs("context name required\n");
+				continue;
+			}
+			printf("context now: %s\n", pushcontext(cp));
+			continue;
+		case ']':
+			cp = popcontext();
+			if (*cp)
+				printf("context now: %s\n", cp);
+			else
+				printf("at global context\n");
+			continue;
+		}
+		if ((cp = strchr(expr, '=')) != NULL ||
+				(cp = strchr(expr, ':')) != NULL) {
+			if (cp[1])
+				scompile(expr, NULL, 0);
+			else if (*cp == '=') {
+				*cp = '\0';
+				if (!strcmp(expr, "*"))
+					dcleanup(1);
+				else
+					dclear(expr);
+			} else {
+				*cp = '\0';
+				if (!strcmp(expr, "*"))
+					dcleanup(2);
+				else
+					dremove(expr);
+			}
+			eclock++;
+		} else {
+			printf("$%d=%.9g\n", nres+1,
+					result[nres%MAXRES] = eval(expr));
+			nres++;
+		}
+	}
+
+	recover = 0;
+	quit(0);
+	return 0; /* pro forma exit */
+}
+
+
+double
+chanvalue(n)			/* return channel value */
+int  n;
+{
+	if (n == 0)
+		n = nres;
+	else if (n > nres || nres-n >= MAXRES) {
+		fprintf(stderr, "$%d: illegal result\n", n);
+		return(0.0);
+	}
+	return(result[(n-1)%MAXRES]);
+}
+
+
+void
+eputs(const char *msg)
+{
+	fputs(msg, stderr);
+}
+
+
+void
+wputs(const char *msg)
+{
+	eputs(msg);
+}
+
+
+void
+quit(int code)
+{
+	if (recover)			/* a cavalier approach */
+		longjmp(env, 1);
+	exit(code);
+}

@@ -1,0 +1,62 @@
+{ RCSid $Id: sun.cal,v 1.4 2019/11/08 22:48:08 greg Exp $ }
+{*
+ *           SOLAR CALCULATIONS
+ *
+ *               7/25/84
+ *		10/10/86
+ *
+ *}
+
+DEG : PI/180;
+
+RLAT = 0.66;		{* Site latitude (radians) *}
+
+RLON = 2.13;		{* Site longitude (radians) *}
+
+RSM = 120 * DEG;	{* Standard meridian (radians) *}
+
+
+stadj(jd)		{* solar time adjustment (hours) *}
+{ jd is days into year }
+=
+      0.170 * sin( 4*PI/373 * (jd - 80) ) -
+      0.129 * sin( 2*PI/355 * (jd - 8 ) ) +
+      12*(RSM-RLON)/PI
+;
+
+
+sdec(jd)		{* solar declination angle (radians) *}
+{ jd is days into year }
+=
+  0.4093 * sin( 2*PI/365 * (jd - 81) )
+;
+
+
+salt(sd, st)		{* solar altitude (radians) *}
+{ sd is solar declination, st is solar time (hours) }
+=
+ asin( sin(RLAT) * sin(sd) - cos(RLAT) * cos(sd) *
+                                     cos(PI/12*st) )
+;
+
+
+sazi(sd, st)		{* the solar azimuth (radians) *}
+{ sd is solar declination, st is solar time (hours) }
+=
+ -atan2( cos(sd) * sin(PI/12*st),
+ 	-cos(RLAT)*sin(sd) -
+	sin(RLAT)*cos(sd)*cos(PI/12*st) )
+;
+
+
+SAZI = sazi(SDEC, STIME) / DEG;
+
+SALT = salt(SDEC, STIME) / DEG;
+
+SDEC = sdec(JDATE);
+
+STIME = TIME + stadj(JDATE);
+
+HALFDAY = acos(-tan(RLAT)*tan(SDEC)) * (12/PI);
+
+JDATE = DAY + select(MONTH,0,31,59,90,120,151,181,212,243,273,304,334);
