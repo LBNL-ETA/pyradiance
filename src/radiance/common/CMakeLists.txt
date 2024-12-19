@@ -4,6 +4,8 @@ set(RTOBJ
     instance.c readobj.c readoct.c otypes.c
     objset.c octree.c readfargs.c modobject.c getlibpath.c
     zeroes.c mesh.c readmesh.c tmesh.c sceneio.c
+    free_os.c
+    addobjnotify.c
 )
 
 set(PICOBJ
