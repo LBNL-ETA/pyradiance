@@ -78,8 +78,6 @@ else() # GCC/Clang (Linux, macOS, MinGW)
 	endif()
 endif()
 
-include_directories(${CMAKE_CURRENT_LIST_DIR}/src/radiance/common)
-include_directories(${CMAKE_CURRENT_LIST_DIR}/src/radiance/rt)
 
 add_subdirectory(src/radiance/common)
 add_subdirectory(src/radiance/rt)
@@ -121,6 +119,8 @@ nanobind_add_module(
 	src/binding/bsdf_ext.cpp
 )
 
+target_include_directories(radiance_ext PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/radiance/common ${CMAKE_CURRENT_LIST_DIR}/src/radiance/rt)
+target_include_directories(bsdf PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/radiance/common ${CMAKE_CURRENT_LIST_DIR}/src/radiance/rt)
 
 target_link_libraries(radiance_ext PRIVATE raycalls radiance cpprad rtrad m)
 target_link_libraries(bsdf PRIVATE rtrad m)
