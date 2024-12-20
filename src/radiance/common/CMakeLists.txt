@@ -30,7 +30,7 @@ set(STDOBJ
 )
 
 set(SYSOBJ
-    ealloc.c fdate.c portio.c myhostname.c erf.c strcmp.c
+    ealloc.c fdate.c portio.c myhostname.c erf.c 
 )
 
 set(CPPOBJ

@@ -115,9 +115,15 @@ set(ROBJS
 # Define source files for raycalls library
 set(RLOBJS
     raycalls.c
-    raypcalls.c
     rayfifo.c
 )
+
+if (WIN32)
+    list(APPEND RLOBJS raypwin.c)
+else()
+    list(APPEND RLOBJS raypcalls.c)
+endif()
+
 
 install(FILES rayinit.cal
   DESTINATION ${SKBUILD_PLATLIB_DIR}/pyradiance/lib
