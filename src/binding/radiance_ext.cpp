@@ -296,13 +296,20 @@ NB_MODULE(radiance_ext, m) {
   m.def("set_render_option", [](std::vector<std::string> opts) {
     int ac = opts.size();
     char **av = new char *[ac];
+    int rval = 0;
 
     for (size_t i = 0; i < ac; i++) {
       av[i] = new char[opts[i].length() + 1];
       strcpy(av[i], opts[i].c_str());
     }
-    int ok = getrenderopt(ac, av);
-    return ok;
+    for (size_t i = 0; i < ac; i++) {
+      rval = getrenderopt(ac - i, av + i);
+      if (rval >= 0) {
+        i += rval;
+        continue;
+      }
+    }
+    return;
   });
 
   m.def(
