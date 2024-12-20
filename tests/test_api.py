@@ -124,7 +124,7 @@ def test_parse_view():
     res = pr.parse_view(inp_str)
     assert res.vp == (0, 0, 0)
     assert res.vdir == (0, -1, 0)
-    assert res.type == ord("a")
+    assert res.type == "a"
     assert res.horiz == 180
 
 
