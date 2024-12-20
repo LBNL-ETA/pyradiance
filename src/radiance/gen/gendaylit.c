@@ -491,7 +491,6 @@ void computesky() {
           diffuseirradiance *
           glob_h_diffuse_effi_PEREZ(); /*diffuse horizontal illuminance*/
       double direct_n_effi = direct_n_effi_PEREZ();
-      printf("direct_n_effi: %f\n", direct_n_effi);
       directilluminance = directirradiance * direct_n_effi;
       check_illuminances();
     }
