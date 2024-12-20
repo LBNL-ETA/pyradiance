@@ -4,7 +4,8 @@ add_executable(getbbox
   init2otypes.c
   readobj2.c
 )
-target_link_libraries(getbbox rtrad)
+target_include_directories(getbbox PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
+target_link_libraries(getbbox PRIVATE rtrad m)
 
 add_executable(obj2mesh
   cvmesh.c
@@ -13,7 +14,8 @@ add_executable(obj2mesh
   wfconv.c
   writemesh.c
 )
-target_link_libraries(obj2mesh rtrad)
+target_include_directories(obj2mesh PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
+target_link_libraries(obj2mesh PRIVATE rtrad m)
 
 add_executable(oconv
   bbox.c
@@ -25,8 +27,9 @@ add_executable(oconv
   sphere.c
   writeoct.c
 )
-target_link_libraries(oconv rtrad)
+target_include_directories(oconv PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
+target_link_libraries(oconv PRIVATE rtrad m)
 
 install(TARGETS getbbox obj2mesh oconv
-  RUNTIME DESTINATION "bin"
+  DESTINATION ${SKBUILD_PLATLIB_DIR}/pyradiance/bin
 )
