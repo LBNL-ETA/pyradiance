@@ -229,6 +229,6 @@ NB_MODULE(bsdf, m) {
           vec_from_deg(theta_out, phi_out, vout);
           SDevalBSDF(&val, vin, vout, sd);
           get_cie_xyz(&val, cie_xyz);
-          return nb::ndarray<nb::numpy, float, nb::ndim<1>>(cie_xyz, {3});
+          return nb::ndarray<nb::numpy, double, nb::ndim<1>>(cie_xyz, {3});
         });
 }
