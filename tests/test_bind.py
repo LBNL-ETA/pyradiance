@@ -59,8 +59,8 @@ mgr.set_thread_count(2)
 mgr.set_cooked_call(cooked_callback)
 mgr.set_trace_call(trace_callback)
 mgr.rt_flags = pr.RTdoFIFO
-# mgr.enqueue_bundle(rays)
-mgr.enqueue_bundle_array(rays_arr)
+# mgr.enqueue_bundle(rays_arr)
+mgr.enqueue_bundle_list(rays)
 mgr.flush_queue()
 mgr.cleanup(True)
 del mgr
