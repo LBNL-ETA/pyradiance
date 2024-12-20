@@ -107,6 +107,10 @@ nanobind_add_module(
   NB_STATIC
 
   src/radiance/rt/RtraceSimulManager.cpp
+
+  src/radiance/rt/RpictSimulManager.cpp
+  src/radiance/rt/srcdraw.c
+
   src/radiance/rt/RcontribSimulManager.cpp
   src/radiance/rt/RdataShareMap.cpp
   src/radiance/rt/RdataShareFile.cpp
