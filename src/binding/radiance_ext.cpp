@@ -27,7 +27,7 @@
 namespace nb = nanobind;
 
 using OrigDirec = nb::ndarray<double, nb::shape<-1, 3>>;
-using COLOR3 = nb::ndarray<float, nb::numpy, nb::shape<3>, nb::c_contig>;
+using Array3 = nb::ndarray<float, nb::numpy, nb::shape<3>, nb::c_contig>;
 
 VIEW ourview = STDVIEW; /* view parameters */
 int hres, vres;         /* current image resolution for srcdraw.c */
@@ -221,7 +221,9 @@ NB_MODULE(radiance_ext, m) {
       });
 
   nb::class_<VIEW>(m, "VIEW")
-      .def_rw("type", &VIEW::type)
+      .def_prop_rw(
+          "type", [](VIEW &v) { return (char)v.type; },
+          [](VIEW &v, const char t) { v.type = (int)t; })
       .def_prop_rw(
           "vp",
           [](VIEW &v) { return nb::make_tuple(v.vp[0], v.vp[1], v.vp[2]); },
@@ -329,34 +331,29 @@ NB_MODULE(radiance_ext, m) {
       "Assign spectral sampling, returns 1 if good, -1 if bad.");
 
   nb::class_<RtraceSimulManager>(m, "RtraceSimulManager")
-
       .def(nb::init<>())
       .def("load_octree", &RtraceSimulManager::LoadOctree)
       .def("set_thread_count", &RtraceSimulManager::SetThreadCount,
            nb::arg("nt") = 0)
       .def(
-          "enqueue_bundle",
-          [](RtraceSimulManager &self, const nb::sequence &orig_direc,
+          "enqueue_bundle_list",
+          [](RtraceSimulManager &self, const nb::list &orig_direc,
              RNUMBER rID0 = 0) {
-            std::vector<std::array<double, 3>> data;
-            auto seq = nb::cast<nb::sequence>(orig_direc);
-            size_t n = len(seq) / 2;
-            data.reserve(n * 2);
-            for (size_t i = 0; i < n * 2; ++i) {
-              auto row = nb::cast<nb::sequence>(seq[i]);
-              std::array<double, 3> point;
-              for (size_t j = 0; j < 3; ++j) {
-                point[j] = nb::cast<double>(row[j]);
-              }
-              data.push_back(point);
+            size_t list_count = len(orig_direc);
+            size_t nrays = list_count / 2;
+            FVECT *output = (FVECT *)emalloc(sizeof(FVECT) * list_count);
+            for (size_t i = 0; i < list_count; ++i) {
+              output[i][0] = nb::cast<double>(nb::list(orig_direc[i])[0]);
+              output[i][1] = nb::cast<double>(nb::list(orig_direc[i])[1]);
+              output[i][2] = nb::cast<double>(nb::list(orig_direc[i])[2]);
             }
-
-            return self.EnqueueBundle(
-                reinterpret_cast<const double(*)[3]>(data.data()), n, rID0);
+            int ok = self.EnqueueBundle(output, nrays, rID0);
+            free(output);
+            return ok;
           },
           nb::arg("orig_direc"), nb::arg("rID0") = 0)
       .def(
-          "enqueue_bundle_array",
+          "enqueue_bundle",
           [](RtraceSimulManager &self, const OrigDirec &orig_direc,
              RNUMBER rID0 = 0) {
             FVECT *output =
@@ -728,10 +725,11 @@ NB_MODULE(radiance_ext, m) {
   m.attr("RCCONTEXT") = nb::str(RCCONTEXT);
   m.def(
       "cie_rgb",
-      [](const COLOR3 xyz) {
-        std::array<float, 3> rgb = {0, 0, 0};
-        cie_rgb(rgb.data(), xyz.data());
-        return COLOR3(rgb.data());
+      [](const Array3 xyz) {
+        float rgb[3] = {0, 0, 0};
+        float xyz2[3] = {xyz(0), xyz(1), xyz(2)};
+        cie_rgb(rgb, xyz2);
+        return Array3(rgb);
       },
       "Convert CIE color to standard RGB");
 }
