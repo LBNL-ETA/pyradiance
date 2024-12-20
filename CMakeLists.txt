@@ -81,8 +81,12 @@ endif()
 
 add_subdirectory(src/radiance/common)
 add_subdirectory(src/radiance/rt)
+add_subdirectory(src/radiance/cv)
 add_subdirectory(src/radiance/gen)
+add_subdirectory(src/radiance/ot)
+add_subdirectory(src/radiance/px)
 add_subdirectory(src/radiance/util)
+add_subdirectory(src/radiance/cal)
 
 # We are now ready to compile the actual extension module
 nanobind_add_module(
