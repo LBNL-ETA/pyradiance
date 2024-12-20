@@ -1,3 +1,5 @@
+import numpy as np
+
 import pyradiance as pr
 
 results = []
@@ -48,6 +50,8 @@ rays = [
     [0.0, 1.0, 0.0],  # Ray 2 origin and direction
 ]
 
+rays_arr = np.array(rays)
+
 pr.set_ab(1)
 mgr = pr.RtraceSimulManager()
 mgr.load_octree("test.oct")
@@ -55,7 +59,8 @@ mgr.set_thread_count(2)
 mgr.set_cooked_call(cooked_callback)
 mgr.set_trace_call(trace_callback)
 mgr.rt_flags = pr.RTdoFIFO
-mgr.enqueue_bundle(rays)
+# mgr.enqueue_bundle(rays)
+mgr.enqueue_bundle_array(rays_arr)
 mgr.flush_queue()
 mgr.cleanup(True)
 del mgr
