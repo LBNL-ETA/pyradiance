@@ -17,6 +17,7 @@
 #include "ray.h"
 #include "resolu.h"
 #include "source.h"
+#include "view.h"
 
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
@@ -27,6 +28,17 @@ namespace nb = nanobind;
 
 using OrigDirec = nb::ndarray<double, nb::shape<-1, 3>>;
 using COLOR3 = nb::ndarray<float, nb::numpy, nb::shape<3>, nb::c_contig>;
+
+VIEW ourview = STDVIEW; /* view parameters */
+int hres, vres;         /* current image resolution for srcdraw.c */
+
+int psample = 4;       /* pixel sample size */
+double maxdiff = .05;  /* max. difference for interpolation */
+double dstrpix = 0.67; /* square pixel distribution */
+
+double mblur = 0.; /* motion blur parameter */
+
+double dblur = 0.; /* depth-of-field blur parameter */
 
 static std::unordered_map<void *, std::shared_ptr<nb::callable>>
     stored_callbacks;
@@ -207,6 +219,91 @@ NB_MODULE(radiance_ext, m) {
       .def_prop_ro("rcol", [](const RAY &r) -> nb::tuple {
         return nb::make_tuple(r.rcol[0], r.rcol[1], r.rcol[2]);
       });
+
+  nb::class_<VIEW>(m, "VIEW")
+      .def_rw("type", &VIEW::type)
+      .def_prop_rw(
+          "vp",
+          [](VIEW &v) { return nb::make_tuple(v.vp[0], v.vp[1], v.vp[2]); },
+          [](VIEW &v, double x, double y, double z) {
+            v.vp[0] = x;
+            v.vp[1] = y;
+            v.vp[2] = z;
+          })
+      .def_prop_rw(
+          "vdir",
+          [](VIEW &v) {
+            return nb::make_tuple(v.vdir[0], v.vdir[1], v.vdir[2]);
+          },
+          [](VIEW &v, double x, double y, double z) {
+            v.vdir[0] = x;
+            v.vdir[1] = y;
+            v.vdir[2] = z;
+          })
+      .def_prop_rw(
+          "vu",
+          [](VIEW &v) { return nb::make_tuple(v.vup[0], v.vup[1], v.vup[2]); },
+          [](VIEW &v, double x, double y, double z) {
+            v.vup[0] = x;
+            v.vup[1] = y;
+            v.vup[2] = z;
+          })
+      .def_rw("vdist", &VIEW::vdist)
+      .def_rw("horiz", &VIEW::horiz)
+      .def_rw("vert", &VIEW::vert)
+      .def_rw("hoff", &VIEW::hoff)
+      .def_rw("voff", &VIEW::voff)
+      .def_rw("vfore", &VIEW::vfore)
+      .def_rw("vaft", &VIEW::vaft)
+      .def_prop_rw(
+          "hvec",
+          [](VIEW &v) {
+            return nb::make_tuple(v.hvec[0], v.hvec[1], v.hvec[2]);
+          },
+          [](VIEW &v, double x, double y, double z) {
+            v.hvec[0] = x;
+            v.hvec[1] = y;
+            v.hvec[2] = z;
+          })
+      .def_prop_rw(
+          "vvec",
+          [](VIEW &v) {
+            return nb::make_tuple(v.vvec[0], v.vvec[1], v.vvec[2]);
+          },
+          [](VIEW &v, double x, double y, double z) {
+            v.vvec[0] = x;
+            v.vvec[1] = y;
+            v.vvec[2] = z;
+          })
+      .def_rw("hn2", &VIEW::hn2)  /* DOT(hvec,hvec) */
+      .def_rw("vn2", &VIEW::vn2); /* DOT(vvec,vvec) */
+
+  nb::class_<RESOLU>(m, "RESOLU")
+      .def_rw("rt", &RESOLU::rt)
+      .def_rw("xr", &RESOLU::xr)
+      .def_rw("yr", &RESOLU::yr);
+
+  m.def("parse_view", [](const char *s) {
+    VIEW vp;
+    sscanview(&vp, const_cast<char *>(s));
+    return vp;
+  });
+
+  m.def("viewfile", [](const char *fname, VIEW *vp, RESOLU *rp) {
+    return viewfile(const_cast<char *>(fname), vp, rp);
+  });
+
+  m.def("set_render_option", [](std::vector<std::string> opts) {
+    int ac = opts.size();
+    char **av = new char *[ac];
+
+    for (size_t i = 0; i < ac; i++) {
+      av[i] = new char[opts[i].length() + 1];
+      strcpy(av[i], opts[i].c_str());
+    }
+    int ok = getrenderopt(ac, av);
+    return ok;
+  });
 
   m.def(
       "setspectrsamp",
