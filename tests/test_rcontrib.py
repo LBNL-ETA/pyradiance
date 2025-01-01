@@ -41,7 +41,6 @@ class TestRcontribSimulManager(unittest.TestCase):
         rparams.aa = 0
         rparams.abs = 0
         rparams.st = 0
-        pr.set_ray_params(rparams)
         cndx = [0, 1, 2, 3]
         wlpart = [780, 588, 480, 380]
         mgr = pr.RcontribSimulManager()
@@ -63,13 +62,18 @@ class TestRcontribSimulManager(unittest.TestCase):
             modn="skyglow", outspec=outfile, prms=params, binval="rbin", bincnt=bincnt
         )
         out = mgr.get_output()
-        pr.setspectrsamp(cndx, wlpart)
+        # pr.setspectrsamp(cndx, wlpart)
+        pr.set_ray_params(rparams)
         mgr.load_octree(self.octree)
-        mgr.add_header("rcontrib -ab -I")
         mgr.out_op = pr.RcOutputOp.FORCE
         rval = mgr.prep_output()
-        mgr.set_thread_count(2)
+        mgr.set_thread_count(1)
         mgr.rcontrib(rays)
-        # print(mgr.get_output_array())
+        result_array = mgr.get_output_array()
+        self.assertTrue(result_array.sum() > 5.0)
+        mgr.cleanup(True)
         os.remove(outfile)
-        del mgr
+
+
+if __name__ == "__main__":
+    unittest.main()

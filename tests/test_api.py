@@ -54,19 +54,8 @@ class TestPyradianceAPI(unittest.TestCase):
         self.assertEqual(res.type, "a")
         self.assertEqual(res.horiz, 180)
 
-    def test_parse_opt(self):
-        inp_str = "-ab 8 -ad 1024 -u- -aa .1 -lw 1e-8 -av 1 2 3 -af test.amf"
-        pr.set_option(inp_str.split())
-        rparams = pr.get_ray_params()
-        self.assertEqual(rparams.ab, 8)
-        self.assertEqual(rparams.ad, 1024)
-        self.assertEqual(rparams.u, False)
-        self.assertEqual(rparams.aa, 0.1)
-        self.assertEqual(rparams.lw, 1e-8)
-        self.assertEqual(rparams.av, (1, 2, 3))
-        self.assertEqual(rparams.af, "test.amf")
-
     def test_ray_param(self):
+        pr.ray_done(1)
         rp = pr.get_ray_params()
         rp.amblist = ["a1", "a2"]
         rp.ab = 2
@@ -86,7 +75,20 @@ class TestPyradianceAPI(unittest.TestCase):
         self.assertEqual(rp.ambincl, rp2.ambincl)
         self.assertEqual(rp.u, rp2.u)
         self.assertEqual(rp.i, rp2.i)
-        pr.set_ray_params(pr.get_default_ray_params())
+        pr.set_ray_params()
+
+    def test_parse_opt(self):
+        pr.ray_done(1)
+        inp_str = "-ab 8 -ad 1024 -u- -aa .1 -lw 1e-8 -av 1 2 3"
+        pr.set_option(inp_str.split())
+        rparams = pr.get_ray_params()
+        self.assertEqual(rparams.ab, 8)
+        self.assertEqual(rparams.ad, 1024)
+        self.assertEqual(rparams.u, False)
+        self.assertEqual(rparams.aa, 0.1)
+        self.assertEqual(rparams.lw, 1e-8)
+        self.assertEqual(rparams.av, (1, 2, 3))
+        pr.set_ray_params()
 
 
 class TestPyradianceCLI(unittest.TestCase):
