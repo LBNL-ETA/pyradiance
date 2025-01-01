@@ -120,6 +120,7 @@ class SamplingParameters:
     bv = pbool("bv")
 
     def __init__(self, **kwargs):
+        print("SamplingParameters will be deprecated, use RayParams instead")
         for key, val in kwargs.items():
             self.update_key(key, val)
 
