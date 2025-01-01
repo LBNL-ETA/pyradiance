@@ -1,22 +1,19 @@
+import os
+import unittest
+
 from pyradiance import bsdf
 
-sddata = bsdf.load_file("Resources/t3.xml")
 
-theta = 0
-phi = 0
+class TestBSDF(unittest.TestCase):
 
-# Direct hemispherical specular transmittance
-t_spec = bsdf.direct_hemi(
-    sddata, theta, phi, bsdf.SAMPLE_ALL & ~bsdf.SAMPLE_R & ~bsdf.SAMPLE_DF
-)
-print(f"{t_spec=}")
+    resources_dir = os.path.join(os.path.dirname(__file__), "Resources")
 
-
-# Generate 1000 transmission samples
-nsamp = 1000
-samples = bsdf.sample(sddata, theta, phi, nsamp, bsdf.SAMPLE_ALL & ~bsdf.SAMPLE_R)
-print(samples)
-
-# Query an incident and outgoing angle
-val = bsdf.query(sddata, theta, phi, 0, 0)
-print(val)
+    def test_BSDF(self):
+        """Test the bsdf function."""
+        sddata = bsdf.load_file(os.path.join(self.resources_dir, "t3.xml"))
+        _t = bsdf.direct_hemi(sddata, 30, 0, bsdf.SAMPLE_ALL & ~bsdf.SAMPLE_R)
+        self.assertAlmostEqual(_t, 7.645609e-2)
+        _a = bsdf.size(sddata, 30.0, 0.0, bsdf.QUERY_MIN + bsdf.QUERY_MAX)
+        self.assertAlmostEqual(_a[0], 7.6699e-4)
+        _sv = bsdf.query(sddata, 0, 0, 180, 0)
+        self.assertAlmostEqual(_sv[1], 4.9971852)
