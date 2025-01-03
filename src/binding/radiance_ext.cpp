@@ -410,23 +410,23 @@ NB_MODULE(radiance_ext, m) {
       .def("load_octree", &RtraceSimulManager::LoadOctree)
       .def("set_thread_count", &RtraceSimulManager::SetThreadCount,
            nb::arg("nt") = 0)
-      .def(
-          "enqueue_bundle_list",
-          [](RtraceSimulManager &self, const nb::list &orig_direc,
-             RNUMBER rID0 = 0) {
-            size_t list_count = len(orig_direc);
-            size_t nrays = list_count / 2;
-            FVECT *output = (FVECT *)emalloc(sizeof(FVECT) * list_count);
-            for (size_t i = 0; i < list_count; ++i) {
-              output[i][0] = nb::cast<double>(nb::list(orig_direc[i])[0]);
-              output[i][1] = nb::cast<double>(nb::list(orig_direc[i])[1]);
-              output[i][2] = nb::cast<double>(nb::list(orig_direc[i])[2]);
-            }
-            int ok = self.EnqueueBundle(output, nrays, rID0);
-            free(output);
-            return ok;
-          },
-          nb::arg("orig_direc"), nb::arg("rID0") = 0)
+      /*.def(*/
+      /*    "enqueue_bundle_list",*/
+      /*    [](RtraceSimulManager &self, const nb::list &orig_direc,*/
+      /*       RNUMBER rID0 = 0) {*/
+      /*      size_t list_count = len(orig_direc);*/
+      /*      size_t nrays = list_count / 2;*/
+      /*      FVECT *output = (FVECT *)emalloc(sizeof(FVECT) * list_count);*/
+      /*      for (size_t i = 0; i < list_count; ++i) {*/
+      /*        output[i][0] = nb::cast<double>(nb::list(orig_direc[i])[0]);*/
+      /*        output[i][1] = nb::cast<double>(nb::list(orig_direc[i])[1]);*/
+      /*        output[i][2] = nb::cast<double>(nb::list(orig_direc[i])[2]);*/
+      /*      }*/
+      /*      int ok = self.EnqueueBundle(output, nrays, rID0);*/
+      /*      free(output);*/
+      /*      return ok;*/
+      /*    },*/
+      /*    nb::arg("orig_direc"), nb::arg("rID0") = 0)*/
       .def(
           "enqueue_bundle",
           [](RtraceSimulManager &self, const OrigDirec &orig_direc,
