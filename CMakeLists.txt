@@ -26,6 +26,12 @@ execute_process(
   OUTPUT_STRIP_TRAILING_WHITESPACE
   OUTPUT_VARIABLE nanobind_ROOT)
 
+if(UNIX)
+  find_library(MATH_LIBRARY m)
+else()
+  set(MATH_LIBRARY)
+endif()
+
 find_package(nanobind CONFIG REQUIRED)
 
 # add_compile_options(-Wall -Wextra -Werror)
@@ -72,17 +78,6 @@ else() # GCC/Clang (Linux, macOS, MinGW)
   if(APPLE)
     add_compile_options(-momit-leaf-frame-pointer)
   endif()
-endif()
-
-add_subdirectory(src/radiance/common)
-add_subdirectory(src/radiance/rt)
-add_subdirectory(src/radiance/cv)
-add_subdirectory(src/radiance/gen)
-add_subdirectory(src/radiance/ot)
-add_subdirectory(src/radiance/px)
-add_subdirectory(src/radiance/util)
-add_subdirectory(src/radiance/cal)
-
 nanobind_add_module(
   radiance_ext
   # Target the stable ABI for Python 3.12+, which reduces the number of binary
@@ -101,21 +96,31 @@ nanobind_add_module(
   src/radiance/rt/RdataShareMap.cpp
   src/radiance/rt/RdataShareFile.cpp
   src/binding/radiance_ext.cpp)
-
-nanobind_add_module(bsdf STABLE_ABI NB_STATIC src/binding/bsdf_ext.cpp)
-
 target_include_directories(
   radiance_ext PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/radiance/common
                        ${CMAKE_CURRENT_LIST_DIR}/src/radiance/rt)
+target_link_libraries(radiance_ext PRIVATE raycalls radiance cpprad rtrad m)
+install(TARGETS radiance_ext LIBRARY DESTINATION pyradiance)
+endif()
+
+add_subdirectory(src/radiance/common)
+add_subdirectory(src/radiance/rt)
+add_subdirectory(src/radiance/cv)
+add_subdirectory(src/radiance/gen)
+add_subdirectory(src/radiance/ot)
+add_subdirectory(src/radiance/px)
+add_subdirectory(src/radiance/util)
+add_subdirectory(src/radiance/cal)
+
+
+nanobind_add_module(bsdf STABLE_ABI NB_STATIC src/binding/bsdf_ext.cpp)
 
 target_include_directories(
   bsdf PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/radiance/common
                ${CMAKE_CURRENT_LIST_DIR}/src/radiance/rt)
 
-target_link_libraries(radiance_ext PRIVATE raycalls radiance cpprad rtrad m)
 
-target_link_libraries(bsdf PRIVATE rtrad m)
+target_link_libraries(bsdf PRIVATE rtrad ${MATH_LIBRARY})
 
 # Install directive for scikit-build-core
-install(TARGETS radiance_ext LIBRARY DESTINATION pyradiance)
 install(TARGETS bsdf LIBRARY DESTINATION pyradiance)
