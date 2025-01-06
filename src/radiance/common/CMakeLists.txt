@@ -56,7 +56,7 @@ if(UNIX)
   endif()
 else()
 	list(APPEND STDOBJ win_process.c win_popen.c win_usleep.c)
-	list(APPEND SYSOBJ strnstr.c strlcpy.c)
+	list(APPEND SYSOBJ strnstr.c strlcpy.c timegm.c fixargv0.c)
 endif()
 
 # Create libraries
