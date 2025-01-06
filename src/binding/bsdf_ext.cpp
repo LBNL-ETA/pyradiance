@@ -11,7 +11,7 @@ using Vec3 = nb::ndarray<double, nb::shape<3>>;
 using Vec6 = nb::ndarray<double, nb::shape<6>>;
 
 void vec_from_deg(double theta, double phi, FVECT vec) {
-  const double DEG = M_PI / 180.;
+  const double DEG = 0.01745329251;
   theta *= DEG;
   phi *= DEG;
   vec[0] = vec[1] = sin(theta);
