@@ -2,17 +2,62 @@ cmake_minimum_required(VERSION 3.15...3.26)
 
 project(pyradiance LANGUAGES CXX C)
 
+# Add this section early
+include(FetchContent)
+
+# Configure libtiff build options first
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static libraries" FORCE)
+set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+
+set(ZLIB_SUPPORT OFF CACHE BOOL "Enable Zlib usage" FORCE)
+set(JPEG_SUPPORT OFF CACHE BOOL "Enable JPEG compression" FORCE)
+set(OJPEG_SUPPORT OFF CACHE BOOL "Enable old-style JPEG compression" FORCE)
+set(JBIG_SUPPORT OFF CACHE BOOL "Enable JBIG compression" FORCE)
+set(WEBP_SUPPORT OFF CACHE BOOL "Enable WebP compression" FORCE)
+set(ZSTD_SUPPORT OFF CACHE BOOL "Enable ZSTD compression" FORCE)
+set(DEFLATE_SUPPORT OFF CACHE BOOL "Enable DEFLATE compression" FORCE)
+
+# Declare and make libtiff available early
+FetchContent_Declare(
+    libtiff
+    GIT_REPOSITORY https://gitlab.com/libtiff/libtiff.git
+    GIT_TAG v4.7.0
+)
+
+set(tiff-tools OFF CACHE BOOL "Build TIFF tools" FORCE)
+set(tiff-tests OFF CACHE BOOL "Build TIFF tests" FORCE)
+set(tiff-docs OFF CACHE BOOL "Build TIFF documentation" FORCE)
+set(tiff-contrib OFF CACHE BOOL "Build TIFF contrib" FORCE)
+set(tiff-install OFF CACHE BOOL "Install TIFF files" FORCE)
+set(zlib OFF CACHE BOOL "" FORCE)
+set(jpeg OFF CACHE BOOL "" FORCE)
+set(pixarlog OFF CACHE BOOL "" FORCE)
+set(libdeflate OFF CACHE BOOL "" FORCE) 
+set(lerc OFF CACHE BOOL "" FORCE)
+set(lzma OFF CACHE BOOL "" FORCE)
+set(webp OFF CACHE BOOL "" FORCE)
+set(zstd OFF CACHE BOOL "" FORCE)
+
+FetchContent_MakeAvailable(libtiff)
+
 # Try to import all Python components potentially needed by nanobind
 find_package(
   Python 3.9 REQUIRED
   COMPONENTS Interpreter Development.Module
   OPTIONAL_COMPONENTS Development.SABIModule)
 
+# Locate the threads package
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+find_package(Threads REQUIRED)
+
 # Avoiding name clashes
 add_compile_definitions(error=rad_error)
 
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
-set(CMAKE_BUILD_TYPE Debug)
+if(NOT APPLE)
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
+endif()
+set(CMAKE_BUILD_TYPE Release)
 
 install(
   DIRECTORY
@@ -26,7 +71,7 @@ execute_process(
   OUTPUT_STRIP_TRAILING_WHITESPACE
   OUTPUT_VARIABLE nanobind_ROOT)
 
-if(UNIX)
+if(UNIX AND NOT APPLE)
   find_library(MATH_LIBRARY m)
 else()
   set(MATH_LIBRARY)
@@ -56,29 +101,30 @@ if(MSVC)
 else() # GCC/Clang (Linux, macOS, MinGW)
   add_compile_options(
     -O3 # Maximum optimization
-    -flto # Link-time optimization
+    # -flto # Link-time optimization
     -march=native # Optimize for local machine architecture
-    -ffast-math # Fast math operations
-    -funroll-loops # Unroll loops
-    -fomit-frame-pointer # Omit frame pointer
-    -ffunction-sections # Place each function in its own section
-    -fdata-sections # Place each data item in its own section
+    # -ffast-math # Fast math operations
+    # -funroll-loops # Unroll loops
+    # -fomit-frame-pointer # Omit frame pointer
+    # -ffunction-sections # Place each function in its own section
+    # -fdata-sections # Place each data item in its own section
   )
 
-  if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    add_compile_options(
-      -fdevirtualize-at-ltrans # Better devirtualization with LTO
-      -fipa-pta # More aggressive function analysis
-    )
-  endif()
+  # if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+  #   add_compile_options(
+  #     -fdevirtualize-at-ltrans # Better devirtualization with LTO
+  #     -fipa-pta # More aggressive function analysis
+  #   )
+  # endif()
 
-  add_link_options(-flto -Wl,--gc-sections # Remove unused code sections
-  )
+  # add_link_options(-flto -Wl,--gc-sections # Remove unused code sections
+  # )
 
-  if(APPLE)
-    add_compile_options(-momit-leaf-frame-pointer)
-  endif()
-nanobind_add_module(
+  # if(APPLE)
+  #   add_compile_options(-momit-leaf-frame-pointer)
+  # endif()
+		
+  nanobind_add_module(
   radiance_ext
   # Target the stable ABI for Python 3.12+, which reduces the number of binary
   # wheels that must be built. This does nothing on older Python versions
@@ -121,6 +167,9 @@ target_include_directories(
 
 
 target_link_libraries(bsdf PRIVATE rtrad ${MATH_LIBRARY})
+if(APPLE)
+    target_compile_options(bsdf PRIVATE -include stdio.h)
+endif()
 
 # Install directive for scikit-build-core
 install(TARGETS bsdf LIBRARY DESTINATION pyradiance)

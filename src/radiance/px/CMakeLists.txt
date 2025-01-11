@@ -98,46 +98,11 @@ add_executable(psketch psketch.c)
 target_include_directories(psketch PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
 target_link_libraries(psketch rtrad ${MATH_LIBRARY})
 
-include(FetchContent)
-
-# Set global static linking preferences
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static libraries" FORCE)
-set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
-set(BUILD_SHARED_LIBS OFF)
-
-set(ZLIB_SUPPORT OFF CACHE BOOL "Enable Zlib usage" FORCE)
-set(JPEG_SUPPORT OFF CACHE BOOL "Enable JPEG compression" FORCE)
-set(OJPEG_SUPPORT OFF CACHE BOOL "Enable old-style JPEG compression" FORCE)
-set(JBIG_SUPPORT OFF CACHE BOOL "Enable JBIG compression" FORCE)
-set(WEBP_SUPPORT OFF CACHE BOOL "Enable WebP compression" FORCE)
-set(ZSTD_SUPPORT OFF CACHE BOOL "Enable ZSTD compression" FORCE)
-set(DEFLATE_SUPPORT OFF CACHE BOOL "Enable DEFLATE compression" FORCE)
-
-# Declare libtiff
-FetchContent_Declare(
-    libtiff
-    GIT_REPOSITORY https://gitlab.com/libtiff/libtiff.git
-    GIT_TAG v4.7.0  # Specify the version you want
-)
-
-# Configure libtiff build options
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static libraries" FORCE)
-set(tiff-tools OFF CACHE BOOL "Build TIFF tools" FORCE)
-set(tiff-tests OFF CACHE BOOL "Build TIFF tests" FORCE)
-set(tiff-docs OFF CACHE BOOL "Build TIFF documentation" FORCE)
-set(tiff-contrib OFF CACHE BOOL "Build TIFF contrib" FORCE)
-set(tiff-install OFF CACHE BOOL "Install TIFF files" FORCE)
-
-# Fetch and make libtiff available
-FetchContent_MakeAvailable(libtiff)
-
-
 add_executable(ra_tiff ra_tiff.c)
 target_include_directories(ra_tiff PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common ${libtiff_SOURCE_DIR}/libtiff)
 target_link_libraries(ra_tiff 
     PRIVATE 
     rtrad
-    -static    # Force static linking
     tiff
     ${MATH_LIBRARY}
 )
