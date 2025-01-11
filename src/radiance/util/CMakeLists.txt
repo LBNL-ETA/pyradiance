@@ -28,7 +28,7 @@ target_link_libraries(rmtxop PRIVATE rtrad ${MATH_LIBRARY})
 
 add_executable(rcomb rcomb.c rmatrix.c cmbsdf.c cmatrix.c)
 target_include_directories(rcomb PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
-target_link_libraries(rcomb PRIVATE radiance rtrad ${MATH_LIBRARY})
+target_link_libraries(rcomb PRIVATE rtrad radiance ${MATH_LIBRARY})
 
 add_executable(wrapBSDF wrapBSDF.c)
 target_include_directories(wrapBSDF PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
