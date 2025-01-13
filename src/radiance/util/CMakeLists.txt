@@ -20,7 +20,7 @@ target_link_libraries(vwrays PRIVATE rtrad ${MATH_LIBRARY})
 
 add_executable(rttree_reduce rttree_reduce.c)
 target_include_directories(rttree_reduce PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
-target_link_libraries(rttree_reduce rtrad)
+target_link_libraries(rttree_reduce rtrad ${MATH_LIBRARY})
 
 add_executable(rmtxop rmtxop.c rmatrix.c cmbsdf.c cmatrix.c)
 target_include_directories(rmtxop PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)

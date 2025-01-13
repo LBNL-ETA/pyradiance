@@ -5,40 +5,11 @@ project(pyradiance LANGUAGES CXX C)
 # Add this section early
 include(FetchContent)
 
+
 # Configure libtiff build options first
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static libraries" FORCE)
 set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 
-set(ZLIB_SUPPORT OFF CACHE BOOL "Enable Zlib usage" FORCE)
-set(JPEG_SUPPORT OFF CACHE BOOL "Enable JPEG compression" FORCE)
-set(OJPEG_SUPPORT OFF CACHE BOOL "Enable old-style JPEG compression" FORCE)
-set(JBIG_SUPPORT OFF CACHE BOOL "Enable JBIG compression" FORCE)
-set(WEBP_SUPPORT OFF CACHE BOOL "Enable WebP compression" FORCE)
-set(ZSTD_SUPPORT OFF CACHE BOOL "Enable ZSTD compression" FORCE)
-set(DEFLATE_SUPPORT OFF CACHE BOOL "Enable DEFLATE compression" FORCE)
-
-# Declare and make libtiff available early
-FetchContent_Declare(
-    libtiff
-    GIT_REPOSITORY https://gitlab.com/libtiff/libtiff.git
-    GIT_TAG v4.7.0
-)
-
-set(tiff-tools OFF CACHE BOOL "Build TIFF tools" FORCE)
-set(tiff-tests OFF CACHE BOOL "Build TIFF tests" FORCE)
-set(tiff-docs OFF CACHE BOOL "Build TIFF documentation" FORCE)
-set(tiff-contrib OFF CACHE BOOL "Build TIFF contrib" FORCE)
-set(tiff-install OFF CACHE BOOL "Install TIFF files" FORCE)
-set(zlib OFF CACHE BOOL "" FORCE)
-set(jpeg OFF CACHE BOOL "" FORCE)
-set(pixarlog OFF CACHE BOOL "" FORCE)
-set(libdeflate OFF CACHE BOOL "" FORCE) 
-set(lerc OFF CACHE BOOL "" FORCE)
-set(lzma OFF CACHE BOOL "" FORCE)
-set(webp OFF CACHE BOOL "" FORCE)
-set(zstd OFF CACHE BOOL "" FORCE)
-
-FetchContent_MakeAvailable(libtiff)
 
 # Try to import all Python components potentially needed by nanobind
 find_package(
@@ -65,19 +36,21 @@ install(
   DESTINATION ${SKBUILD_PLATLIB_DIR}/pyradiance/bin)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 execute_process(
   COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
   OUTPUT_STRIP_TRAILING_WHITESPACE
   OUTPUT_VARIABLE nanobind_ROOT)
 
+
+find_package(nanobind CONFIG REQUIRED)
+
 if(UNIX AND NOT APPLE)
   find_library(MATH_LIBRARY m)
 else()
   set(MATH_LIBRARY)
 endif()
-
-find_package(nanobind CONFIG REQUIRED)
 
 # add_compile_options(-Wall -Wextra -Werror)
 add_compile_options(-Wall)
@@ -149,6 +122,37 @@ target_link_libraries(radiance_ext PRIVATE raycalls radiance cpprad rtrad m)
 install(TARGETS radiance_ext LIBRARY DESTINATION pyradiance)
 endif()
 
+set(ZLIB_SUPPORT OFF CACHE BOOL "Enable Zlib usage" FORCE)
+set(JPEG_SUPPORT OFF CACHE BOOL "Enable JPEG compression" FORCE)
+set(OJPEG_SUPPORT OFF CACHE BOOL "Enable old-style JPEG compression" FORCE)
+set(JBIG_SUPPORT OFF CACHE BOOL "Enable JBIG compression" FORCE)
+set(WEBP_SUPPORT OFF CACHE BOOL "Enable WebP compression" FORCE)
+set(ZSTD_SUPPORT OFF CACHE BOOL "Enable ZSTD compression" FORCE)
+set(DEFLATE_SUPPORT OFF CACHE BOOL "Enable DEFLATE compression" FORCE)
+
+# Declare and make libtiff available early
+FetchContent_Declare(
+    libtiff
+    GIT_REPOSITORY https://gitlab.com/libtiff/libtiff.git
+    GIT_TAG v4.7.0
+)
+
+set(tiff-tools OFF CACHE BOOL "Build TIFF tools" FORCE)
+set(tiff-tests OFF CACHE BOOL "Build TIFF tests" FORCE)
+set(tiff-docs OFF CACHE BOOL "Build TIFF documentation" FORCE)
+set(tiff-contrib OFF CACHE BOOL "Build TIFF contrib" FORCE)
+set(tiff-install OFF CACHE BOOL "Install TIFF files" FORCE)
+set(zlib OFF CACHE BOOL "" FORCE)
+set(jpeg OFF CACHE BOOL "" FORCE)
+set(pixarlog OFF CACHE BOOL "" FORCE)
+set(libdeflate OFF CACHE BOOL "" FORCE) 
+set(lerc OFF CACHE BOOL "" FORCE)
+set(lzma OFF CACHE BOOL "" FORCE)
+set(webp OFF CACHE BOOL "" FORCE)
+set(zstd OFF CACHE BOOL "" FORCE)
+
+FetchContent_MakeAvailable(libtiff)
+
 add_subdirectory(src/radiance/common)
 add_subdirectory(src/radiance/rt)
 add_subdirectory(src/radiance/cv)
@@ -166,7 +170,12 @@ target_include_directories(
                ${CMAKE_CURRENT_LIST_DIR}/src/radiance/rt)
 
 
-target_link_libraries(bsdf PRIVATE rtrad ${MATH_LIBRARY})
+if(UNIX)
+    target_link_libraries(bsdf PRIVATE rtrad m)  # use -lm instead of libm.a
+else()
+    target_link_libraries(bsdf PRIVATE rtrad ${MATH_LIBRARY})
+endif()
+
 if(APPLE)
     target_compile_options(bsdf PRIVATE -include stdio.h)
 endif()
