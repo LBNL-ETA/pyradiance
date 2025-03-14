@@ -34,5 +34,6 @@ jobs:
     - name: Install and test
       run: |
         git submodule update --init --recursive
+        pip install numpy
         pip install .
         python -m unittest discover -s tests
