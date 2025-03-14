@@ -46,6 +46,7 @@ class TestPyradianceAPI(unittest.TestCase):
         self.assertTrue(self.material in scene.materials)
         self.assertTrue(self.source in scene.sources)
 
+    @unittest.skipIf(os.name=='nt', "test not supported on Windows")
     def test_parse_view(self):
         inp_str = "-vta -vv 180 -vh 180 -vp 0 0 0 -vd 0 -1 0"
         res = pr.parse_view(inp_str)
@@ -54,6 +55,7 @@ class TestPyradianceAPI(unittest.TestCase):
         self.assertEqual(res.type, "a")
         self.assertEqual(res.horiz, 180)
 
+    @unittest.skipIf(os.name=='nt', "test not supported on Windows")
     def test_ray_param(self):
         pr.ray_done(1)
         rp = pr.get_ray_params()
@@ -77,6 +79,7 @@ class TestPyradianceAPI(unittest.TestCase):
         self.assertEqual(rp.i, rp2.i)
         pr.set_ray_params()
 
+    @unittest.skipIf(os.name=='nt', "test not supported on Windows")
     def test_parse_opt(self):
         pr.ray_done(1)
         inp_str = "-ab 8 -ad 1024 -u- -aa .1 -lw 1e-8 -av 1 2 3"
@@ -161,3 +164,6 @@ class TestPyradianceCLI(unittest.TestCase):
                 "steel", "ring", "torus.1", [], [0, 0, 1.22464679915e-16, 0, 0, 1, 3, 1]
             ),
         )
+
+if __name__ == "__main__":
+    unittest.main()
