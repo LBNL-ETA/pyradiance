@@ -32,7 +32,6 @@ from .gen import (
     mkillum,
 )
 
-# from .lib import ABASELIST, BSDF, get_view_resolu, read_rad, spec_xyz, xyz_rgb
 from .model import Primitive, Scene, Sensor  # View
 from .ot import oconv
 from .param import SamplingParameters
@@ -48,31 +47,33 @@ from .px import (
     ra_ppm,
     ra_tiff,
 )
-from .radiance_ext import (
-    RCCONTEXT,
-    RayParams,
-    RcontribSimulManager,
-    RcOutputOp,
-    RTdoFIFO,
-    RTimmIrrad,
-    RTlimDist,
-    RTmask,
-    RtraceSimulManager,
-    RTtraceSources,
-    View,
-    calcontext,
-    eval,
-    get_default_ray_params,
-    get_ray_params,
-    initfunc,
-    loadfunc,
-    parse_view,
-    ray_done,
-    set_eparams,
-    set_option,
-    set_ray_params,
-    setspectrsamp,
-)
+if os.name != 'nt':
+    from .radiance_ext import (
+        RCCONTEXT,
+        RayParams,
+        RcontribSimulManager,
+        RcOutputOp,
+        RTdoFIFO,
+        RTimmIrrad,
+        RTlimDist,
+        RTmask,
+        RtraceSimulManager,
+        RTtraceSources,
+        View,
+        calcontext,
+        eval,
+        get_default_ray_params,
+        get_ray_params,
+        initfunc,
+        loadfunc,
+        parse_view,
+        ray_done,
+        set_eparams,
+        set_option,
+        set_ray_params,
+        setspectrsamp,
+    )
+
 from .rt import RcModifier, mkpmap, rcontrib, rpict, rtrace
 from .util import (
     RcombInput,
