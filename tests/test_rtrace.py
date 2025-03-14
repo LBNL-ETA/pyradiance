@@ -2,11 +2,9 @@ import os
 import unittest
 
 import numpy as np
-
 import pyradiance as pr
 
 result = []
-
 
 def cooked_callback(ray, client_data):
     print("\nCooked callback called!")
@@ -50,6 +48,7 @@ class TestRtraceSimulManager(unittest.TestCase):
 
     octree = os.path.join(os.path.dirname(__file__), "Resources", "trace.oct")
 
+    @unittest.skipIf(os.name=='nt', "test not supported on Windows")
     def test_rtrace(self):
         rays = np.array(
             [
@@ -73,3 +72,6 @@ class TestRtraceSimulManager(unittest.TestCase):
         mgr.cleanup(True)
         del mgr
         self.assertEqual(len(result), 4)
+
+if __name__ == "__main__":
+    unittest.main()

@@ -10,6 +10,7 @@ class TestRcontribSimulManager(unittest.TestCase):
 
     octree = os.path.join(os.path.dirname(__file__), "Resources", "contrib.oct")
 
+    @unittest.skipIf(os.name=='nt', "test not supported on Windows")
     def test_rcontrib(self):
         rays = np.array(
             [
