@@ -1,21 +1,25 @@
-cmake_minimum_required(VERSION 3.15...3.26)
+cmake_minimum_required(VERSION 3.15...3.27)
 
 project(pyradiance LANGUAGES CXX C)
 
+if (CMAKE_VERSION VERSION_LESS 3.18)
+  set(DEV_MODULE Development)
+else()
+  set(DEV_MODULE Development.Module)
+endif()
+find_package(Python 3.8 COMPONENTS Interpreter ${DEV_MODULE} REQUIRED)
+
 # Add this section early
 include(FetchContent)
-
 
 # Configure libtiff build options first
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static libraries" FORCE)
 set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 
-
-# Try to import all Python components potentially needed by nanobind
-find_package(
-  Python 3.9 REQUIRED
-  COMPONENTS Interpreter Development.Module
-  OPTIONAL_COMPONENTS Development.SABIModule)
+if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif()
 
 # Locate the threads package
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
@@ -28,7 +32,6 @@ add_compile_definitions(error=rad_error)
 if(NOT APPLE)
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
 endif()
-set(CMAKE_BUILD_TYPE Release)
 
 install(
   DIRECTORY
@@ -43,8 +46,8 @@ execute_process(
   OUTPUT_STRIP_TRAILING_WHITESPACE
   OUTPUT_VARIABLE nanobind_ROOT)
 
-
 find_package(nanobind CONFIG REQUIRED)
+
 
 if(UNIX AND NOT APPLE)
   find_library(MATH_LIBRARY m)
@@ -70,7 +73,6 @@ if(MSVC)
   # Global link options
   add_link_options(/LTCG # Link-time code generation
   )
-
 else() # GCC/Clang (Linux, macOS, MinGW)
   add_compile_options(
     -O3 # Maximum optimization
@@ -162,9 +164,7 @@ add_subdirectory(src/radiance/px)
 add_subdirectory(src/radiance/util)
 add_subdirectory(src/radiance/cal)
 
-
 nanobind_add_module(bsdf STABLE_ABI NB_STATIC src/binding/bsdf_ext.cpp)
-
 target_include_directories(
   bsdf PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/radiance/common
                ${CMAKE_CURRENT_LIST_DIR}/src/radiance/rt)
@@ -182,3 +182,4 @@ endif()
 
 # Install directive for scikit-build-core
 install(TARGETS bsdf LIBRARY DESTINATION pyradiance)
+
