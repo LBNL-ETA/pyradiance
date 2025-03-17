@@ -14,9 +14,11 @@ from typing import Optional, Sequence, Union
 
 from .anci import BINPATH, handle_called_process_error
 
-# from .lib import spec_xyz, xyz_rgb
-from .model import Primitive, View
+from .bsdf import spec_xyz, xyz_rgb
+from .model import Primitive
+from .rad_view import View
 from .ot import getbbox
+from .cal import cnt
 from .param import SamplingParameters, add_view_args, parse_rtrace_args
 
 
@@ -700,9 +702,9 @@ def render(
         ((xmax - xmin) / 2) ** 2 + ((ymax - ymin) / 2) ** 2 + ((zmax - zmin) / 2) ** 2
     )
     view_center = (
-        (aview.position[0] - (xmax + xmin) / 2) ** 2
-        + (aview.position[1] - (ymax + ymin) / 2) ** 2
-        + (aview.position[2] - (zmax + zmin) / 2) ** 2
+        (aview.vp[0] - (xmax + xmin) / 2) ** 2
+        + (aview.vp[1] - (ymax + ymin) / 2) ** 2
+        + (aview.vp[2] - (zmax + zmin) / 2) ** 2
     )
     if view_center > distance:
         zone = f"E {xmin} {xmax} {ymin} {ymax} {zmin} {zmax}"
@@ -761,11 +763,27 @@ def render(
     if spectral:
         param_strs.append("-co+")
     scene.build()
-    result = rtpict(
-        aview, octpath, nproc=nproc, xres=xres, yres=yres, params=param_strs
-    )
-    if result is None:
-        raise ValueError("rtpict returned None")
+    specout = ncssamp > 3
+    # result = rtpict(
+    #     aview, octpath, nproc=nproc, xres=xres, yres=yres, params=param_strs
+    # )
+    if (specout == False and nprocs == 1):
+        return rpict(aview, octpath, params=['-ps', '1'] + param_strs)
+    if (nproc > 1 and ambounce > 0 and ambcache and ambfile):
+        # straight picture output, so just shuffle sample order
+        if not specout:
+            ord = cnt(xres, yres, shuffle=True)
+            pix = rtrace(octree=oct, rays=vwrays(outform='f', pixpos=ord), inform='f', outform='a')
+            header = getinfo(pix)
+            content = sort(rlam(ord, remove_header(pix)))
+            return pvalue_r(pix, yres=yres, xres=xres)
+        # else randomize overture calculation to prime ambient cache
+        else:
+            oxres, oyres = int(xres / 6), int(yres / 6)
+            cnt -s ores
+            rtrace(oct, inform='f', vwrays(pixpos=cnt(oxres, oyres, shuffle=True),xres=oxres, yres=oyres))
+
+    rtrace(vwrays())
     return result
 
 
@@ -874,50 +892,96 @@ def rsensor(
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
-@handle_called_process_error
-def rtpict(
-    view: View,
-    octree: Union[str, Path],
-    nproc: int = 1,
-    outform: Optional[str] = None,
-    outdir: Optional[str] = None,
-    ref_depth: Optional[str] = None,
-    xres: Optional[int] = None,
-    yres: Optional[int] = None,
-    params: Optional[Sequence[str]] = None,
-) -> Optional[bytes]:
-    """Run rtpict command.
-    Args:
-        view: A View object.
-        octree: Path to octree file.
-        nproc: Number of processors to use.
-        outform: Output format. Default is "i".
-        outdir: Output directory. Default is current directory.
-        ref_depth: Maximum number of reflections. Default is 5.
-        xres: Horizontal resolution. Default is 512.
-        yres: Vertical resolution. Default is 512.
-        params: Radiance parameters for rtpict command as a list of strings.
-    Returns:
-        Rendered image as output or None if output to directory
-    """
-    cmd = [str(BINPATH / "rtpict")]
-    cmd.extend(view.args())
-    cmd.extend(["-n", str(nproc)])
-    if outform is not None:
-        if outdir is not None:
-            cmd.extend([f"-o{outform}", str(outdir)])
-    if ref_depth is not None:
-        cmd.extend(["-d", str(ref_depth)])
-    if xres:
-        cmd.extend(["-x", str(xres)])
-    if yres:
-        cmd.extend(["-y", str(yres)])
-    if params:
-        cmd.extend(params)
-    cmd.append(str(octree))
-    proc = sp.run(cmd, check=True, stdout=sp.PIPE)
-    if not outdir:
-        return proc.stdout
+# @handle_called_process_error
+# def rtpict(
+#     view: View,
+#     octree: Union[str, Path],
+#     nproc: int = 1,
+#     outform: Optional[str] = None,
+#     outdir: Optional[str] = None,
+#     ref_depth: Optional[str] = None,
+#     xres: Optional[int] = None,
+#     yres: Optional[int] = None,
+#     params: Optional[Sequence[str]] = None,
+# ) -> Optional[bytes]:
+#     """Run rtpict command.
+#     Args:
+#         view: A View object.
+#         octree: Path to octree file.
+#         nproc: Number of processors to use.
+#         outform: Output format. Default is "i".
+#         outdir: Output directory. Default is current directory.
+#         ref_depth: Maximum number of reflections. Default is 5.
+#         xres: Horizontal resolution. Default is 512.
+#         yres: Vertical resolution. Default is 512.
+#         params: Radiance parameters for rtpict command as a list of strings.
+#     Returns:
+#         Rendered image as output or None if output to directory
+#     """
+#     cmd = [str(BINPATH / "rtpict")]
+#     cmd.extend(view.args())
+#     cmd.extend(["-n", str(nproc)])
+#     if outform is not None:
+#         if outdir is not None:
+#             cmd.extend([f"-o{outform}", str(outdir)])
+#     if ref_depth is not None:
+#         cmd.extend(["-d", str(ref_depth)])
+#     if xres:
+#         cmd.extend(["-x", str(xres)])
+#     if yres:
+#         cmd.extend(["-y", str(yres)])
+#     if params:
+#         cmd.extend(params)
+#     cmd.append(str(octree))
+#     proc = sp.run(cmd, check=True, stdout=sp.PIPE)
+#     if not outdir:
+#         return proc.stdout
+
+# NOTE: Stripped down version of rtpict, single pic output
+def rtpict2(view: View, oct: str, nproc: int = 1, params: Optional[list[str]] = None, ncsamp: int = 3, ambcache: bool = False):
+    # rtrace options and the associated number of arguments
+    # TODO: replace this with SimulParam
+    rtraceC = {'-dt':1, '-dc':1, '-dj':1, '-ds':1, '-dr':1, '-dp':1, '-ss':1, '-st':1, '-e':1, '-am':1, '-P':1, '-PP':1, '-ab':1, '-af':1, '-ai':1, '-aI':1, '-ae':1, '-aE':1, '-av':3, '-aw':1, '-aa':1, '-ar':1, '-ad':1, '-as':1, '-me':3, '-ma':3, '-mg':1, '-ms':1, '-lr':1, '-lw':1, '-ap':2, '-am':1, '-ac':1, '-aC':1, '-cs':1, '-cw':2, '-pc':8, '-pXYZ':0}
+
+    # boolean rtrace options
+    boolO = ('-w', '-bv', '-dv', '-i', '-u', '-co')
+    # view options and the associated number of arguments
+    vwraysC = {'-vf':1, '-vtv':0, '-vtl':0, '-vth':0, '-vta':0, '-vts':0, '-vtc':0,
+		'-x':1, '-y':1, '-vp':3, '-vd':3, '-vu':3, '-vh':1, '-vv':1,
+		'-vo':1, '-va':1, '-vs':1, '-vl':1, '-pa':1, '-pj':1, '-pd':1}
+
+    # options we need to silently ignore
+    ignoreC = {'-t':1, '-ps':1, '-pt':1, '-pm':1,}
+    # Starting options for rtrace (rpict values)
+    rtraceA = 'rtrace -u- -dt .05 -dc .5 -ds .25 -dr 1 -aa .2 -ar 64 -ad 512 -as 128 -lr 7 -lw 1e-04'.split()
+    vwraysA = ['vwrays', '-pj', '.67']
+    vwrightA = ['vwright', '-vtv']
+    rpictA = ['rpict', '-ps', '1']
+    pvalueA = ['pvalue', '-r']
+    outpatt = '^-o[vrxlLRXnNsmM]+';
+    refDepth = ""
+    viewA = view_args(view)
+    rpictA.extend(viewA)
+    spectout = ncsamp > 3
+
+    res = vwrays(pixel_jitter = 0.67, view=viewA, dimensions=True).decode().split()
+    xres, yres = int(res[1]), int(res[3])
+    ##### May as well run rpict?
+    if (specout == False and nprocs == 1 and persist == False):
+        # run rpict
+        # rpict()
+    if (nproc > 1 and ambounce > 0 and ambcache and ambfile):
+        # straight picture output, so just shuffle sample order
+        if not specout:
+            ord = cnt(xres, yres, shuffle=True)
+            rtrace(octree=oct, rays=vwrays(outform='f', pixpos=ord), inform='f', outform='a')
+        # else randomize overture calculation to prime ambient cache
+        else:
+            oxres, oyres = int(xres / 6), int(yres / 6)
+            cnt -s ores
+            rtrace(oct, inform='f', vwrays(pixpos=cnt(oxres, oyres, shuffle=True),xres=oxres, yres=oyres))
+
+    rtrace(vwrays())
 
 
 @handle_called_process_error
@@ -1156,7 +1220,6 @@ class Xform:
             self.stdin = self.inp
         else:
             self.args.append(self.inp)
-        print(self.args)
         return sp.run(self.args, check=True, input=self.stdin, stdout=sp.PIPE).stdout
 
     def __call__(self):
@@ -1238,65 +1301,65 @@ def xform(
     return sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
 
 
-# def load_material_smd(
-#     file: Path, roughness: float = 0.0, spectral=False, metal=False
-# ) -> list[Primitive]:
-#     """Generate Radiance primitives from csv file from spectral
-#     material database (spectraldb.com).
-#
-#     Args:
-#         file: Path to .csv file
-#         roughness: Roughtness of material
-#         spectral: Output spectral primitives
-#         metal: Material is metal
-#
-#     Returns:
-#         A list of primitives
-#     """
-#
-#     primitives: list[Primitive] = []
-#
-#     mmod: str = "void"
-#     specular: float = 0.0
-#     mid: str = file.stem.replace(" ", "_")
-#     wvls: list[float] = []
-#     scis: list[float] = []
-#     sces: list[float] = []
-#
-#     with open(file, "r") as f:
-#         reader = csv.reader(f)
-#         next(reader)
-#         for row in reader:
-#             wvl, sci, sce = map(float, row)
-#             wvls.append(wvl)
-#             scis.append(sci / 100.0)
-#             sces.append(sce / 100.0)
-#
-#     min_wvl = min(wvls)
-#     max_wvl = max(wvls)
-#
-#     sce_x, sce_y, sce_z = spec_xyz(sces, min_wvl, max_wvl)
-#     if all(scis):
-#         _, sci_y, _ = spec_xyz(scis, min_wvl, max_wvl)
-#         specular = sci_y - sce_y
-#
-#     mfargs: list[float] = []
-#     pfargs: list[float] = []
-#     if spectral:
-#         pid = f"{mid}_spectrum"
-#         mmod = pid
-#         pfargs.extend([min_wvl, max_wvl])
-#         pfargs.extend(sces)
-#         pp = Primitive("void", "spectrum", pid, [], pfargs)
-#         mfargs.extend([1.0, 1.0, 1.0, specular, roughness])
-#         primitives.append(pp)
-#     else:
-#         r, g, b = xyz_rgb(sce_x, sce_y, sce_z)
-#         mfargs.extend([r, g, b])
-#         mfargs.extend([specular, roughness])
-#
-#     primitives.append(Primitive(mmod, "metal" if metal else "plastic", mid, [], mfargs))
-#     return primitives
+def load_material_smd(
+    file: Path, roughness: float = 0.0, spectral=False, metal=False
+) -> list[Primitive]:
+    """Generate Radiance primitives from csv file from spectral
+    material database (spectraldb.com).
+
+    Args:
+        file: Path to .csv file
+        roughness: Roughtness of material
+        spectral: Output spectral primitives
+        metal: Material is metal
+
+    Returns:
+        A list of primitives
+    """
+
+    primitives: list[Primitive] = []
+
+    mmod: str = "void"
+    specular: float = 0.0
+    mid: str = file.stem.replace(" ", "_")
+    wvls: list[float] = []
+    scis: list[float] = []
+    sces: list[float] = []
+
+    with open(file, "r") as f:
+        reader = csv.reader(f)
+        next(reader)
+        for row in reader:
+            wvl, sci, sce = map(float, row)
+            wvls.append(wvl)
+            scis.append(sci / 100.0)
+            sces.append(sce / 100.0)
+
+    min_wvl = min(wvls)
+    max_wvl = max(wvls)
+
+    sce_cie = spec_xyz(sces, min_wvl, max_wvl)
+    if all(scis):
+        sci_cie = spec_xyz(scis, min_wvl, max_wvl)
+        specular = sci_cie[1] - sce_cie[1]
+
+    mfargs: list[float] = []
+    pfargs: list[float] = []
+    if spectral:
+        pid = f"{mid}_spectrum"
+        mmod = pid
+        pfargs.extend([min_wvl, max_wvl])
+        pfargs.extend(sces)
+        pp = Primitive("void", "spectrum", pid, [], pfargs)
+        mfargs.extend([1.0, 1.0, 1.0, specular, roughness])
+        primitives.append(pp)
+    else:
+        rgb = xyz_rgb(*sce_cie)
+        mfargs.extend(rgb)
+        mfargs.extend([specular, roughness])
+
+    primitives.append(Primitive(mmod, "metal" if metal else "plastic", mid, [], mfargs))
+    return primitives
 
 
 def parse_primitive(pstr: str) -> list[Primitive]:
@@ -1322,47 +1385,76 @@ def parse_primitive(pstr: str) -> list[Primitive]:
     return res
 
 
-def parse_view(vstr: str) -> View:
-    """Parse view string into a View object.
+# def parse_view(vstr: str) -> View:
+#     """Parse view string into a View object.
+#
+#     Args:
+#         vstr: view parameters as a string
+#
+#     Returns:
+#         A View object
+#     """
+#     args_list = vstr.strip().split()
+#     vparser = argparse.ArgumentParser()
+#     vparser = add_view_args(vparser)
+#     args, _ = vparser.parse_known_args(args_list)
+#     if args.vf is not None:
+#         args, _ = vparser.parse_known_args(
+#             args.vf.readline().strip().split(), namespace=args
+#         )
+#         args.vf.close()
+#     return View(
+#         position=args.vp,
+#         direction=args.vd,
+#         vtype=args.vt[-1],
+#         horiz=args.vh,
+#         vert=args.vv,
+#         vfore=args.vo,
+#         vaft=args.va,
+#         hoff=args.vs,
+#         voff=args.vl,
+#     )
 
-    Args:
-        vstr: view parameters as a string
 
-    Returns:
-        A View object
-    """
-    args_list = vstr.strip().split()
-    vparser = argparse.ArgumentParser()
-    vparser = add_view_args(vparser)
-    args, _ = vparser.parse_known_args(args_list)
-    if args.vf is not None:
-        args, _ = vparser.parse_known_args(
-            args.vf.readline().strip().split(), namespace=args
-        )
-        args.vf.close()
-    return View(
-        position=args.vp,
-        direction=args.vd,
-        vtype=args.vt[-1],
-        horiz=args.vh,
-        vert=args.vv,
-        vfore=args.vo,
-        vaft=args.va,
-        hoff=args.vs,
-        voff=args.vl,
-    )
+# def load_views(file: Union[str, Path]) -> list[View]:
+#     """Load views from a file.
+#     One view per line.
+#
+#     Args:
+#         file: A file path to a view file.
+#
+#     Returns:
+#         A view object.
+#     """
+#     with open(file) as f:
+#         lines = f.readlines()
+#     return [parse_view(line) for line in lines]
 
-
-def load_views(file: Union[str, Path]) -> list[View]:
-    """Load views from a file.
-    One view per line.
-
-    Args:
-        file: A file path to a view file.
-
-    Returns:
-        A view object.
-    """
-    with open(file) as f:
-        lines = f.readlines()
-    return [parse_view(line) for line in lines]
+def view_args(view: View):
+    return [
+        f"-vt{view.vtype}",
+        "-vp",
+        str(view.vp[0]),
+        str(view.vp[1]),
+        str(view.vp[2]),
+        "-vd",
+        str(view.vdir[0]),
+        str(view.vdir[1]),
+        str(view.vdir[2]),
+        "-vu",
+        str(view.vu[0]),
+        str(view.vu[1]),
+        str(view.vu[2]),
+        "-vh",
+        str(view.horiz),
+        "-vv",
+        str(view.vert),
+        "-vo",
+        str(view.vfore),
+        "-va",
+        str(view.vaft),
+        "-vs",
+        str(view.hoff),
+        "-vl",
+        str(view.voff),
+    ]

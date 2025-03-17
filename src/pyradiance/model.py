@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Dict, List, Sequence, Tuple, Union
 
 from .ot import oconv
+from .rad_view import View
 
 
 @dataclass
@@ -66,61 +67,7 @@ class ViewType:
     VT_CYL = "c"
 
 
-@dataclass(eq=True)
-class View:
-    """Radiance View.
 
-    Attributes:
-        vtype: view type
-        position: view position
-        direction: view direction
-        vup: view up
-        horiz: horizontal field of view
-        vert: vertical field of view
-        vfore: view fore
-        vaft: view aft
-        hoff: horizontal offset
-        voff: vertical offset
-    """
-
-    position: Tuple[float, float, float]
-    direction: Tuple[float, float, float]
-    vtype: str = ViewType.VT_PER
-    vup: Tuple[float, float, float] = (0, 0, 1)
-    horiz: float = 45
-    vert: float = 45
-    hoff: float = 0
-    voff: float = 0
-    vfore: float = 0
-    vaft: float = 0
-    vdist: float = 0
-    hvec: Tuple[float, float, float] = (0, 0, 0)
-    vvec: Tuple[float, float, float] = (0, 0, 0)
-    hn2: float = 0
-    vn2: float = 0
-
-    def args(self):
-        return [
-            f"-vt{self.vtype}",
-            "-vp",
-            *[str(i) for i in self.position],
-            "-vd",
-            *[str(i) for i in self.direction],
-            "-vu",
-            *[str(i) for i in self.vup],
-            "-vh",
-            str(self.horiz),
-            "-vv",
-            str(self.vert),
-            "-vo",
-            str(self.vfore),
-            "-va",
-            str(self.vaft),
-            "-vs",
-            str(self.hoff),
-            "-vl",
-            str(self.voff),
-        ]
 
 
 @dataclass

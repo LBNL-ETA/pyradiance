@@ -8,6 +8,7 @@ import os
 
 from .anci import BINPATH, write
 from .cal import cnt, rcalc, rlam, total
+from .bsdf import spec_xyz, xyz_rgb
 from .cv import (
     bsdf2klems,
     bsdf2ttree,
@@ -32,7 +33,7 @@ from .gen import (
     mkillum,
 )
 
-from .model import Primitive, Scene, Sensor  # View
+from .model import Primitive, Scene, Sensor
 from .ot import oconv
 from .param import SamplingParameters
 from .px import (
@@ -85,6 +86,7 @@ from .util import (
     get_image_dimensions,
     getinfo,
     load_views,
+    load_material_smd,
     parse_primitive,
     rcode_depth,
     rcode_ident,
@@ -150,7 +152,7 @@ __all__ = [
     "getinfo",
     "ies2rad",
     "load_views",
-    # "load_material_smd",
+    "load_material_smd",
     "mgf2rad",
     "mkillum",
     "mkpmap",
@@ -191,7 +193,7 @@ __all__ = [
     "Scene",
     "Sensor",
     "SamplingParameters",
-    # "spec_xyz",
+    "spec_xyz",
     "set_eparams",
     "total",
     "View",
@@ -200,5 +202,5 @@ __all__ = [
     "wrapbsdf",
     "write",
     "Xform",
-    # "xyz_rgb",
+    "xyz_rgb",
 ]
