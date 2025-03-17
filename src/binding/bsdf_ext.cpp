@@ -3,6 +3,7 @@
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
 #include <nanobind/stl/string.h>
+#include <nanobind/stl/vector.h>
 
 namespace nb = nanobind;
 
@@ -168,7 +169,7 @@ NB_MODULE(bsdf, m) {
     FVECT v1 = {0};
     vec_from_deg(theta, phi, v1);
     SDsizeBSDF(proj_sa, v1, NULL, qflags, sd);
-    return nb::make_tuple(proj_sa);
+    return nb::make_tuple(proj_sa[0], proj_sa[1]);
   });
 
   m.def("size2", [](const SDData *sd, const double theta, const double phi,
@@ -179,7 +180,7 @@ NB_MODULE(bsdf, m) {
     vec_from_deg(theta, phi, v1);
     vec_from_deg(t2, p2, v2);
     SDsizeBSDF(proj_sa, v1, v2, qflags, sd);
-    return nb::make_tuple(proj_sa);
+    return nb::make_tuple(proj_sa[0], proj_sa[1]);
   });
 
   m.def("direct_hemi",
@@ -231,4 +232,31 @@ NB_MODULE(bsdf, m) {
           get_cie_xyz(&val, cie_xyz);
           return nb::ndarray<nb::numpy, double, nb::ndim<1>>(cie_xyz, {3});
         });
+
+  m.def("spec_xyz",
+        [](std::vector<double> spec, double wlmin, double wlmax){
+            C_COLOR clr;
+            double cie_x, cie_y, cie_z;
+            int nwvl = spec.size();
+            float* ssamp = new float[nwvl];
+            for (size_t i=0; i<nwvl; i++) {
+                ssamp[i] = static_cast<float>(spec[i]);
+            }
+            cie_y = c_sset(&clr, wlmin, wlmax, ssamp, nwvl);
+            c_ccvt(&clr, 4);
+            double d = clr.cx / clr.cy;
+            cie_x = d * cie_y;
+            cie_z = (1 / clr.cy - 1 - d) * cie_y;
+            return nb::make_tuple(cie_x, cie_y, cie_z);
+        });
+
+  m.def("xyz_rgb",
+        [](double x, double y, double z){
+            float rgb[3];
+            const float xyz[3] = {x, y, z};
+            cie_rgb(rgb, xyz);
+            return nb::make_tuple(rgb[0], rgb[1], rgb[2]);
+        });
+  // TODO: add abase_list
+
 }
