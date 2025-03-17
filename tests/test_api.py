@@ -1,8 +1,10 @@
 import os
 import unittest
 from datetime import datetime
+from pathlib import Path
 
 import pyradiance as pr
+from pyradiance.util import view_args
 
 
 class TestPyradianceAPI(unittest.TestCase):
@@ -12,6 +14,7 @@ class TestPyradianceAPI(unittest.TestCase):
     ceiling = os.path.join(resources_dir, "ceiling.rad")
     material = os.path.join(resources_dir, "materials.mat")
     source = os.path.join(resources_dir, "sky.rad")
+    smd_file = os.path.join(resources_dir, "spectral.csv")
 
     def test_primitive(self):
         prim = pr.Primitive("void", "plastic", "white", [], [0.5, 0.6, 0.7, 0, 0])
@@ -93,6 +96,13 @@ class TestPyradianceAPI(unittest.TestCase):
         self.assertEqual(rparams.av, (1, 2, 3))
         pr.set_ray_params()
 
+    def test_load_material_smd(self):
+        path = Path(self.smd_file)
+        prim = pr.load_material_smd(path)
+        self.assertEqual(prim[0].fargs, [0.5206966996192932, 0.3083151578903198, 0.02297455072402954, 0.00482973841239237, 0.0])
+        prim2 = pr.load_material_smd(path, spectral=True, roughness=0.2)
+        self.assertEqual(prim2[1].fargs, [1., 1., 1., 0.00482973841239237, 0.2])
+
 
 class TestPyradianceCLI(unittest.TestCase):
 
@@ -109,19 +119,21 @@ class TestPyradianceCLI(unittest.TestCase):
         ptypes = {p.ptype for p in pr.parse_primitive(res.decode())}
         self.assertEqual(ptypes, {"light", "brightfunc", "source"})
 
-    # def test_render(resources_dir: Path):
-    #     """Test the render function."""
-    #     aview = pr.View(
-    #         position=(1, 1, 1),
-    #         direction=(0, -1, 0),
-    #     )
-    #     scene = pr.Scene("test_scene")
-    #     scene.add_surface(resources_dir / "floor 1.rad")
-    #     scene.add_surface(resources_dir / "ceiling.rad")
-    #     scene.add_material(resources_dir / "materials.mat")
-    #     scene.add_source(resources_dir / "sky.rad")
-    #     scene.add_view(aview)
-    #     pr.render(scene)
+    def test_render(self):
+        """Test the render function."""
+        aview = pr.View()
+        aview.type = 'a'
+        aview.vp = (1, 1, 1)
+        aview.vdir = (0, -1 ,0)
+        aview.horiz = 180
+        aview.vert = 180
+        scene = pr.Scene("test_scene")
+        scene.add_surface(self.floor)
+        scene.add_surface(self.ceiling)
+        scene.add_material(self.material)
+        scene.add_source(self.source)
+        scene.add_view(aview)
+        pr.render(scene)
 
     def test_rfluxmtx(self):
         """Test the rfluxmtx function."""
