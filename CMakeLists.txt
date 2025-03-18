@@ -74,6 +74,11 @@ if(MSVC)
   add_link_options(/LTCG # Link-time code generation
   )
 else() # GCC/Clang (Linux, macOS, MinGW)
+  if(APPLE)
+    add_definitions(-DBSD -DNOSTEREO -Dfreebsd)
+  else()
+    add_definitions(-Dlinux -D_FILE_OFFSET_BITS=64 -DNOSTEREO)
+  endif()
   add_compile_options(
     -O3 # Maximum optimization
     # -flto # Link-time optimization

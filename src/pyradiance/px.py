@@ -478,7 +478,7 @@ def pvaluer(
     inform: str = "a",
     resstr: bool = True,
     dataonly: bool = False,
-    header: bool = False,
+    header: bool = True,
     primaries: Optional[List[float]] = None,
     pxyz: bool = False,
 ) -> bytes:
@@ -499,7 +499,7 @@ def pvaluer(
         Bytes of the pvalue output
     """
     stdin = None
-    cmd = ["pvalue", "-r"]
+    cmd = [str(BINPATH / "pvalue"), "-r"]
     if not header:
         cmd.append("-h")
     if not resstr:

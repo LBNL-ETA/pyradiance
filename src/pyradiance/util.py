@@ -18,8 +18,10 @@ from .bsdf import spec_xyz, xyz_rgb
 from .model import Primitive
 from .rad_view import View
 from .ot import getbbox
-from .cal import cnt
-from .param import SamplingParameters, add_view_args, parse_rtrace_args
+from .px import pvaluer
+from .cal import cnt, rlam
+from .param import SamplingParameters, parse_rtrace_args
+from .rt import rpict, rtrace
 
 
 @handle_called_process_error
@@ -660,8 +662,9 @@ def render(
     variability: str = "Medium",
     detail: str = "Medium",
     nproc: int = 1,
+    ncssamp: int = 3,
     resolution: Optional[tuple[int, int]] = None,
-    ambbounce: Optional[int] = None,
+    ambbounce: int = 0,
     ambcache: bool = True,
     spectral: bool = False,
     params: Optional[SamplingParameters] = None,
@@ -764,27 +767,23 @@ def render(
         param_strs.append("-co+")
     scene.build()
     specout = ncssamp > 3
-    # result = rtpict(
-    #     aview, octpath, nproc=nproc, xres=xres, yres=yres, params=param_strs
-    # )
-    if (specout == False and nprocs == 1):
-        return rpict(aview, octpath, params=['-ps', '1'] + param_strs)
-    if (nproc > 1 and ambounce > 0 and ambcache and ambfile):
+    vargs = view_args(aview)
+    if (specout == False and nproc == 1):
+        return rpict(vargs, octpath, params=['-ps', '1'] + param_strs)
+    if (nproc > 1 and ambbounce > 0 and ambcache and ambfile):
         # straight picture output, so just shuffle sample order
         if not specout:
-            ord = cnt(xres, yres, shuffle=True)
-            pix = rtrace(octree=oct, rays=vwrays(outform='f', pixpos=ord), inform='f', outform='a')
-            header = getinfo(pix)
-            content = sort(rlam(ord, remove_header(pix)))
-            return pvalue_r(pix, yres=yres, xres=xres)
+            ord = cnt(xres, yres, shuffled=True)
+            pix = rtrace(octree=octpath, rays=vwrays(view=vargs, outform='f', pixpos=ord), inform='f', outform='a', outspec='v', params=param_strs)
+            header = getinfo(get_header(pix), append=f"VIEW={" ".join(vargs)}")
+            rlam = b"\n".join(o + b"\t" + p for o,p in zip(ord.splitlines(), strip_header(pix).splitlines()))
+            content = sp.run(["sort", "-k2rn", "-k1n"], input=rlam, check=True, stdout=sp.PIPE).stdout
+            return pvaluer(header+content, yres=yres, xres=xres)
         # else randomize overture calculation to prime ambient cache
-        else:
-            oxres, oyres = int(xres / 6), int(yres / 6)
-            cnt -s ores
-            rtrace(oct, inform='f', vwrays(pixpos=cnt(oxres, oyres, shuffle=True),xres=oxres, yres=oyres))
+        oxres, oyres = int(xres / 6), int(yres / 6)
+        rtrace(octree=octpath, inform='f', rays=vwrays(view=vargs, pixpos=cnt(oxres, oyres, shuffled=True),xres=oxres, yres=oyres))
 
-    rtrace(vwrays())
-    return result
+    return getinfo(rtrace(octree=octpath, rays=vwrays(view=vargs)))
 
 
 @handle_called_process_error
@@ -892,98 +891,6 @@ def rsensor(
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
-# @handle_called_process_error
-# def rtpict(
-#     view: View,
-#     octree: Union[str, Path],
-#     nproc: int = 1,
-#     outform: Optional[str] = None,
-#     outdir: Optional[str] = None,
-#     ref_depth: Optional[str] = None,
-#     xres: Optional[int] = None,
-#     yres: Optional[int] = None,
-#     params: Optional[Sequence[str]] = None,
-# ) -> Optional[bytes]:
-#     """Run rtpict command.
-#     Args:
-#         view: A View object.
-#         octree: Path to octree file.
-#         nproc: Number of processors to use.
-#         outform: Output format. Default is "i".
-#         outdir: Output directory. Default is current directory.
-#         ref_depth: Maximum number of reflections. Default is 5.
-#         xres: Horizontal resolution. Default is 512.
-#         yres: Vertical resolution. Default is 512.
-#         params: Radiance parameters for rtpict command as a list of strings.
-#     Returns:
-#         Rendered image as output or None if output to directory
-#     """
-#     cmd = [str(BINPATH / "rtpict")]
-#     cmd.extend(view.args())
-#     cmd.extend(["-n", str(nproc)])
-#     if outform is not None:
-#         if outdir is not None:
-#             cmd.extend([f"-o{outform}", str(outdir)])
-#     if ref_depth is not None:
-#         cmd.extend(["-d", str(ref_depth)])
-#     if xres:
-#         cmd.extend(["-x", str(xres)])
-#     if yres:
-#         cmd.extend(["-y", str(yres)])
-#     if params:
-#         cmd.extend(params)
-#     cmd.append(str(octree))
-#     proc = sp.run(cmd, check=True, stdout=sp.PIPE)
-#     if not outdir:
-#         return proc.stdout
-
-# NOTE: Stripped down version of rtpict, single pic output
-def rtpict2(view: View, oct: str, nproc: int = 1, params: Optional[list[str]] = None, ncsamp: int = 3, ambcache: bool = False):
-    # rtrace options and the associated number of arguments
-    # TODO: replace this with SimulParam
-    rtraceC = {'-dt':1, '-dc':1, '-dj':1, '-ds':1, '-dr':1, '-dp':1, '-ss':1, '-st':1, '-e':1, '-am':1, '-P':1, '-PP':1, '-ab':1, '-af':1, '-ai':1, '-aI':1, '-ae':1, '-aE':1, '-av':3, '-aw':1, '-aa':1, '-ar':1, '-ad':1, '-as':1, '-me':3, '-ma':3, '-mg':1, '-ms':1, '-lr':1, '-lw':1, '-ap':2, '-am':1, '-ac':1, '-aC':1, '-cs':1, '-cw':2, '-pc':8, '-pXYZ':0}
-
-    # boolean rtrace options
-    boolO = ('-w', '-bv', '-dv', '-i', '-u', '-co')
-    # view options and the associated number of arguments
-    vwraysC = {'-vf':1, '-vtv':0, '-vtl':0, '-vth':0, '-vta':0, '-vts':0, '-vtc':0,
-		'-x':1, '-y':1, '-vp':3, '-vd':3, '-vu':3, '-vh':1, '-vv':1,
-		'-vo':1, '-va':1, '-vs':1, '-vl':1, '-pa':1, '-pj':1, '-pd':1}
-
-    # options we need to silently ignore
-    ignoreC = {'-t':1, '-ps':1, '-pt':1, '-pm':1,}
-    # Starting options for rtrace (rpict values)
-    rtraceA = 'rtrace -u- -dt .05 -dc .5 -ds .25 -dr 1 -aa .2 -ar 64 -ad 512 -as 128 -lr 7 -lw 1e-04'.split()
-    vwraysA = ['vwrays', '-pj', '.67']
-    vwrightA = ['vwright', '-vtv']
-    rpictA = ['rpict', '-ps', '1']
-    pvalueA = ['pvalue', '-r']
-    outpatt = '^-o[vrxlLRXnNsmM]+';
-    refDepth = ""
-    viewA = view_args(view)
-    rpictA.extend(viewA)
-    spectout = ncsamp > 3
-
-    res = vwrays(pixel_jitter = 0.67, view=viewA, dimensions=True).decode().split()
-    xres, yres = int(res[1]), int(res[3])
-    ##### May as well run rpict?
-    if (specout == False and nprocs == 1 and persist == False):
-        # run rpict
-        # rpict()
-    if (nproc > 1 and ambounce > 0 and ambcache and ambfile):
-        # straight picture output, so just shuffle sample order
-        if not specout:
-            ord = cnt(xres, yres, shuffle=True)
-            rtrace(octree=oct, rays=vwrays(outform='f', pixpos=ord), inform='f', outform='a')
-        # else randomize overture calculation to prime ambient cache
-        else:
-            oxres, oyres = int(xres / 6), int(yres / 6)
-            cnt -s ores
-            rtrace(oct, inform='f', vwrays(pixpos=cnt(oxres, oyres, shuffle=True),xres=oxres, yres=oyres))
-
-    rtrace(vwrays())
-
-
 @handle_called_process_error
 def strip_header(inp) -> bytes:
     """Use getinfo to strip the header from a Radiance file."""
@@ -1056,7 +963,7 @@ def vwright(
 class WrapBSDFInput:
     """Input data for wrapbsdf command."""
 
-    spectrum: Optional[str] = "Visible"
+    spectrum: str = "Visible"
     tf: Optional[Union[str, Path]] = None
     tb: Optional[Union[str, Path]] = None
     rf: Optional[Union[str, Path]] = None
@@ -1110,6 +1017,7 @@ def wrapbsdf(
     Returns:
         Wrapped BSDF.
     """
+    print("This function will be deprecated, plase use WrapBSDF instead")
     cmd = [str(BINPATH / "wrapBSDF")]
     if enforce_window:
         cmd.append("-W")
@@ -1138,6 +1046,80 @@ def wrapbsdf(
     if inxml is not None:
         cmd.append(str(inxml))
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
+
+class WrapBSDF:
+    def __init__(
+        self,
+        inxml=None,
+        enforce_window=False,
+        comment: Optional[str] = None,
+        correct_solid_angle=False,
+        basis: Optional[str] = None,
+        unlink: bool = False,
+        unit=None,
+        geometry=None,
+        **kwargs,
+    ):
+        self.has_visible = False
+        self.has_solar = False
+        self.cmd = [str(BINPATH / "wrapBSDF")]
+        if enforce_window:
+            self.cmd.append("-W")
+        if correct_solid_angle:
+            self.cmd.append("-c")
+        if basis:
+            self.cmd.extend(["-a", basis])
+        if unlink:
+            self.cmd.append("-U")
+        if unit:
+            self.cmd.extend(["-u", unit])
+        if comment:
+            self.cmd.extend(["-C", comment])
+        if geometry:
+            self.cmd.extend(["-g", geometry])
+        fields_keys = ["n", "m", "d", "c", "ef", "eb", "eo", "t", "h", "w"]
+        fields = []
+        for key in fields_keys:
+            if key in kwargs:
+                fields.append(f"{key}={kwargs[key]}")
+        if fields:
+            self.cmd.extend(["-f", ";".join(fields)])
+        if inxml is not None:
+            self.cmd.append(str(inxml))
+
+    def _add_spectrum(self, spectrum, tb:Optional[str]=None, tf: Optional[str]=None, rb: Optional[str]=None, rf: Optional[str]=None):
+        arglist = ["-s", spectrum]
+        if tf:
+            arglist.extend(["-tf", str(tf)])
+        if tb:
+            arglist.extend(["-tb", str(tb)])
+        if rf:
+            arglist.extend(["-rf", str(rf)])
+        if rb:
+            arglist.extend(["-rb", str(rb)])
+        if len(arglist) == 2:
+            print("At least one of tf, tb, rf, rb should be provided for", spectrum)
+            return
+        self.cmd.extend(arglist)
+        return self
+
+    def add_visible(self, tb:Optional[str]=None, tf: Optional[str]=None, rb: Optional[str]=None, rf: Optional[str]=None):
+        self.has_visible = True
+        return self._add_spectrum("Visible", tb=tb, tf=tf, rb=rb, rf=rf)
+
+    def add_solar(self, tb:Optional[str]=None, tf: Optional[str]=None, rb: Optional[str]=None, rf: Optional[str]=None):
+        self.has_solar = True
+        return self._add_spectrum("Solar", tb=tb, tf=tf, rb=rb, rf=rf)
+
+    @handle_called_process_error
+    def _execute(self):
+        if not self.has_visible and not self.has_solar:
+            print("Need to specify at least solar or visible data")
+            return
+        return sp.run(self.args, check=True, stdout=sp.PIPE).stdout
+
+    def __call__(self):
+        return self._execute()
 
 
 class Xform:
@@ -1385,35 +1367,6 @@ def parse_primitive(pstr: str) -> list[Primitive]:
     return res
 
 
-# def parse_view(vstr: str) -> View:
-#     """Parse view string into a View object.
-#
-#     Args:
-#         vstr: view parameters as a string
-#
-#     Returns:
-#         A View object
-#     """
-#     args_list = vstr.strip().split()
-#     vparser = argparse.ArgumentParser()
-#     vparser = add_view_args(vparser)
-#     args, _ = vparser.parse_known_args(args_list)
-#     if args.vf is not None:
-#         args, _ = vparser.parse_known_args(
-#             args.vf.readline().strip().split(), namespace=args
-#         )
-#         args.vf.close()
-#     return View(
-#         position=args.vp,
-#         direction=args.vd,
-#         vtype=args.vt[-1],
-#         horiz=args.vh,
-#         vert=args.vv,
-#         vfore=args.vo,
-#         vaft=args.va,
-#         hoff=args.vs,
-#         voff=args.vl,
-#     )
 
 
 # def load_views(file: Union[str, Path]) -> list[View]:
@@ -1432,7 +1385,7 @@ def parse_primitive(pstr: str) -> list[Primitive]:
 
 def view_args(view: View):
     return [
-        f"-vt{view.vtype}",
+        f"-vt{view.type}",
         "-vp",
         str(view.vp[0]),
         str(view.vp[1]),

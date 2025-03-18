@@ -207,13 +207,14 @@ def rlam(
     """
     cmd = [str(BINPATH / "rlam")]
     stdins = []
+    stdin = None
     for inp in inputs:
         if isinstance(inp, (str, Path)):
             cmd.append(str(inp))
         elif isinstance(inp, bytes):
             cmd.append("-")
             stdins.append(inp)
-    if len(stdins) > 1:
-        raise ValueError("Only one stdin is allowed with rlam.")
-    stdin = stdins[0] if stdins else None
+    if len(stdins) > 0:
+        stdin = b"\x00".join(stdins)
+    breakpoint()
     return sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout

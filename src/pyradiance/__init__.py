@@ -36,6 +36,7 @@ from .gen import (
 from .model import Primitive, Scene, Sensor
 from .ot import oconv
 from .param import SamplingParameters
+from .rad_view import View, Resolu
 from .px import (
     PcombInput,
     falsecolor,
@@ -60,7 +61,6 @@ if os.name != 'nt':
         RTmask,
         RtraceSimulManager,
         RTtraceSources,
-        View,
         calcontext,
         eval,
         get_default_ray_params,
@@ -85,7 +85,7 @@ from .util import (
     get_header,
     get_image_dimensions,
     getinfo,
-    load_views,
+    # load_views,
     load_material_smd,
     parse_primitive,
     rcode_depth,
@@ -96,7 +96,7 @@ from .util import (
     rfluxmtx,
     rmtxop,
     rsensor,
-    rtpict,
+    # rtpict,
     vwrays,
     wrapbsdf,
 )
@@ -151,7 +151,7 @@ __all__ = [
     # "get_view_resolu",
     "getinfo",
     "ies2rad",
-    "load_views",
+    # "load_views",
     "load_material_smd",
     "mgf2rad",
     "mkillum",
@@ -186,7 +186,7 @@ __all__ = [
     "robjutil",
     "rpict",
     "rsensor",
-    "rtpict",
+    # "rtpict",
     "rtrace",
     "RcModifier",
     "Primitive",

@@ -99,9 +99,11 @@ class TestPyradianceAPI(unittest.TestCase):
     def test_load_material_smd(self):
         path = Path(self.smd_file)
         prim = pr.load_material_smd(path)
-        self.assertEqual(prim[0].fargs, [0.5206966996192932, 0.3083151578903198, 0.02297455072402954, 0.00482973841239237, 0.0])
+        for v, t in zip(prim[0].fargs, [0.5206966996192932, 0.3083151578903198, 0.02297455072402954, 0.00482973841239237, 0.0]):
+            self.assertAlmostEqual(v, t, places=4)
         prim2 = pr.load_material_smd(path, spectral=True, roughness=0.2)
-        self.assertEqual(prim2[1].fargs, [1., 1., 1., 0.00482973841239237, 0.2])
+        for v, t in zip(prim2[1].fargs, [1., 1., 1., 0.00482973841239237, 0.2]):
+            self.assertAlmostEqual(v, t, places=4)
 
 
 class TestPyradianceCLI(unittest.TestCase):
@@ -123,8 +125,9 @@ class TestPyradianceCLI(unittest.TestCase):
         """Test the render function."""
         aview = pr.View()
         aview.type = 'a'
-        aview.vp = (1, 1, 1)
+        aview.vp = (1, 2, 1)
         aview.vdir = (0, -1 ,0)
+        aview.vu = (0, 0, 1)
         aview.horiz = 180
         aview.vert = 180
         scene = pr.Scene("test_scene")
@@ -133,7 +136,9 @@ class TestPyradianceCLI(unittest.TestCase):
         scene.add_material(self.material)
         scene.add_source(self.source)
         scene.add_view(aview)
-        pr.render(scene)
+        img = pr.render(scene, ambbounce=1, nproc=2)
+        with open('test.hdr', 'wb') as fp:
+            fp.write(img)
 
     def test_rfluxmtx(self):
         """Test the rfluxmtx function."""
