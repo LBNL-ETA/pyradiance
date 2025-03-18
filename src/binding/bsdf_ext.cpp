@@ -253,7 +253,7 @@ NB_MODULE(bsdf, m) {
   m.def("xyz_rgb",
         [](double x, double y, double z){
             float rgb[3];
-            const float xyz[3] = {x, y, z};
+            const float xyz[3] = {(float)x, (float)y, (float)z};
             cie_rgb(rgb, xyz);
             return nb::make_tuple(rgb[0], rgb[1], rgb[2]);
         });
