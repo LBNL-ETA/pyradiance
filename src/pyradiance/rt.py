@@ -249,6 +249,7 @@ def rcontrib(
     Returns:
         A bytes object.
     """
+    print("rcontrib will be deprecated, plase use Rcontrib instead")
     cmd = [str(BINPATH / "rcontrib")]
     if nproc > 1 and sys.platform != "win32":
         cmd.extend(["-n", str(nproc)])
@@ -264,6 +265,77 @@ def rcontrib(
             cmd.extend(["-t", str(report)])
     cmd.append(str(octree))
     return sp.run(cmd, check=True, input=inp, stderr=sp.PIPE, stdout=sp.PIPE).stdout
+
+
+class Rcontrib:
+    def __init__(
+        self,
+        inp: bytes,
+        octree: Union[Path, str],
+        nproc: int = 1,
+        yres: Optional[int] = None,
+        inform: Optional[str] = None,
+        outform: Optional[str] = None,
+        report: int = 0,
+        params: Optional[Sequence[str]] = None,
+    ):
+        self.cmd = [str(BINPATH / "rcontrib")]
+        self.octree = octree
+        self.inp = inp
+        if nproc > 1 and sys.platform != "win32":
+            self.cmd.extend(["-n", str(nproc)])
+        if params is not None:
+            self.cmd.extend(params)
+        if None not in (inform, outform):
+            self.cmd.append(f"-f{inform}{outform}")
+        if yres is not None:
+            self.cmd.extend(["-y", str(yres)])
+        if report:
+            self.cmd.extend(["-t", str(report)])
+
+    def add_modifier(
+        self, 
+        modifier: Optional[str] = None,
+        modifier_path: Optional[str] = None,
+        calfile: Optional[str] = None,
+        expression: Optional[str] = None,
+        nbins: Optional[str] = None,
+        binv: Optional[str] = None,
+        param: Optional[str] = None,
+        xres: Optional[int] = None,
+        yres: Optional[int] = None,
+        output: Optional[str] = None,
+    ):
+        arglist = []
+        if calfile is not None:
+            arglist.extend(["-f", str(calfile)])
+        if expression is not None:
+            arglist.extend(["-e", str(expression)])
+        if nbins is not None:
+            arglist.extend(["-bn", str(nbins)])
+        if binv is not None:
+            arglist.extend(["-b", str(binv)])
+        if param is not None:
+            arglist.extend(["-p", str(param)])
+        if xres is not None:
+            arglist.extend(["-x", str(xres)])
+        if yres is not None:
+            arglist.extend(["-y", str(yres)])
+        if output is not None:
+            arglist.extend(["-o", str(output)])
+        if modifier is not None:
+            arglist.extend(["-m", modifier])
+        elif modifier_path is not None:
+            arglist.extend(["-M", modifier_path])
+        else:
+            raise ValueError("Modifier or modifier path must be provided.")
+        self.cmd.extend(arglist)
+        return self
+
+    @handle_called_process_error
+    def __call__(self):
+        self.cmd.append(str(self.octree))
+        sp.run(self.cmd, check=True, input=self.inp, stderr=sp.PIPE, stdout=sp.PIPE).stdout
 
 
 @handle_called_process_error
