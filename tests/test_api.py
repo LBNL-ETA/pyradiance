@@ -136,7 +136,7 @@ class TestPyradianceCLI(unittest.TestCase):
         scene.add_material(self.material)
         scene.add_source(self.source)
         scene.add_view(aview)
-        img = pr.render(scene, ambbounce=1, nproc=2)
+        img = pr.render(scene, quality='low', ambbounce=1, nproc=2, resolution=(800, 800))
         with open('test.hdr', 'wb') as fp:
             fp.write(img)
 
