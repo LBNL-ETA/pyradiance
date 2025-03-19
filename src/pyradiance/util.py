@@ -775,7 +775,7 @@ def render(
         if not specout:
             ord = cnt(xres, yres, shuffled=True)
             pix = rtrace(octree=octpath, rays=vwrays(view=vargs, outform='f', pixpos=ord), inform='f', outform='a', outspec='v', params=param_strs)
-            header = getinfo(getinfo(get_header(pix), remove="NCOMP"), append=f"VIEW={" ".join(vargs)}")
+            header = getinfo(getinfo(get_header(pix), replace="NCOMP"), append=f"VIEW={" ".join(vargs)}")
             rlam = b"\n".join(o + b"\t" + p for o,p in zip(ord.splitlines(), strip_header(pix).splitlines()))
             content = sp.run(["sort", "-k2rn", "-k1n"], input=rlam, check=True, stdout=sp.PIPE).stdout
             return pvaluer(header+content, yres=yres, xres=xres)
