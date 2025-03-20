@@ -9,8 +9,9 @@ from .anci import BINPATH, handle_called_process_error
 
 @handle_called_process_error
 def getbbox(
-    *path,
+    *path: str | bytes,
     header: bool = False,
+    warning: bool = True,
 ) -> list[float]:
     """Get axis-aligned bounding box of a Radiance scene.
 
@@ -22,10 +23,15 @@ def getbbox(
         list: bounding box
     """
     cmd = [str(BINPATH / "getbbox")]
+    stdin: Optional[bytes] = None
     if not header:
         cmd.append("-h")
-    cmd.extend(path)
-    proc = sp.run(cmd, check=True, stdout=sp.PIPE)
+    if isinstance(path[0], bytes):
+        stdin = path[0]
+        cmd.append("-")
+    else:
+        cmd.extend(path)
+    proc = sp.run(cmd, input=stdin, check=True, stdout=sp.PIPE)
     return [float(x) for x in proc.stdout.split()]
 
 
