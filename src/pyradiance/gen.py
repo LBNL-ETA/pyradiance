@@ -5,181 +5,10 @@ Radiance generators and scene Manipulators
 import subprocess as sp
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional, Sequence, Union
+from typing import Optional, Sequence, Union
 
 from .anci import BINPATH, handle_called_process_error
 
-@dataclass
-class Dimension:
-    xmin: float
-    xmax: float
-    ymin: float
-    ymax: float
-    zmin: float
-    zmax: float
-
-
-@dataclass
-class BSDFResults:
-    tf: bytes
-    tb: bytes
-    rf: bytes
-    rb: bytes
-
-
-def run_check(cmd):
-    os.system(cmd)
-
-
-def matrix_comp(typ, spec, src, dest):
-    cmd = "rmtxop -fa -t"
-    if spec == "Visible":
-        cmd += " -c 0.2651 0.6701 0.0648"
-    elif spec == "CIE-X":
-        cmd += " -c 0.5141 0.3239 0.1620"
-    elif spec == "CIE-Z":
-        cmd += " -c 0.0241 0.1229 0.8530"
-    cmd += " $src | getinfo -"
-    run_check(f"{cmd} > {dest}")
-    if spec != curspec:
-        wrapper += " -s $spec"
-        curspec = spec
-    wrapper += " -$typ $dest";
-    return rmtxop()
-
-
-# TODO: Add tensortree out
-# TODO: Add color out
-def generate_bsdf(
-    *inp, 
-    unit=None, 
-    params=[],
-    forward=False,
-    backward=True, color=False, recip=True, nsamp=2000, pctcull=90, nproc=1,
-    geout=True,
-    gunit="meter",
-    dim: Optional[Dimension] = None,
-):
-
-    if not backward and not forward:
-        print("Neither forward nor backward calculation requested")
-        return
-
-    tempdir = tempfile.mkdtemp()
-    radscn = os.path.join(tempdir, "device.rad")
-    octree = os.path.join(tempdir, "device.oct")
-    fsender = os.path.join(tempdir, "fsender.rad")
-    bsender = os.path.join(tempdir, "bsender.rad")
-    receivers = os.path.join(tempdir, "receivers.rad")
-    facedat = os.path.join(tempdir, "face.dat")
-    behinddat = os.path.join(tempdir, "behind.dat")
-    # tf = os.path.join(tempdir, "tf.dat")
-    # rf = os.path.join(tempdir, "rf.dat")
-    # tb = os.path.join(tempdir, "tb.dat")
-    # rb = os.path.join(tempdir, "rb.dat")
-
-    rfluxmtx = ["rfluxmtx -ab 5 -ad 700 -lw 3e-6 -w-"]
-    rfluxmtx.extend(params)
-    tensortree = 0
-    ttlog2 = 4
-    mgfin = 0
-    geout = 1
-    gunit = "meter"
-    curspec = "Visible"
-
-    # NOTE: xform -e inp > radscn
-    device = xform(inp)
-
-    # NOTE: getbbox -h -w device.rad
-    if dim is None:
-        dim_str = getbbox(device)
-        dim = Dimension()
-
-    if dim.zmin >= 0:
-        print("Device entirely inside room!")
-        return
-    if dim.zmax > 1e-5:
-        print("Warning: Device extends into room")
-    elif (dim.zmax*dim.zmax > .01*(dim.xmax-dim.xmin)*(dim.ymax-dim.ymin)):
-        print ("Warning: Device far behind Z==0 plane")
-
-    with open(octree, "wb") as fp:
-        fp.write(oconv(device, warning=False))
-
-    # TODO: handle geometry output
-    if geout:
-        # NOTE: rad2mgf device >> mgfscn
-        pass
-
-    receiver_str = (
-        f'#@rfluxmtx h=-kf\n'
-        f'#@rfluxmtx u=-Y o={facedat}\n\n'
-        "void glow receiver_face\n0\n0\n4 1 1 1 0\n\n"
-        "receiver_face source f_receiver\n0\n0\n4 0 0 1 180\n\n"
-        f'#@rfluxmtx h=+kf\n'
-        f'#@rfluxmtx "u=-Y o={behinddat}\n\n"'
-        "void glow receiver_behind\n0\n0\n4 1 1 1 0\n\n"
-        "receiver_behind source b_receiver\n0\n0\n4 0 0 -1 180\n"
-    )
-    print(receiver_str)
-    with open(receivers, "w") as f:
-        f.write(receiver_str)
-
-    fsender_str = (
-        f'#@rfluxmtx u=-Y h=-kf\n\n'
-        "void polygon fwd_sender\n0\n0\n12\n"
-        f"\t{dim.xmin}\t{dim.ymin}\t{dim.zmin-FEPS}\n"
-        f"\t{dim.xmin}\t{dim.ymax}\t{dim.zmin-FEPS}\n"
-        f"\t{dim.xmax}\t{dim.ymax}\t{dim.zmin-FEPS}\n"
-        f"\t{dim.xmax}\t{dim.ymin}\t{dim.zmin-FEPS}\n"
-    )
-    with open(fsender, "w") as f:
-        f.write(fsender_str)
-
-    bsender_str = (
-		f'#@rfluxmtx u=-Y h=+kf\n\n'
-		"void polygon bwd_sender\n0\n0\n12\n"
-		f"\t{dim.xmin}\t{dim.ymin}\t{dim.zmax+FEPS}\n"
-		f"\t{dim.xmax}\t{dim.ymin}\t{dim.zmax+FEPS}\n"
-		f"\t{dim.xmax}\t{dim.ymax}\t{dim.zmax+FEPS}\n"
-		f"\t{dim.xmin}\t{dim.ymax}\t{dim.zmax+FEPS}\n"
-    )
-    with open(bsender, "w") as f:
-       f.write(bsender_str)
-
-    result = BSDFResults()
-    # backward:
-    cmd = f"rfluxmtx{r} -fd {bsender} {receivers} -i {octree}"
-    transdat = behinddat
-    refldat = facedat
-
-    # Output transmission
-    result.tb = matrix_comp("tb", "Visible", transdat, tb)
-
-    # Output reflection
-    result.rb = matrix_comp("rb", "Visible", refldat, rb)
-
-    # forward:
-    cmd = f"rfluxmtx{r} -fd {fsender} {receivers} -i {octree}"
-    transdat = facedat
-    refldat = behinddat
-
-    # Output transmission
-    result.tf = matrix_comp("tf", "Visible", transdat, tf)
-
-    # Output reflection
-    result.rf = matrix_comp("rf", "Visible", refldat, rf)
-
-
-
-# NOTE: calculate emissivity 1 - TIR - RIR
-def calculate_emissivity():
-    pass
-
-def generate_dual_band_bsdf():
-    sol_results = generate_bsdf(sol_model)
-    vis_results = generate_bsdf(vis_model)
-    # wrap_bsdf()
 
 @handle_called_process_error
 def genblinds(
@@ -213,11 +42,10 @@ def genblinds(
     cmd = [BINPATH / "genblinds", mat, name, str(depth), str(width), str(height)]
     cmd.extend([str(nslats), str(angle)])
     if rcurv is not None:
-        if rcurv > 0:
-            cmd.extend(["+r", str(rcurv)])
-        else:
-            cmd.extend(["-r", str(rcurv)])
+        cmd.append("+r") if rcurv > 0 else cmd.append("-r")
+        cmd.append(str(rcurv))
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
+
 
 @handle_called_process_error
 def genbox(
@@ -427,8 +255,8 @@ def gendaymtx(
     sun_mods: Optional[str] = None,
     daylight_hours_only: bool = False,
     dryrun: bool = False,
-    sky_color: Optional[List[float]] = None,
-    ground_color: Optional[List[float]] = None,
+    sky_color: Optional[list[float]] = None,
+    ground_color: Optional[list[float]] = None,
     rotate: Optional[float] = None,
     outform: Optional[str] = None,
     onesun: bool = False,
@@ -501,6 +329,7 @@ def gendaymtx(
     out = sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE, stderr=sp.PIPE)
     return out.stdout
 
+
 @handle_called_process_error
 def genrev(
     mat: str,
@@ -512,7 +341,7 @@ def genrev(
     file: Optional[str] = None,
     smooth: bool = False,
 ) -> bytes:
-    cmd = [str(BINPATH/"genrev")]
+    cmd = [str(BINPATH / "genrev")]
     cmd.append(mat)
     cmd.append(name)
     cmd.append(z_t)
@@ -535,7 +364,7 @@ def gensdaymtx(
     sun_only: bool = False,
     sky_only: bool = False,
     daylight_hours_only: bool = False,
-    ground_reflectance: Optional[List[float]] = None,
+    ground_reflectance: Optional[list[float]] = None,
     rotate: Optional[float] = None,
     outform: Optional[str] = None,
     onesun: bool = False,
