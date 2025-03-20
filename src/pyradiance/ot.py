@@ -3,7 +3,6 @@ Radiance scene compiler
 """
 
 import subprocess as sp
-from typing import List
 
 from .anci import BINPATH, handle_called_process_error
 
@@ -12,7 +11,7 @@ from .anci import BINPATH, handle_called_process_error
 def getbbox(
     *path,
     header: bool = False,
-) -> List[float]:
+) -> list[float]:
     """Get axis-aligned bounding box of a Radiance scene.
 
     Args:

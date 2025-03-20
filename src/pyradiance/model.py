@@ -67,9 +67,6 @@ class ViewType:
     VT_CYL = "c"
 
 
-
-
-
 @dataclass
 class Resolu:
     """Radiance resolution.

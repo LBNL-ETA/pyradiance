@@ -294,7 +294,7 @@ class Rcontrib:
             self.cmd.extend(["-t", str(report)])
 
     def add_modifier(
-        self, 
+        self,
         modifier: Optional[str] = None,
         modifier_path: Optional[str] = None,
         calfile: Optional[str] = None,
@@ -335,7 +335,9 @@ class Rcontrib:
     @handle_called_process_error
     def __call__(self):
         self.cmd.append(str(self.octree))
-        sp.run(self.cmd, check=True, input=self.inp, stderr=sp.PIPE, stdout=sp.PIPE).stdout
+        sp.run(
+            self.cmd, check=True, input=self.inp, stderr=sp.PIPE, stdout=sp.PIPE
+        ).stdout
 
 
 @handle_called_process_error

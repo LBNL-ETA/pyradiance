@@ -49,7 +49,8 @@ from .px import (
     ra_ppm,
     ra_tiff,
 )
-if os.name != 'nt':
+
+if os.name != "nt":
     from .radiance_ext import (
         RCCONTEXT,
         RayParams,

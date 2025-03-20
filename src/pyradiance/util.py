@@ -2,12 +2,11 @@
 Radiance utilities
 """
 
-import argparse
 import csv
 import os
 import re
 import subprocess as sp
-import sys
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Sequence, Union
@@ -19,8 +18,8 @@ from .model import Primitive
 from .rad_view import View
 from .ot import getbbox
 from .px import pvaluer
-from .cal import cnt, rlam
-from .param import SamplingParameters, parse_rtrace_args
+from .cal import cnt
+from .param import SamplingParameters
 from .rt import rpict, rtrace
 
 
@@ -241,7 +240,7 @@ def get_image_dimensions(image: Union[str, Path, bytes]) -> tuple[int, int]:
     """Get the dimensions of an image.
 
     Args:
-        image: image file or bytes
+        image: image file path or image bytes
 
     Returns:
         Tuple[int, int]: width and height
@@ -276,6 +275,7 @@ def get_header(inp, dimension: bool = False) -> bytes:
 @handle_called_process_error
 def rad(
     inp,
+    view: Optional[str] = None,
     dryrun: bool = False,
     update: bool = False,
     silent: bool = False,
@@ -301,27 +301,28 @@ def rad(
         cmd.append("-t")
     if silent:
         cmd.append("-s")
+    if view:
+        cmd.extend(["-v", view])
     cmd.append(str(inp))
     if varstr is not None:
         cmd.extend(varstr)
     return sp.run(cmd, stdout=sp.PIPE, check=True).stdout
 
 
-# # Replaced with read_rad from lib.py
-# def read_rad(fpath: str) -> List[Primitive]:
-#     """Parse a Radiance file.
-#
-#     Args:
-#         fpath: Path to the .rad file
-#
-#     Returns:
-#         A list of primitives
-#     """
-#     with open(fpath) as rdr:
-#         lines = rdr.readlines()
-#     if any((l.startswith("!") for l in lines)):
-#         lines = xform(fpath).decode().splitlines()
-#     return parse_primitive("\n".join(lines))
+def read_rad(fpath: str) -> list[Primitive]:
+    """Parse a Radiance file.
+
+    Args:
+        fpath: Path to the .rad file
+
+    Returns:
+        A list of primitives
+    """
+    with open(fpath) as rdr:
+        lines = rdr.readlines()
+    if any(line.startswith("!") for line in lines):
+        lines = xform(fpath).decode().splitlines()
+    return parse_primitive("\n".join(lines))
 
 
 @handle_called_process_error
@@ -666,7 +667,6 @@ def render(
     resolution: Optional[tuple[int, int]] = None,
     ambbounce: int = 0,
     ambcache: bool = True,
-    spectral: bool = False,
     params: Optional[SamplingParameters] = None,
 ) -> bytes:
     """Render a scene.
@@ -684,7 +684,7 @@ def render(
     Returns:
         tuple[bytes, int, int]: output of render, width, height
     """
-    nproc = 1 if sys.platform == "win32" else nproc
+    nproc = 1 if os.name == "nt" else nproc
     octpath = Path(f"{scene.sid}.oct")
     scenestring = ""
     for _, srf in scene.surfaces.items():
@@ -714,6 +714,8 @@ def render(
     else:
         zone = f"I {xmin} {xmax} {ymin} {ymax} {zmin} {zmax}"
 
+    fd, optpath = tempfile.mkstemp()
+    os.close(fd)
     radvars = [
         f"ZONE={zone}",
         f"OCTREE={octpath}",
@@ -723,6 +725,7 @@ def render(
         f"VARIABILITY={variability}",
         f"DETAIL={detail}",
         f"render= {' '.join(rad_render_options)}",
+        f"OPT= {optpath}",
     ]
     if ambbounce and ambcache:
         ambfile = f"{scene.sid}.amb"
@@ -734,56 +737,82 @@ def render(
         radvars.append(f"RESOLUTION={xres} {yres}")
     else:
         xres = yres = 512
-    radcmds = [
-        l.strip()
-        for l in rad(os.devnull, dryrun=True, varstr=radvars).decode().splitlines()
-    ]
-    _sidx = 0
-    if radcmds[0].startswith("oconv"):
-        print("rebuilding octree...")
-        scene.build()
-        _sidx = 1
-    elif radcmds[0].startswith(("rm", "del")):
-        sp.run(radcmds[0].split(), check=True)
-        _sidx = 1
-    radcmds = [c for c in radcmds[_sidx:] if not c.startswith(("pfilt", "rm"))]
-    argdict = parse_rtrace_args(" ".join(radcmds))
-
-    options = SamplingParameters()
-    options.dt = 0.05
-    options.ds = 0.25
-    options.dr = 1
-    options.ad = 512
-    options.as_ = 128
-    options.aa = 0.2
-    options.ar = 64
-    options.lr = 7
-    options.lw = 1e-03
-    options.update_from_dict(argdict)
-    if params is not None:
-        options.update(params)
-    param_strs = options.args()
-    if spectral:
-        param_strs.append("-co+")
+    rad(os.devnull, dryrun=True, varstr=radvars).decode().splitlines()
+    with open(optpath) as f:
+        param_strs = f.read().strip().replace("\n", " ").split()
+    os.remove(optpath)
     scene.build()
     specout = ncssamp > 3
+    if specout:
+        param_strs.append("-co+")
+    if params is not None:
+        param_strs.extend(params.args())
     vargs = view_args(aview)
-    if (specout == False and nproc == 1):
-        return rpict(vargs, octpath, params=['-ps', '1'] + param_strs)
-    if (nproc > 1 and ambbounce > 0 and ambcache and ambfile):
+    res = vwrays(view=vargs, dimensions=True, xres=xres, yres=yres).decode().split()
+    xres, yres = int(res[1]), int(res[3])
+    if not specout and nproc == 1:
+        return rpict(
+            vargs, octpath, params=["-ps", "1"] + param_strs, xres=xres, yres=yres
+        )
+    if nproc > 1 and ambbounce > 0 and ambcache:
         # straight picture output, so just shuffle sample order
         if not specout:
             ord = cnt(xres, yres, shuffled=True)
-            pix = rtrace(octree=octpath, rays=vwrays(view=vargs, outform='f', pixpos=ord), inform='f', outform='a', outspec='v', params=param_strs)
-            header = getinfo(getinfo(get_header(pix), replace="NCOMP"), append=f"VIEW={" ".join(vargs)}")
-            rlam = b"\n".join(o + b"\t" + p for o,p in zip(ord.splitlines(), strip_header(pix).splitlines()))
-            content = sp.run(["sort", "-k2rn", "-k1n"], input=rlam, check=True, stdout=sp.PIPE).stdout
-            return pvaluer(header+content, yres=yres, xres=xres)
+            pix = rtrace(
+                octree=octpath,
+                rays=vwrays(view=vargs, outform="f", pixpos=ord, xres=xres, yres=yres),
+                inform="f",
+                outform="a",
+                outspec="v",
+                nproc=nproc,
+                params=param_strs,
+            )
+            header = getinfo(
+                getinfo(get_header(pix), replace="NCOMP"),
+                append=f"VIEW={' '.join(vargs)}",
+            )
+            rlam = b"\n".join(
+                o + b"\t" + p
+                for o, p in zip(ord.splitlines(), strip_header(pix).splitlines())
+            )
+            content = sp.run(
+                ["sort", "-k2rn", "-k1n"], input=rlam, check=True, stdout=sp.PIPE
+            ).stdout
+            return pvaluer(header + content, yres=yres, xres=xres)
         # else randomize overture calculation to prime ambient cache
         oxres, oyres = int(xres / 6), int(yres / 6)
-        rtrace(octree=octpath, inform='f', rays=vwrays(view=vargs, pixpos=cnt(oxres, oyres, shuffled=True),xres=oxres, yres=oyres))
+        rtrace(
+            octree=octpath,
+            inform="f",
+            params=param_strs,
+            nproc=nproc,
+            rays=vwrays(
+                view=vargs,
+                outform="f",
+                pixpos=cnt(oxres, oyres, shuffled=True),
+                xres=oxres,
+                yres=oyres,
+            ),
+        )
 
-    return getinfo(rtrace(octree=octpath, rays=vwrays(view=vargs, outform='f',), inform='f', outform='c', xres=xres, yres=yres),append=f"VIEW={" ".join(vargs)}")
+    return getinfo(
+        rtrace(
+            octree=octpath,
+            params=param_strs,
+            rays=vwrays(
+                view=vargs,
+                outform="f",
+                xres=xres,
+                yres=yres,
+            ),
+            inform="f",
+            outform="c",
+            nproc=nproc,
+            xres=xres,
+            yres=yres,
+        ),
+        append=f"VIEW={' '.join(vargs)}",
+    )
 
 
 @handle_called_process_error
@@ -815,7 +844,7 @@ def rfluxmtx(
     if octree is not None:
         cmd.extend(["-i", str(octree)])
     if scene is not None:
-        if sys.platform == "win32":
+        if os.name == "nt":
             cmd.extend(f'"{str(s)}"' for s in scene)
         else:
             cmd.extend(str(s) for s in scene)
@@ -1047,6 +1076,7 @@ def wrapbsdf(
         cmd.append(str(inxml))
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
+
 class WrapBSDF:
     def __init__(
         self,
@@ -1087,7 +1117,14 @@ class WrapBSDF:
         if inxml is not None:
             self.cmd.append(str(inxml))
 
-    def _add_spectrum(self, spectrum, tb:Optional[str]=None, tf: Optional[str]=None, rb: Optional[str]=None, rf: Optional[str]=None):
+    def _add_spectrum(
+        self,
+        spectrum,
+        tb: Optional[str] = None,
+        tf: Optional[str] = None,
+        rb: Optional[str] = None,
+        rf: Optional[str] = None,
+    ):
         arglist = ["-s", spectrum]
         if tf:
             arglist.extend(["-tf", str(tf)])
@@ -1103,11 +1140,23 @@ class WrapBSDF:
         self.cmd.extend(arglist)
         return self
 
-    def add_visible(self, tb:Optional[str]=None, tf: Optional[str]=None, rb: Optional[str]=None, rf: Optional[str]=None):
+    def add_visible(
+        self,
+        tb: Optional[str] = None,
+        tf: Optional[str] = None,
+        rb: Optional[str] = None,
+        rf: Optional[str] = None,
+    ):
         self.has_visible = True
         return self._add_spectrum("Visible", tb=tb, tf=tf, rb=rb, rf=rf)
 
-    def add_solar(self, tb:Optional[str]=None, tf: Optional[str]=None, rb: Optional[str]=None, rf: Optional[str]=None):
+    def add_solar(
+        self,
+        tb: Optional[str] = None,
+        tf: Optional[str] = None,
+        rb: Optional[str] = None,
+        rf: Optional[str] = None,
+    ):
         self.has_solar = True
         return self._add_spectrum("Solar", tb=tb, tf=tf, rb=rb, rf=rf)
 
@@ -1366,22 +1415,6 @@ def parse_primitive(pstr: str) -> list[Primitive]:
         res.append(Primitive(modifier, ptype, identifier, sarg, rarg))
     return res
 
-
-
-
-# def load_views(file: Union[str, Path]) -> list[View]:
-#     """Load views from a file.
-#     One view per line.
-#
-#     Args:
-#         file: A file path to a view file.
-#
-#     Returns:
-#         A view object.
-#     """
-#     with open(file) as f:
-#         lines = f.readlines()
-#     return [parse_view(line) for line in lines]
 
 def view_args(view: View):
     return [
