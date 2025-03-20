@@ -4,7 +4,6 @@ from datetime import datetime
 from pathlib import Path
 
 import pyradiance as pr
-from pyradiance.util import view_args
 
 
 class TestPyradianceAPI(unittest.TestCase):
@@ -136,9 +135,7 @@ class TestPyradianceCLI(unittest.TestCase):
         scene.add_material(self.material)
         scene.add_source(self.source)
         scene.add_view(aview)
-        img = pr.render(scene, quality='low', ambbounce=1, nproc=2, resolution=(800, 800))
-        with open('test.hdr', 'wb') as fp:
-            fp.write(img)
+        img = pr.render(scene, quality='low', ambbounce=1, nproc=4, ambcache=True, resolution=(800,800))
 
     def test_rfluxmtx(self):
         """Test the rfluxmtx function."""
@@ -181,6 +178,22 @@ class TestPyradianceCLI(unittest.TestCase):
                 "steel", "ring", "torus.1", [], [0, 0, 1.22464679915e-16, 0, 0, 1, 3, 1]
             ),
         )
+
+    def test_genblinds(self):
+        result = pr.genblinds(
+            mat="white",
+            name="blinds",
+            depth=0.05,
+            width=1,
+            height=1,
+            nslats=10,
+            angle=45,
+            rcurv = 0,)
+        print(result)
+
+    def test_genbsdf(self):
+        pass
+
 
 if __name__ == "__main__":
     unittest.main()
