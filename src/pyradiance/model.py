@@ -58,36 +58,6 @@ class Primitive:
         )
 
 
-class ViewType:
-    VT_PER = "v"
-    VT_PAR = "l"
-    VT_ANG = "a"
-    VT_HEM = "h"
-    VT_PLS = "s"
-    VT_CYL = "c"
-
-
-@dataclass
-class Resolu:
-    """Radiance resolution.
-
-    Attributes:
-        orient: orientation
-        xr: x resolution
-        yr: y resolution
-    """
-
-    orient: str
-    xr: int
-    yr: int
-
-
-@dataclass(eq=True, frozen=True)
-class Sensor:
-    position: Tuple[float, float, float]
-    direction: Tuple[float, float, float]
-
-
 class Scene:
     """Radiance Scene."""
 
@@ -100,6 +70,7 @@ class Scene:
         "_sensors",
         "_changed",
         "_octree",
+        "_moctree",
     )
 
     def __init__(self, sid: str, **kwargs):
@@ -111,6 +82,7 @@ class Scene:
             raise ValueError("Scene id must be at least one character long")
         self._sid = sid
         self._octree = f"{sid}.oct"
+        self._moctree = f"m{sid}.oct"
         self._materials: Dict[str, str] = {}
         self._surfaces: Dict[str, str] = {}
         self._views: List[View] = []
@@ -246,8 +218,7 @@ class Scene:
         inp = [mat for mat in self.materials.values() if isinstance(mat, str)]
         if mstdin:
             stdin = "".join(mstdin).encode()
-        moctname = f"{self.sid}mat.oct"
-        with open(moctname, "wb") as wtr:
+        with open(self._moctree, "wb") as wtr:
             wtr.write(oconv(*inp, warning=False, stdin=stdin))
         sstdin = [
             str(srf) for srf in self.surfaces.values() if isinstance(srf, Primitive)
@@ -259,8 +230,8 @@ class Scene:
         inp.extend([path for path in self.sources.values() if isinstance(path, str)])
         if sstdin:
             stdin = "".join(sstdin).encode()
-        with open(f"{self.sid}.oct", "wb") as wtr:
-            wtr.write(oconv(*inp, stdin=stdin, warning=False, octree=moctname))
+        with open(self._octree, "wb") as wtr:
+            wtr.write(oconv(*inp, stdin=stdin, warning=False, octree=self._moctree))
 
     def build(self):
         """Build an octree, as {sid}.oct in the current directory.
