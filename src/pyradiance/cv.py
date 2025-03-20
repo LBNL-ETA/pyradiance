@@ -119,6 +119,7 @@ def pkgbsdf(
     result = sp.run(cmd, check=True, stdout=sp.PIPE).stdout
     if stdout:
         return result
+    return None
 
 
 @handle_called_process_error
