@@ -1,18 +1,20 @@
 from dataclasses import dataclass
+import math
 import os
-import tempfile
+import random
+import string
 import shutil
+import tempfile
 from typing import Optional, Literal
 
-from .util import rmtxop, rfluxmtx, strip_header, WrapBSDF
-from .cv import xform, getbbox
-from .ot import oconv
+from .util import rmtxop, rfluxmtx, strip_header, WrapBSDF, Xform
+from .ot import oconv, getbbox
 from .gen import genblinds
+from .model import Primitive
 
 
-@dataclass
+@dataclass(slots=True)
 class Dimension:
-    __slots__ = ["xmin", "xmax", "ymin", "ymax", "zmin", "zmax"]
     xmin: float = 0
     xmax: float = 0
     ymin: float = 0
@@ -21,18 +23,16 @@ class Dimension:
     zmax: float = 0
 
 
-@dataclass
+@dataclass(slots=True)
 class BSDFResult:
-    __slots__ = ["tf", "tb", "rf", "rb"]
     tf: bytes = b""
     tb: bytes = b""
     rf: bytes = b""
     rb: bytes = b""
 
 
-@dataclass
+@dataclass(slots=True)
 class BlindsGeometry:
-    __slots__ = ["depth", "width", "height", "nslats", "angle", "rcurv"]
     depth: float = 0
     width: float = 0
     height: float = 0
@@ -42,7 +42,9 @@ class BlindsGeometry:
     unit: str = "meter"
 
 
-@dataclass
+# TODO: support full color/spectral material
+# TODO: support translucent material
+@dataclass(slots=True)
 class ShadingMaterial:
     diffuse_reflectance: float = 0
     specular_reflectance: float = 0
@@ -53,21 +55,49 @@ def generate_blinds_from_cross_section():
     pass
 
 
-def generate_blinds(mat: ShadingMaterial, geom: BlindsGeometry):
+def generate_blinds(mat: ShadingMaterial, geom: BlindsGeometry) -> bytes:
+    fargs = [
+        mat.diffuse_reflectance,
+        mat.diffuse_reflectance,
+        mat.diffuse_reflectance,
+        mat.specular_reflectance,
+        mat.roughness,
+    ]
+    mat_random_strings = "".join(
+        random.choices(string.ascii_letters + string.digits, k=5)
+    )
+    name_random_strings = "".join(
+        random.choices(string.ascii_letters + string.digits, k=8)
+    )
+    material_name = f"blinds_material_{mat_random_strings}"
+    blinds_name = f"blinds_{name_random_strings}"
+    material = Primitive("void", "plastic", material_name, [], fargs)
     blinds = genblinds(
+        material_name,
+        blinds_name,
         geom.depth,
-        geom.width,
         geom.width,
         geom.height,
         geom.nslats,
         geom.angle,
         geom.rcurv,
     )
-    return mat + blinds
+    # xform -rz -90 -rx -90 -t 0 0 -0.939693
+    thickness = geom.depth * math.cos(math.radians(geom.angle))
+    return (
+        material.bytes
+        + Xform(blinds).rotatez(-90).rotatex(-90).translate(0, 0, -thickness)()
+    )
 
 
 def write_senders_receiver(
-    fsender, bsender, receiver, facedat, behinddat, basis, dim: Dimension
+    fsender: str,
+    bsender: str,
+    receiver: str,
+    facedat: str,
+    behinddat: str,
+    basis: str,
+    dim: Dimension,
 ):
     FEPS = 1e-6
     receiver_str = (
@@ -76,7 +106,7 @@ def write_senders_receiver(
         "void glow receiver_face\n0\n0\n4 1 1 1 0\n\n"
         "receiver_face source f_receiver\n0\n0\n4 0 0 1 180\n\n"
         f"#@rfluxmtx h=+{basis}\n"
-        f'#@rfluxmtx "u=-Y o={behinddat}\n\n"'
+        f"#@rfluxmtx u=-Y o={behinddat}\n\n"
         "void glow receiver_behind\n0\n0\n4 1 1 1 0\n\n"
         "receiver_behind source b_receiver\n0\n0\n4 0 0 -1 180\n"
     )
@@ -112,23 +142,15 @@ def generate_bsdf(
     *inp,
     unit=None,
     params: Optional[list[str]] = None,
-    forward=False,
-    backward=True,
-    color=False,
     recip=True,
     nsamp=2000,
     pctcull=90,
     nproc=1,
     geout=True,
-    gunit="meter",
     basis: Literal["kf", "kh", "kq", "u", "r1", "r2", "r4"] = "kf",
     dim: Optional[Dimension] = None,
 ) -> BSDFResult:
     result = BSDFResult()
-
-    if not backward and not forward:
-        print("Neither forward nor backward calculation requested")
-        return result
 
     tempdir = tempfile.mkdtemp()
     octree = os.path.join(tempdir, "device.oct")
@@ -141,14 +163,14 @@ def generate_bsdf(
     param_args = ["-ab", "5", "-ad", "700", "-lw", "3e-6", "-w-"]
     if params is not None:
         param_args.extend(params)
+    param_args.extend(["-n", str(nproc)])
+
     geout = 1
 
-    device = xform(inp)
+    device = Xform(*inp)()
 
     # NOTE: getbbox -h -w device.rad
-    if dim is None:
-        dims = getbbox(device)
-        dim = Dimension(*dims)
+    dim = Dimension(*getbbox(device, warning=False)) if dim is None else dim
 
     if dim.zmin >= 0:
         print("Device entirely inside room!")
@@ -158,8 +180,13 @@ def generate_bsdf(
     elif dim.zmax * dim.zmax > 0.01 * (dim.xmax - dim.xmin) * (dim.ymax - dim.ymin):
         print("Warning: Device far behind Z==0 plane")
 
+    nx = int(math.sqrt(nsamp * (dim.xmax - dim.xmin) / (dim.ymax - dim.ymin)) + 1)
+    ny = int(nsamp / nx + 1)
+    param_args.extend(["-c", str(nx * ny)])
+    param_args.extend(["-cs", "3"])
+
     with open(octree, "wb") as fp:
-        fp.write(oconv(device, warning=False))
+        fp.write(oconv(stdin=device, warning=False))
 
     # TODO: handle geometry output
     if geout:
@@ -168,11 +195,11 @@ def generate_bsdf(
 
     write_senders_receiver(fsender, bsender, receivers, facedat, behinddat, basis, dim)
 
+    param_args.append("-fd")
     # backward:
     rfluxmtx(
         surface=bsender,
-        outform="d",
-        receivers=receivers,
+        receiver=receivers,
         octree=octree,
         params=param_args,
     )
@@ -182,8 +209,7 @@ def generate_bsdf(
     # forward:
     rfluxmtx(
         surface=fsender,
-        outform="d",
-        receivers=receivers,
+        receiver=receivers,
         octree=octree,
         params=param_args,
     )
@@ -203,9 +229,9 @@ def generate_xml(
     manufacturer="unnamed",
     unit="meter",
     thickness=0,
-) -> Optional[bytes]:
-    emissivity_front = 1
-    emissivity_back = 1
+) -> bytes:
+    emissivity_front = 1.0
+    emissivity_back = 1.0
     if ir_results is not None:
         emissivity_front = 1 - float(ir_results.tf) - float(ir_results.rf)
         emissivity_back = 1 - float(ir_results.tb) - float(ir_results.rb)
@@ -261,3 +287,77 @@ def generate_xml(
         wrapper = wrapper.add_visible(tb=tbv, tf=tfv, rb=rbv, rf=rfv)
 
     return wrapper()
+
+
+def generate_blinds_bsdf(
+    depth: float,
+    width: float,
+    height: float,
+    nslats: int,
+    angle: float,
+    rcurv: float,
+    diff_refl: float,
+    spec_refl: float,
+    ir_refl: float,
+    roughness: float,
+):
+    mat = pr.ShadingMaterial(0.5, 0, 0)
+    geom = pr.BlindsGeometry(
+        depth=0.05,
+        width=1,
+        height=1,
+        nslats=20,
+        angle=45,
+        rcurv=1,
+    )
+    blinds = pr.generate_blinds(mat, geom)
+    bsdf = pr.generate_bsdf(blinds, nsamp=10, params=["-ab", "1"])
+    xml = pr.generate_xml()
+
+
+Point3D = tuple[float, float, float]
+Rectangle3D = tuple[Point3D, Point3D, Point3D, Point3D]
+
+
+def generate_blinds_bsdf_for_windows(
+    window_rects: list[Rectangle3D],
+    slat_depth: float,
+    nslats: int,
+    slat_angle: float,
+    slat_rcurv: float,
+    diff_refl: float,
+    spec_refl: float,
+    ir_refl: float,
+    roughness: float,
+):
+    FEPS = 1e-5
+    window_dimensions: list[tuple[float, float]] = []
+    for window_rect in window_rects:
+        zdiff1 = abs(window_rect[1][2] - window_rect[0][2])
+        zdiff2 = abs(window_rect[2][2] - window_rect[1][2])
+        dim1 = math.sqrt(
+            sum((window_rect[1][i] - window_rect[0][i]) ** 2 for i in range(3))
+        )
+        dim2 = math.sqrt(
+            sum((window_rect[2][i] - window_rect[1][i]) ** 2 for i in range(3))
+        )
+        if zdiff1 <= FEPS:
+            window_dimensions.append((dim1, dim2))
+        elif zdiff2 <= FEPS:
+            window_dimensions.append((dim2, dim1))
+        else:
+            print("Error: Skewed window not supported: ")
+            print(window_rect)
+            return
+    return generate_blinds_bsdf(
+        slat_depth,
+        window_width,
+        window_height,
+        nslats,
+        slat_angle,
+        slat_rcurv,
+        diff_refl,
+        spec_refl,
+        ir_refl,
+        roughness,
+    )

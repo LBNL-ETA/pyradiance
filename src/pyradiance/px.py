@@ -3,77 +3,81 @@ Radiance picture processing utilities.
 """
 
 import subprocess as sp
-from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Sequence, Tuple, Union
 
 from .anci import BINPATH, handle_called_process_error
 
 
-@dataclass
-class PcombInput:
-    image: Union[Path, str, bytes]
-    original: bool = False
-    scaler: float = 1.0
+class Pcomb:
+    def __init__(
+        self,
+        xres: Optional[int] = None,
+        yres: Optional[int] = None,
+        inform: str = "a",
+        fout: bool = True,
+        header: bool = False,
+        expression: Optional[str] = None,
+        source: Optional[str] = None,
+    ):
+        """combine Radiance pictures and/or float matrices
 
+        Args:
+            inputs: list of PcombInput
+            xres: horizontal resolution
+            yres: vertical resolution
+            inform: input data format. Default is "a" for ascii.
+            fout: if True, write output to file
+            header: if True, write header
+            expression: expression
+            source: source
 
-@handle_called_process_error
-def pcomb(
-    inputs: Sequence[PcombInput],
-    xres: Optional[int] = None,
-    yres: Optional[int] = None,
-    inform: str = "a",
-    fout: bool = True,
-    header: bool = False,
-    expression: Optional[str] = None,
-    source: Optional[str] = None,
-) -> bytes:
-    """combine Radiance pictures and/or float matrices
+        Returns:
+            bytes: output of pcomb
+        """
+        self.has_input = False
+        self.stdin: Optional[bytes] = None
+        self.cmd = [str(BINPATH / "pcomb")]
+        if xres is not None:
+            self.cmd.extend(["-x", str(xres)])
+        if yres is not None:
+            self.cmd.extend(["-y", str(yres)])
+        if inform != "a":
+            self.cmd.extend(["-i", inform])
+        if fout:
+            self.cmd.append("-ff")
+        if header:
+            self.cmd.append("-h")
+        if expression is not None:
+            self.cmd.extend(["-e", expression])
+        if source is not None:
+            self.cmd.extend(["-f", source])
 
-    Args:
-        inputs: list of PcombInput
-        xres: horizontal resolution
-        yres: vertical resolution
-        inform: input data format. Default is "a" for ascii.
-        fout: if True, write output to file
-        header: if True, write header
-        expression: expression
-        source: source
-
-    Returns:
-        bytes: output of pcomb
-    """
-    stdin = None
-    cmd = [str(BINPATH / "pcomb")]
-    if xres is not None:
-        cmd.extend(["-x", str(xres)])
-    if yres is not None:
-        cmd.extend(["-y", str(yres)])
-    if inform != "a":
-        cmd.extend(["-i", inform])
-    if fout:
-        cmd.append("-ff")
-    if header:
-        cmd.append("-h")
-    if expression is not None:
-        cmd.extend(["-e", expression])
-    if source is not None:
-        cmd.extend(["-f", source])
-    for input in inputs:
-        if input.original:
-            cmd.append("-o")
-        if input.scaler:
-            cmd.extend(["-s", str(input.scaler)])
-        if isinstance(input, bytes):
-            if stdin is not None:
+    def add(
+        self,
+        image: Union[Path, str, bytes],
+        original: bool = False,
+        scaler: float = 1.0,
+    ):
+        if original:
+            self.cmd.append("-o")
+        self.cmd.extend(["-s", str(scaler)])
+        if isinstance(image, bytes):
+            if self.stdin is not None:
                 raise ValueError("Only one bytes input is allowed with pcomb.")
-            stdin = input
-            cmd.append("-")
-        elif isinstance(input, (str, Path)):
-            cmd.append(str(input))
+            self.stdin = image
+            self.cmd.append("-")
+        elif isinstance(image, (str, Path)):
+            self.cmd.append(str(image))
         else:
-            raise ValueError(f"Unsupported input type: {type(input)}")
-    return sp.check_output(cmd)
+            raise ValueError(f"Unsupported input type: {type(image)}")
+        self.has_input = True
+
+    @handle_called_process_error
+    def __call__(self):
+        if not self.has_input:
+            raise ValueError("No input images, call .add() to add one")
+        return sp.run(self.cmd, input=self.stdin, stdout=sp.PIPE).stdout
 
 
 @handle_called_process_error
@@ -603,7 +607,7 @@ def ra_tiff(
     pout = sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
     if out is None:
         return pout
-    return
+    return None
 
 
 @handle_called_process_error

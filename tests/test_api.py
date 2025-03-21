@@ -120,6 +120,27 @@ class TestPyradianceCLI(unittest.TestCase):
         ptypes = {p.ptype for p in pr.parse_primitive(res.decode())}
         self.assertEqual(ptypes, {"light", "brightfunc", "source"})
 
+    def test_gensky(self):
+        res = pr.gensky(
+            datetime(2022, 2, 1, 12), 37, 122, 120,
+        )
+        ptypes = {p.ptype for p in pr.parse_primitive(res.decode())}
+        self.assertEqual(ptypes, {"light", "brightfunc", "source"})
+
+
+    def test_genssky(self):
+        res = pr.genssky(
+            datetime(2022, 2, 1, 12), 37, 122, 120, nthreads=4
+        )
+        ptypes = {p.ptype for p in pr.parse_primitive(res.decode())}
+        self.assertEqual(ptypes, {"light", "source", "spectrum", "specpict"})
+
+    def test_gendaymtx(self):
+        pass
+
+    def test_gensdaymtx(self):
+        pass
+
     def test_render(self):
         """Test the render function."""
         aview = pr.View()
@@ -136,6 +157,9 @@ class TestPyradianceCLI(unittest.TestCase):
         scene.add_source(self.source)
         scene.add_view(aview)
         img = pr.render(scene, quality='low', ambbounce=1, nproc=4, ambcache=True, resolution=(800,800))
+        os.remove(scene.octree)
+        os.remove(scene._moctree)
+        os.remove(f"{scene.sid}.amb")
 
     def test_rfluxmtx(self):
         """Test the rfluxmtx function."""
@@ -189,9 +213,28 @@ class TestPyradianceCLI(unittest.TestCase):
             nslats=10,
             angle=45,
             rcurv = 0,)
-        print(result)
 
     def test_genbsdf(self):
+        mat = pr.ShadingMaterial(0.5, 0, 0)
+        geom = pr.BlindsGeometry(
+            depth=0.05,
+            width=1,
+            height=1,
+            nslats=20,
+            angle=45,
+            rcurv=1,
+        )
+        blinds = pr.generate_blinds(mat, geom)
+        bsdf = pr.generate_bsdf(blinds, nsamp=10, params=["-ab", "1"])
+        xml = pr.generate_xml()
+
+    def test_rcontrib(self):
+        pass
+
+    def test_pcomb(self):
+        pass
+
+    def test_pcond(self):
         pass
 
 

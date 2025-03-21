@@ -32,15 +32,21 @@ from .gen import (
     genssky,
     mkillum,
 )
+from .genbsdf import (
+    ShadingMaterial,
+    BlindsGeometry,
+    generate_blinds,
+    generate_bsdf,
+    generate_xml,
+)
 
-from .model import Primitive, Scene, Sensor
+from .model import Primitive, Scene
 from .ot import oconv
 from .param import SamplingParameters
 from .rad_view import View, Resolu
 from .px import (
-    PcombInput,
+    Pcomb,
     falsecolor,
-    pcomb,
     pcompos,
     pcond,
     pfilt,
@@ -50,7 +56,7 @@ from .px import (
     ra_tiff,
 )
 
-if os.name != "nt":
+if os.name == "posix":
     from .radiance_ext import (
         RCCONTEXT,
         RayParams,
@@ -162,8 +168,7 @@ __all__ = [
     "oconv",
     "pabopto2bsdf",
     "parse_primitive",
-    "pcomb",
-    "PcombInput",
+    "Pcomb",
     "pcompos",
     "pkgbsdf",
     "pvalue",
@@ -179,7 +184,7 @@ __all__ = [
     "rcontrib",
     "rcomb",
     "RcombInput",
-    # "read_rad",
+    "read_rad",
     "render",
     "rfluxmtx",
     "rlam",
@@ -187,12 +192,10 @@ __all__ = [
     "robjutil",
     "rpict",
     "rsensor",
-    # "rtpict",
     "rtrace",
     "RcModifier",
     "Primitive",
     "Scene",
-    "Sensor",
     "SamplingParameters",
     "spec_xyz",
     "set_eparams",
@@ -204,4 +207,10 @@ __all__ = [
     "write",
     "Xform",
     "xyz_rgb",
+    "ShadingMaterial",
+    "BlindsGeometry",
+    "generate_blinds",
+    "generate_bsdf",
+    "generate_xml",
+    "Resolu",
 ]
