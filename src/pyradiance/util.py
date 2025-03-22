@@ -860,8 +860,7 @@ def rmtxop(
     stdin = None
     if transpose:
         cmd.append("-t")
-    if outform != "a":
-        cmd.append(f"-f{outform}")
+    cmd.append(f"-f{outform}")
     if scale is not None:
         cmd.extend(["-s", str(scale)])
     if transform is not None:
@@ -1165,7 +1164,7 @@ class WrapBSDF:
         if not self.has_visible and not self.has_solar:
             print("Need to specify at least solar or visible data")
             return
-        return sp.run(self.args, check=True, stdout=sp.PIPE).stdout
+        return sp.run(self.cmd, check=True, stdout=sp.PIPE).stdout
 
     def __call__(self):
         return self._execute()

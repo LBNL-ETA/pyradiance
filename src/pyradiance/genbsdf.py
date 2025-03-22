@@ -100,40 +100,73 @@ def write_senders_receiver(
     dim: Dimension,
 ):
     FEPS = 1e-6
-    receiver_str = (
-        f"#@rfluxmtx h=-{basis}\n"
-        f"#@rfluxmtx u=-Y o={facedat}\n\n"
+    header_templ = "#@rfluxmtx {hemis} {up} {out}\n\n"
+    receiver_templ = (
+        "{face_header}"
         "void glow receiver_face\n0\n0\n4 1 1 1 0\n\n"
         "receiver_face source f_receiver\n0\n0\n4 0 0 1 180\n\n"
-        f"#@rfluxmtx h=+{basis}\n"
-        f"#@rfluxmtx u=-Y o={behinddat}\n\n"
+        "{behind_header}"
         "void glow receiver_behind\n0\n0\n4 1 1 1 0\n\n"
         "receiver_behind source b_receiver\n0\n0\n4 0 0 -1 180\n"
     )
-    with open(receiver, "w") as f:
-        f.write(receiver_str)
-
-    fsender_str = (
-        f"#@rfluxmtx u=-Y h=-{basis}\n\n"
+    fsender_templ = (
+        "{header}"
         "void polygon fwd_sender\n0\n0\n12\n"
-        f"\t{dim.xmin}\t{dim.ymin}\t{dim.zmin - FEPS}\n"
-        f"\t{dim.xmin}\t{dim.ymax}\t{dim.zmin - FEPS}\n"
-        f"\t{dim.xmax}\t{dim.ymax}\t{dim.zmin - FEPS}\n"
-        f"\t{dim.xmax}\t{dim.ymin}\t{dim.zmin - FEPS}\n"
+        "\t{xmin}\t{ymin}\t{zmin}\n"
+        "\t{xmin}\t{ymax}\t{zmin}\n"
+        "\t{xmax}\t{ymax}\t{zmin}\n"
+        "\t{xmax}\t{ymin}\t{zmin}\n"
     )
-    with open(fsender, "w") as f:
-        f.write(fsender_str)
+    bsender_templ = (
+        "{header}"
+        "void polygon fwd_sender\n0\n0\n12\n"
+        "\t{xmin}\t{ymin}\t{zmax}\n"
+        "\t{xmax}\t{ymin}\t{zmax}\n"
+        "\t{xmax}\t{ymax}\t{zmax}\n"
+        "\t{xmin}\t{ymax}\t{zmax}\n"
+    )
 
-    bsender_str = (
-        f"#@rfluxmtx u=-Y h=+{basis}\n\n"
-        "void polygon bwd_sender\n0\n0\n12\n"
-        f"\t{dim.xmin}\t{dim.ymin}\t{dim.zmax + FEPS}\n"
-        f"\t{dim.xmax}\t{dim.ymin}\t{dim.zmax + FEPS}\n"
-        f"\t{dim.xmax}\t{dim.ymax}\t{dim.zmax + FEPS}\n"
-        f"\t{dim.xmin}\t{dim.ymax}\t{dim.zmax + FEPS}\n"
-    )
+    face_out = f"o={facedat}"
+    behind_out = f"o={behinddat}"
+    up = ""
+    if basis == "u":
+        face_hemis = behind_hemis = "h=u"
+    else:
+        face_hemis = f"h=-{basis}"
+        behind_hemis = f"h=+{basis}"
+        up = "u=-Y"
+
+    with open(receiver, "w") as f:
+        f.write(
+            receiver_templ.format(
+                face_header=header_templ.format(hemis=face_hemis, up=up, out=face_out),
+                behind_header=header_templ.format(
+                    hemis=behind_hemis, up=up, out=behind_out
+                ),
+            )
+        )
+    with open(fsender, "w") as f:
+        f.write(
+            fsender_templ.format(
+                header=header_templ.format(up=up, hemis=face_hemis, out=""),
+                xmin=dim.xmin,
+                xmax=dim.xmax,
+                ymin=dim.ymin,
+                ymax=dim.ymax,
+                zmin=dim.zmin - FEPS,
+            )
+        )
     with open(bsender, "w") as f:
-        f.write(bsender_str)
+        f.write(
+            bsender_templ.format(
+                header=header_templ.format(up=up, hemis=behind_hemis, out=""),
+                xmin=dim.xmin,
+                xmax=dim.xmax,
+                ymin=dim.ymin,
+                ymax=dim.ymax,
+                zmax=dim.zmax + FEPS,
+            )
+        )
 
 
 # TODO: Add tensortree out
@@ -195,6 +228,7 @@ def generate_bsdf(
 
     write_senders_receiver(fsender, bsender, receivers, facedat, behinddat, basis, dim)
 
+    visible_coeffs = (0.2651, 0.6701, 0.0648)
     param_args.append("-fd")
     # backward:
     rfluxmtx(
@@ -203,8 +237,8 @@ def generate_bsdf(
         octree=octree,
         params=param_args,
     )
-    result.tb = strip_header(rmtxop(behinddat, transform=(0.2651, 0.6701, 0.0648)))
-    result.rb = strip_header(rmtxop(facedat, transform=(0.2651, 0.6701, 0.0648)))
+    result.tb = strip_header(rmtxop(behinddat, transpose=True, transform=visible_coeffs))
+    result.rb = strip_header(rmtxop(facedat, transpose=True, transform=visible_coeffs))
 
     # forward:
     rfluxmtx(
@@ -213,8 +247,8 @@ def generate_bsdf(
         octree=octree,
         params=param_args,
     )
-    result.tf = strip_header(rmtxop(facedat, transform=(0.2651, 0.6701, 0.0648)))
-    result.rf = strip_header(rmtxop(behinddat, transform=(0.2651, 0.6701, 0.0648)))
+    result.tf = strip_header(rmtxop(facedat, transpose=True, transform=visible_coeffs))
+    result.rf = strip_header(rmtxop(behinddat, transpose=True, transform=visible_coeffs))
 
     shutil.rmtree(tempdir)
     return result
@@ -225,28 +259,22 @@ def generate_xml(
     vis_results=None,
     ir_results=None,
     basis="kf",
-    name="unnamed",
-    manufacturer="unnamed",
     unit="meter",
-    thickness=0,
+    **kwargs,
 ) -> bytes:
-    emissivity_front = 1.0
-    emissivity_back = 1.0
+    emissivity_front = emissivity_back = 1.0
     if ir_results is not None:
         emissivity_front = 1 - float(ir_results.tf) - float(ir_results.rf)
         emissivity_back = 1 - float(ir_results.tb) - float(ir_results.rb)
 
     wrapper = WrapBSDF(
         basis=basis,
-        enforce_window=True,
         correct_solid_angle=True,
         unit=unit,
         unlink=True,
-        n=name,
-        m=manufacturer,
-        thickness=thickness,
         ef=emissivity_front,
         eb=emissivity_back,
+        **kwargs,
     )
 
     if sol_results is not None:
@@ -289,32 +317,6 @@ def generate_xml(
     return wrapper()
 
 
-def generate_blinds_bsdf(
-    depth: float,
-    width: float,
-    height: float,
-    nslats: int,
-    angle: float,
-    rcurv: float,
-    diff_refl: float,
-    spec_refl: float,
-    ir_refl: float,
-    roughness: float,
-):
-    mat = pr.ShadingMaterial(0.5, 0, 0)
-    geom = pr.BlindsGeometry(
-        depth=0.05,
-        width=1,
-        height=1,
-        nslats=20,
-        angle=45,
-        rcurv=1,
-    )
-    blinds = pr.generate_blinds(mat, geom)
-    bsdf = pr.generate_bsdf(blinds, nsamp=10, params=["-ab", "1"])
-    xml = pr.generate_xml()
-
-
 Point3D = tuple[float, float, float]
 Rectangle3D = tuple[Point3D, Point3D, Point3D, Point3D]
 
@@ -323,7 +325,7 @@ def generate_blinds_bsdf_for_windows(
     window_rects: list[Rectangle3D],
     slat_depth: float,
     nslats: int,
-    slat_angle: float,
+    slat_angle: list[float],
     slat_rcurv: float,
     diff_refl: float,
     spec_refl: float,
