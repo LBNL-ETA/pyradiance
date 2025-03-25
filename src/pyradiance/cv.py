@@ -329,10 +329,9 @@ def bsdf2klems(
     elif progress_bar_length is not None:
         cmd.append(f"p{progress_bar_length}")
     if len(inp) == 1 and not inp[0]:
-        inp = inp[0]
         # xml input
-        if inp.endswith(".xml"):
-            cmd.append(inp)
+        if inp[0].endswith(".xml"):
+            cmd.append(inp[0])
         # func input
         else:
             if forward:
@@ -343,7 +342,7 @@ def bsdf2klems(
                 cmd.extend(["-e", expr])
             if file is not None:
                 cmd.extend(["-f", file])
-            cmd.append(inp)
+            cmd.append(inp[0])
     # sir input
     else:
         if maxlobes is not None:
