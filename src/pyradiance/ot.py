@@ -3,6 +3,7 @@ Radiance scene compiler
 """
 
 import subprocess as sp
+from typing import Optional
 
 from .anci import BINPATH, handle_called_process_error
 

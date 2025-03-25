@@ -8,7 +8,7 @@ This module defines model data structure.
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Sequence, Tuple, Union
+from typing import Sequence
 
 from .ot import oconv
 from .rad_view import View
@@ -83,11 +83,11 @@ class Scene:
         self._sid = sid
         self._octree = f"{sid}.oct"
         self._moctree = f"m{sid}.oct"
-        self._materials: Dict[str, str] = {}
-        self._surfaces: Dict[str, str] = {}
-        self._views: List[View] = []
-        self._sensors: List[Sequence[float]] = []
-        self._sources: Dict[str, str] = {}
+        self._materials: dict[str, str] = {}
+        self._surfaces: dict[str, str] = {}
+        self._views: list[View] = []
+        self._sensors: list[Sequence[float]] = []
+        self._sources: dict[str, str] = {}
         for key, vals in kwargs.items():
             for val in vals:
                 self._add(val, key)
@@ -152,42 +152,42 @@ class Scene:
             raise TypeError("Unsupported type: ", type(obj))
         self._changed = True
 
-    def add_material(self, material: Union[str, Path, Primitive]):
+    def add_material(self, material: str | Path | Primitive):
         """Add material to the scene.
         Args:
             material: material to be added
         """
         self._add(material, "materials")
 
-    def remove_material(self, material: Union[str, Path, Primitive]):
+    def remove_material(self, material: str | Path | Primitive):
         """Remove material from the scene.
         Args:
             material: material to be removed
         """
         self._remove(material, "materials")
 
-    def add_surface(self, surface: Union[str, Path, Primitive]):
+    def add_surface(self, surface: str | Path | Primitive):
         """Add surface to the scene.
         Args:
             surface: surface to be added
         """
         self._add(surface, "surfaces")
 
-    def remove_surface(self, surface: Union[str, Path, Primitive]):
+    def remove_surface(self, surface: str | Path | Primitive):
         """Remove surface from the scene.
         Args:
             surface: surface to be removed
         """
         self._remove(surface, "surfaces")
 
-    def add_source(self, source: Union[str, Path, Primitive]):
+    def add_source(self, source: str | Path | Primitive):
         """Add source to the scene.
         Args:
             source: source to be added
         """
         self._add(source, "sources")
 
-    def remove_source(self, source: Union[str, Path, Primitive]):
+    def remove_source(self, source: str | Path | Primitive):
         """Remove source from the scene.
         Args:
             source: source to be removed
