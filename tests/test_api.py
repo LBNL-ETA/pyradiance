@@ -237,8 +237,6 @@ class TestPyradianceCLI(unittest.TestCase):
         vis_results = pr.generate_bsdf(vis_blinds, nsamp=10, params=["-ab", "1"])
         ir_results = pr.generate_bsdf(ir_blinds, basis='u', nsamp=10, params=["-ab", "1"])
         xml = pr.generate_xml(sol_results, vis_results, ir_results)
-        with open("test.xml", "wb") as f:
-            f.write(xml)
 
     def test_rcontrib(self):
         pass
