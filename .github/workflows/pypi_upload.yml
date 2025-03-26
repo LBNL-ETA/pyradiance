@@ -44,7 +44,8 @@ jobs:
           auditwheel repair "$whl" --plat manylinux_2_34_x86_64 -w wheelhouse/
         done
         # Replace original wheels with repaired ones
-        cp wheelhouse/*.whl dist/ || true
+        rm dist/*.whl
+        cp wheelhouse/*.whl dist/
 
     - name: upload wheels
       uses: actions/upload-artifact@v4
