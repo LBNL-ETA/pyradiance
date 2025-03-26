@@ -5,7 +5,8 @@ make Radiance easier to use and accessible to Python user.
 """
 
 import os
-
+from importlib.metadata import version
+__version__ = version("pyradiance")
 from .anci import BINPATH, write
 from .cal import cnt, rcalc, rlam, total
 from .bsdf import spec_xyz, xyz_rgb
@@ -23,7 +24,6 @@ from .cv import (
 from .gen import (
     genblinds,
     genbox,
-    genbsdf,
     gendaylit,
     gendaymtx,
     genrev,
@@ -66,14 +66,11 @@ if os.name == "posix":
         RTmask,
         RtraceSimulManager,
         RTtraceSources,
-        View,
-        Resolu,
         calcontext,
         eval,
         get_ray_params,
         initfunc,
         loadfunc,
-        parse_view,
         ray_done,
         set_eparams,
         set_option,
@@ -84,11 +81,11 @@ if os.name == "posix":
 from .rad_params import (
     View,
     Resolu,
+    RayParams,
     create_default_view,
     viewfile,
     parse_view,
     get_view_args,
-    RayParams,
     get_default_ray_params,
     get_ray_params_args,
 )
@@ -122,12 +119,9 @@ os.environ["PATH"] = str(BINPATH) + os.pathsep + os.environ["PATH"]
 
 __all__ = [
     "set_ray_params",
-    "get_ray_params",
     "get_default_ray_params",
     "RayParams",
     "get_ray_params",
-    "get_default_ray_params",
-    "set_ray_params",
     "parse_view",
     "setspectrsamp",
     "set_option",
@@ -153,7 +147,6 @@ __all__ = [
     "falsecolor",
     "genblinds",
     "genbox",
-    "genbsdf",
     "gendaylit",
     "gendaymtx",
     "genrev",
@@ -220,4 +213,5 @@ __all__ = [
     "create_default_view",
     "viewfile",
     "get_view_args",
+    "get_ray_params_args",
 ]
