@@ -105,6 +105,33 @@ class TestPyradianceAPI(unittest.TestCase):
         for v, t in zip(prim2[1].fargs, [1., 1., 1., 0.00482973841239237, 0.2]):
             self.assertAlmostEqual(v, t, places=4)
 
+    def test_create_default_view(self):
+        myview = pr.create_default_view()
+        self.assertEqual(myview.type , 'v')
+
+    def test_view_mod(self):
+        myview = pr.create_default_view()
+        myview.type = 'a'
+        self.assertEqual(myview.type , 'a')
+        myview.vp = 1,1,1
+        self.assertEqual(myview.vp , (1,1,1))
+
+    def test_view_args(self):
+        myview = pr.create_default_view()
+        myview.type = 'a'
+        myview.vp = 1,1,1
+        args = pr.get_view_args(myview)
+        self.assertEqual(args, ['-vta', '-vp', '1.000000', '1.000000', '1.000000', '-vd', '0.000000', '1.000000', '0.000000', '-vu', '0.000000', '0.000000', '1.000000', '-vh', '45.000000', '-vv', '45.000000', '-vs', '0.000000', '-vl', '0.000000', '-vo', '0.000000', '-va', '0.000000'])
+
+    def test_parse_view(self):
+        view = "-vta -vp 1 2 3 -vd 4 5 6 -vv 180 -vh 170"
+        myview = pr.parse_view(view)
+        self.assertEqual(myview.type, 'a')
+        self.assertEqual(myview.vp, (1,2,3))
+        self.assertEqual(myview.vdir, (4,5,6))
+        self.assertEqual(myview.horiz, 170)
+        self.assertEqual(myview.vert, 180)
+
 
 class TestPyradianceCLI(unittest.TestCase):
 
