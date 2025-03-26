@@ -6,81 +6,24 @@ This module contains the main API for pyradiance.
 
 import subprocess as sp
 import sys
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Sequence, Tuple, Union
+from typing import Optional, Sequence
 
 from .anci import BINPATH, handle_called_process_error
 
 
-@dataclass
-class RcModifier:
-    """Modifier for rcontrib command.
-
-    Attributes:
-        modifier: Modifier name, mutually exclusive with modifier_path.
-        modifier_path: File with modifier names, mutually exclusive with modifier.
-        calfile: Calc file path.
-        expression: Variable and function expressions.
-        nbins: Number of bins, can be expression.
-        binv: Bin value.
-        param: Parameter.
-        xres: X resolution.
-        yres: Y resolution.
-        output: Output file.
-    """
-
-    modifier: Optional[str] = None
-    modifier_path: Optional[str] = None
-    calfile: Optional[str] = None
-    expression: Optional[str] = None
-    nbins: Optional[str] = None
-    binv: Optional[str] = None
-    param: Optional[str] = None
-    xres: Optional[int] = None
-    yres: Optional[int] = None
-    output: Optional[str] = None
-
-    def args(self):
-        """Return modifier as a list of arguments."""
-        arglist = []
-        if self.calfile is not None:
-            arglist.extend(["-f", str(self.calfile)])
-        if self.expression is not None:
-            arglist.extend(["-e", str(self.expression)])
-        if self.nbins is not None:
-            arglist.extend(["-bn", str(self.nbins)])
-        if self.binv is not None:
-            arglist.extend(["-b", str(self.binv)])
-        if self.param is not None:
-            arglist.extend(["-p", str(self.param)])
-        if self.xres is not None:
-            arglist.extend(["-x", str(self.xres)])
-        if self.yres is not None:
-            arglist.extend(["-y", str(self.yres)])
-        if self.output is not None:
-            arglist.extend(["-o", str(self.output)])
-        if self.modifier is not None:
-            arglist.extend(["-m", self.modifier])
-        elif self.modifier_path is not None:
-            arglist.extend(["-M", self.modifier_path])
-        else:
-            raise ValueError("Modifier or modifier path must be provided.")
-        return arglist
-
-
 @handle_called_process_error
 def mkpmap(
-    octree: Union[Path, str],
-    global_map: Optional[Tuple[Union[Path, str], int]] = None,
-    caustic_map: Optional[Tuple[Union[Path, str], int]] = None,
-    volume_map: Optional[Tuple[Union[Path, str], int]] = None,
-    direct_map: Optional[Tuple[Union[Path, str], int]] = None,
-    contrib_map: Optional[Tuple[Union[Path, str], int]] = None,
-    pre_global_map: Optional[Tuple[Union[Path, str], int, float]] = None,
+    octree: Path | str,
+    global_map: Optional[tuple[Path | str, int]] = None,
+    caustic_map: Optional[tuple[Path | str, int]] = None,
+    volume_map: Optional[tuple[Path | str, int]] = None,
+    direct_map: Optional[tuple[Path | str, int]] = None,
+    contrib_map: Optional[tuple[Path | str, int]] = None,
+    pre_global_map: Optional[tuple[Path | str, int, float]] = None,
     predistrib: Optional[float] = None,
-    rect_region: Optional[Tuple[float, float, float, float, float, float]] = None,
-    sphere_region: Optional[Tuple[float, float, float, float]] = None,
+    rect_region: Optional[tuple[float, float, float, float, float, float]] = None,
+    sphere_region: Optional[tuple[float, float, float, float]] = None,
     maxbounce: Optional[int] = None,
     maxprepass: Optional[int] = None,
     port_mod: Optional[Sequence[str]] = None,
@@ -99,8 +42,8 @@ def mkpmap(
     progress_file: Optional[str] = None,
     overwrite: bool = False,
     maxdist: Optional[float] = None,
-    scattering_albedo: Optional[Tuple[float, float, float]] = None,
-    extinction_coefficient: Optional[Tuple[float, float, float]] = None,
+    scattering_albedo: Optional[tuple[float, float, float]] = None,
+    extinction_coefficient: Optional[tuple[float, float, float]] = None,
     scattering_eccentricity: Optional[float] = None,
     nproc: int = 1,
     progress_interval: Optional[int] = None,
@@ -222,56 +165,11 @@ def mkpmap(
     sp.run(cmd, check=True, capture_output=True)
 
 
-@handle_called_process_error
-def rcontrib(
-    inp: bytes,
-    octree: Union[Path, str],
-    modifiers: Sequence[RcModifier],
-    nproc: int = 1,
-    yres: Optional[int] = None,
-    inform: Optional[str] = None,
-    outform: Optional[str] = None,
-    report: int = 0,
-    params: Optional[Sequence[str]] = None,
-) -> bytes:
-    """Run rcontrib command.
-
-    Args:
-        inp: A bytes object.
-        octree: A path to octree file.
-        modifiers: A list of RcModifier objects.
-        nproc: Number of processes.
-        yres: Y resolution.
-        inform: Input format.
-        outform: Output format.
-        params: A list of additional parameters.
-
-    Returns:
-        A bytes object.
-    """
-    print("rcontrib will be deprecated, plase use Rcontrib instead")
-    cmd = [str(BINPATH / "rcontrib")]
-    if nproc > 1 and sys.platform != "win32":
-        cmd.extend(["-n", str(nproc)])
-    if params is not None:
-        cmd.extend(params)
-    if None not in (inform, outform):
-        cmd.append(f"-f{inform}{outform}")
-    for mod in modifiers:
-        cmd.extend(mod.args())
-    if yres is not None:
-        cmd.extend(["-y", str(yres)])
-        if report:
-            cmd.extend(["-t", str(report)])
-    cmd.append(str(octree))
-    return sp.run(cmd, check=True, input=inp, stderr=sp.PIPE, stdout=sp.PIPE).stdout
-
-
 class Rcontrib:
     def __init__(
         self,
         inp: bytes,
-        octree: Union[Path, str],
+        octree: Path | str,
         nproc: int = 1,
         yres: Optional[int] = None,
         inform: Optional[str] = None,
@@ -343,7 +241,7 @@ class Rcontrib:
 @handle_called_process_error
 def rpict(
     view: Sequence[str],
-    octree: Union[Path, str],
+    octree: Path | str,
     xres: Optional[int] = None,
     yres: Optional[int] = None,
     report: float = 0,
@@ -383,7 +281,7 @@ def rpict(
 @handle_called_process_error
 def rtrace(
     rays: bytes,
-    octree: Union[Path, str],
+    octree: Path | str,
     header: bool = True,
     inform: str = "a",
     outform: str = "a",
@@ -392,8 +290,8 @@ def rtrace(
     outspec: Optional[str] = None,
     trace_exclude: str = "",
     trace_include: str = "",
-    trace_exclude_file: Optional[Union[str, Path]] = None,
-    trace_include_file: Optional[Union[str, Path]] = None,
+    trace_exclude_file: Optional[str | Path] = None,
+    trace_include_file: Optional[str | Path] = None,
     uncorrelated: bool = False,
     xres: Optional[int] = None,
     yres: Optional[int] = None,
