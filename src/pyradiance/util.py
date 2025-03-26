@@ -7,9 +7,8 @@ import os
 import re
 import subprocess as sp
 import tempfile
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Sequence, Union
+from typing import Optional, Sequence
 
 from .anci import BINPATH, handle_called_process_error
 
@@ -33,9 +32,9 @@ def evalglare(
     smooth: bool = False,
     threshold: Optional[float] = None,
     task_area: Optional[tuple] = None,
-    masking_file: Optional[Union[str, Path]] = None,
+    masking_file: Optional[str | Path] = None,
     band_lum_angle: Optional[float] = None,
-    check_file: Optional[Union[str, Path]] = None,
+    check_file: Optional[str | Path] = None,
     correction_mode: Optional[str] = None,
     peak_extraction: bool = True,
     peak_extraction_value: float = 50000,
@@ -191,7 +190,7 @@ def dctimestep(
 
 @handle_called_process_error
 def getinfo(
-    *inputs: Union[str, Path, bytes],
+    *inputs: str | Path | bytes,
     dimension_only: bool = False,
     dimension: bool = False,
     strip_header: bool = False,
@@ -236,7 +235,7 @@ def getinfo(
     return sp.run(cmd, input=stdin, capture_output=True, check=True).stdout
 
 
-def get_image_dimensions(image: Union[str, Path, bytes]) -> tuple[int, int]:
+def get_image_dimensions(image: str | Path | bytes) -> tuple[int, int]:
     """Get the dimensions of an image.
 
     Args:
@@ -327,7 +326,7 @@ def read_rad(fpath: str) -> list[Primitive]:
 
 @handle_called_process_error
 def rcode_depth(
-    inp: Union[str, Path, bytes],
+    inp: str | Path | bytes,
     ref_depth: str = "1.0",
     inheader: bool = True,
     outheader: bool = True,
@@ -427,7 +426,7 @@ def rcode_depth(
 
 @handle_called_process_error
 def rcode_ident(
-    inp: Union[str, Path, bytes],
+    inp: str | Path | bytes,
     index_size: int = 16,
     sep: str = "\n",
     decode: bool = False,
@@ -586,29 +585,21 @@ def rcode_norm(
     return sp.run(cmd, stdout=sp.PIPE, input=stdin, check=True).stdout
 
 
-@dataclass
-class RcombInput:
-    input: Union[str, Path, bytes]
-    transform: Optional[str] = None
-    scale: Optional[Sequence[float]] = None
-
-
-@handle_called_process_error
-def rcomb(
-    inps: Sequence[RcombInput],
-    transform: Optional[str] = None,
-    transform_all: Optional[str] = None,
-    source: Optional[str] = None,
-    expression: Optional[str] = None,
-    concat: Optional[Sequence[str]] = None,
-    outform: Optional[str] = None,
-    header: bool = True,
-    silent: bool = False,
-) -> bytes:
+class Rcomb:
+    def __init__(
+        self,
+        transform: Optional[str] = None,
+        transform_all: Optional[str] = None,
+        source: Optional[str] = None,
+        expression: Optional[str] = None,
+        concat: Optional[Sequence[str]] = None,
+        outform: Optional[str] = None,
+        header: bool = True,
+        silent: bool = False,
+    ) -> bytes:
     """Combine multiple rasters.
 
     Args:
-        inps: Sequence of RcombInput object
         transform: transform
         transform_all: transform all
         source: source
@@ -638,7 +629,10 @@ def rcomb(
         cmd.extend(["-f", source])
     if outform:
         cmd.append(f"-f{outform}")
-    for inp in inps:
+    if transform is not None:
+        cmd.extend(["-c", transform])
+
+    def add_input(self, input: str | Path | bytes, transform: Optional[str] = None, scale: Optional[Sequence[float]] = None):
         if inp.transform is not None:
             cmd.extend(["-c", inp.transform])
         if inp.scale is not None:
@@ -651,9 +645,11 @@ def rcomb(
             cmd.append(str(inp.input))
         else:
             raise TypeError("inp must be a string, Path, or bytes")
-    if transform is not None:
-        cmd.extend(["-c", transform])
-    return sp.run(cmd, input=stdin, check=True, stdout=sp.PIPE).stdout
+        return self
+
+    @handle_called_process_error
+    def __call__(self):
+        sp.run(cmd, input=stdin, check=True, stdout=sp.PIPE).stdout
 
 
 def render(
@@ -817,12 +813,12 @@ def render(
 
 @handle_called_process_error
 def rfluxmtx(
-    receiver: Union[str, Path],
-    surface: Optional[Union[str, Path]] = None,
+    receiver: str | Path,
+    surface: Optional[str | Path] = None,
     rays: Optional[bytes] = None,
     params: Optional[Sequence[str]] = None,
-    octree: Optional[Union[Path, str]] = None,
-    scene: Optional[Sequence[Union[Path, str]]] = None,
+    octree: Optional[Path | str] = None,
+    scene: Optional[Sequence[Path | str]] = None,
 ) -> bytes:
     """Run rfluxmtx command.
     Args:
@@ -877,11 +873,11 @@ def rmtxop(
 
 @handle_called_process_error
 def rsensor(
-    sensor: Sequence[Union[str, Path]],
-    sensor_view: Optional[Sequence[Union[str, Path]]] = None,
+    sensor: Sequence[str | Path],
+    sensor_view: Optional[Sequence[str | Path]] = None,
     direct_ray: Optional[Sequence[int]] = None,
     ray_count: Optional[Sequence[int]] = None,
-    octree: Optional[Union[str, Path]] = None,
+    octree: Optional[str | Path] = None,
     nproc: int = 1,
     params: Optional[Sequence[str]] = None,
 ) -> bytes:
@@ -984,95 +980,6 @@ def vwright(
     cmd = [str(BINPATH / "vwright")]
     cmd.extend(view.args())
     cmd.append(str(distance))
-    return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
-
-
-@dataclass
-class WrapBSDFInput:
-    """Input data for wrapbsdf command."""
-
-    spectrum: str = "Visible"
-    tf: Optional[Union[str, Path]] = None
-    tb: Optional[Union[str, Path]] = None
-    rf: Optional[Union[str, Path]] = None
-    rb: Optional[Union[str, Path]] = None
-
-    def args(self) -> list[str]:
-        """Return command as a list of strings."""
-        arglist = ["-s", self.spectrum]
-        if self.tf:
-            arglist.extend(["-tf", str(self.tf)])
-        if self.tb:
-            arglist.extend(["-tb", str(self.tb)])
-        if self.rf:
-            arglist.extend(["-rf", str(self.rf)])
-        if self.rb:
-            arglist.extend(["-rb", str(self.rb)])
-        if len(arglist) == 2:
-            raise ValueError("At least one of tf, tb, rf, rb should be provided.")
-        return arglist
-
-
-@handle_called_process_error
-def wrapbsdf(
-    inxml=None,
-    enforce_window=False,
-    comment: Optional[str] = None,
-    correct_solid_angle=False,
-    basis: Optional[str] = None,
-    inp: Optional[Sequence[WrapBSDFInput]] = None,
-    unlink: bool = False,
-    unit=None,
-    geometry=None,
-    **kwargs,
-) -> bytes:
-    """Wrap BSDF.
-    Args:
-        inp: Input file. Default is stdin.
-        enforce_window: Enforce window convention. Default is False.
-        comment: Comment. Default is None.
-        correct_solid_angle: Correct solid angle. Default is False.
-        basis: Basis. Default is None.
-        tf: Front transmittance. Default is None.
-        tb: Back transmittance. Default is None.
-        rf: Front reflectance. Default is None.
-        rb: Back reflectance. Default is None.
-        spectr: Spectral data. Default is None.
-        unlink: Unlink. Default is False.
-        unit: Unit. Default is None.
-        geometry: Geometry. Default is None.
-        **kwargs: Additional arguments for Window tags such as n, m, t...
-    Returns:
-        Wrapped BSDF.
-    """
-    print("This function will be deprecated, plase use WrapBSDF instead")
-    cmd = [str(BINPATH / "wrapBSDF")]
-    if enforce_window:
-        cmd.append("-W")
-    if correct_solid_angle:
-        cmd.append("-c")
-    if basis:
-        cmd.extend(["-a", basis])
-    if inp is not None:
-        for s in inp:
-            cmd.extend(s.args())
-    if unlink:
-        cmd.append("-U")
-    if unit:
-        cmd.extend(["-u", unit])
-    if comment:
-        cmd.extend(["-C", comment])
-    if geometry:
-        cmd.extend(["-g", geometry])
-    fields_keys = ["n", "m", "d", "c", "ef", "eb", "eo", "t", "h", "w"]
-    fields = []
-    for key in fields_keys:
-        if key in kwargs:
-            fields.append(f"{key}={kwargs[key]}")
-    if fields:
-        cmd.extend(["-f", ";".join(fields)])
-    if inxml is not None:
-        cmd.append(str(inxml))
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
