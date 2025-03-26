@@ -43,7 +43,6 @@ from .genbsdf import (
 from .model import Primitive, Scene
 from .ot import oconv
 from .param import SamplingParameters
-from .rad_view import View, Resolu
 from .px import (
     Pcomb,
     falsecolor,
@@ -68,6 +67,8 @@ if os.name == "posix":
         RTmask,
         RtraceSimulManager,
         RTtraceSources,
+        View,
+        Resolu,
         calcontext,
         eval,
         get_default_ray_params,
@@ -81,6 +82,8 @@ if os.name == "posix":
         set_ray_params,
         setspectrsamp,
     )
+
+from .rad_view import View, Resolu, create_default_view, viewfile, parse_view, get_view_args
 
 from .rt import RcModifier, mkpmap, rcontrib, rpict, rtrace
 from .util import (
@@ -213,4 +216,7 @@ __all__ = [
     "generate_bsdf",
     "generate_xml",
     "Resolu",
+    "create_default_view",
+    "viewfile",
+    "get_view_args",
 ]
