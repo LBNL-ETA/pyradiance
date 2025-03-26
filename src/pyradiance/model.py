@@ -101,8 +101,6 @@ class Scene:
     @property
     def octree(self) -> str:
         """Scene id."""
-        if self._changed:
-            self._build()
         return self._octree
 
     @property

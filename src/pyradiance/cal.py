@@ -4,7 +4,6 @@ Radiance calculation utilites
 
 import subprocess as sp
 from pathlib import Path
-from typing import Optional
 
 from .anci import BINPATH, handle_called_process_error
 
@@ -123,14 +122,14 @@ def total(
     multiply=False,
     find_max=False,
     find_min=False,
-    inform: Optional[str] = None,
+    inform: None | str = None,
     incount=1,
-    outform: Optional[str] = None,
-    substep: Optional[int] = None,
+    outform: None | str = None,
+    substep: None | int = None,
     substep_reset=True,
-    inlimit: Optional[int] = None,
-    outlimit: Optional[int] = None,
-    sep: Optional[str] = None,
+    inlimit: None | int = None,
+    outlimit: None | int = None,
+    sep: None | str = None,
 ) -> bytes:
     """Sum up columns.
 

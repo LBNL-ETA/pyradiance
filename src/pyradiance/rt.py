@@ -7,7 +7,7 @@ This module contains the main API for pyradiance.
 import subprocess as sp
 import sys
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Sequence
 
 from .anci import BINPATH, handle_called_process_error
 
@@ -15,38 +15,38 @@ from .anci import BINPATH, handle_called_process_error
 @handle_called_process_error
 def mkpmap(
     octree: Path | str,
-    global_map: Optional[tuple[Path | str, int]] = None,
-    caustic_map: Optional[tuple[Path | str, int]] = None,
-    volume_map: Optional[tuple[Path | str, int]] = None,
-    direct_map: Optional[tuple[Path | str, int]] = None,
-    contrib_map: Optional[tuple[Path | str, int]] = None,
-    pre_global_map: Optional[tuple[Path | str, int, float]] = None,
-    predistrib: Optional[float] = None,
-    rect_region: Optional[tuple[float, float, float, float, float, float]] = None,
-    sphere_region: Optional[tuple[float, float, float, float]] = None,
-    maxbounce: Optional[int] = None,
-    maxprepass: Optional[int] = None,
-    port_mod: Optional[Sequence[str]] = None,
-    port_modfile: Optional[str] = None,
-    precomp: Optional[float] = None,
-    seed: Optional[int] = None,
-    virtual_mod: Optional[Sequence[str]] = None,
-    virtual_modfile: Optional[str] = None,
-    amb_excl_mod: Optional[str] = None,
-    amb_excl_modfile: Optional[str] = None,
-    amb_incl_mod: Optional[str] = None,
-    amb_incl_modfile: Optional[str] = None,
+    global_map: None | tuple[Path | str, int] = None,
+    caustic_map: None | tuple[Path | str, int] = None,
+    volume_map: None | tuple[Path | str, int] = None,
+    direct_map: None | tuple[Path | str, int] = None,
+    contrib_map: None | tuple[Path | str, int] = None,
+    pre_global_map: None | tuple[Path | str, int, float] = None,
+    predistrib: None | float = None,
+    rect_region: None | tuple[float, float, float, float, float, float] = None,
+    sphere_region: None | tuple[float, float, float, float] = None,
+    maxbounce: None | int = None,
+    maxprepass: None | int = None,
+    port_mod: None | Sequence[str] = None,
+    port_modfile: None | str = None,
+    precomp: None | float = None,
+    seed: None | int = None,
+    virtual_mod: None | Sequence[str] = None,
+    virtual_modfile: None | str = None,
+    amb_excl_mod: None | str = None,
+    amb_excl_modfile: None | str = None,
+    amb_incl_mod: None | str = None,
+    amb_incl_modfile: None | str = None,
     backface_vis: bool = False,
-    sample_res: Optional[int] = None,
-    partition_size: Optional[float] = None,
-    progress_file: Optional[str] = None,
+    sample_res: None | int = None,
+    partition_size: None | float = None,
+    progress_file: None | str = None,
     overwrite: bool = False,
-    maxdist: Optional[float] = None,
-    scattering_albedo: Optional[tuple[float, float, float]] = None,
-    extinction_coefficient: Optional[tuple[float, float, float]] = None,
-    scattering_eccentricity: Optional[float] = None,
+    maxdist: None | float = None,
+    scattering_albedo: None | tuple[float, float, float] = None,
+    extinction_coefficient: None | tuple[float, float, float] = None,
+    scattering_eccentricity: None | float = None,
     nproc: int = 1,
-    progress_interval: Optional[int] = None,
+    progress_interval: None | int = None,
 ) -> None:
     """
     Mkpmap takes a RADIANCE scene description as an octree and performs
@@ -171,11 +171,11 @@ class Rcontrib:
         inp: bytes,
         octree: Path | str,
         nproc: int = 1,
-        yres: Optional[int] = None,
-        inform: Optional[str] = None,
-        outform: Optional[str] = None,
+        yres: None | int = None,
+        inform: None | str = None,
+        outform: None | str = None,
         report: int = 0,
-        params: Optional[Sequence[str]] = None,
+        params: None | Sequence[str] = None,
     ):
         self.cmd = [str(BINPATH / "rcontrib")]
         self.octree = octree
@@ -193,16 +193,16 @@ class Rcontrib:
 
     def add_modifier(
         self,
-        modifier: Optional[str] = None,
-        modifier_path: Optional[str] = None,
-        calfile: Optional[str] = None,
-        expression: Optional[str] = None,
-        nbins: Optional[str] = None,
-        binv: Optional[str] = None,
-        param: Optional[str] = None,
-        xres: Optional[int] = None,
-        yres: Optional[int] = None,
-        output: Optional[str] = None,
+        modifier: None | str = None,
+        modifier_path: None | str = None,
+        calfile: None | str = None,
+        expression: None | str = None,
+        nbins: None | str = None,
+        binv: None | str = None,
+        param: None | str = None,
+        xres: None | int = None,
+        yres: None | int = None,
+        output: None | str = None,
     ):
         arglist = []
         if calfile is not None:
@@ -242,11 +242,11 @@ class Rcontrib:
 def rpict(
     view: Sequence[str],
     octree: Path | str,
-    xres: Optional[int] = None,
-    yres: Optional[int] = None,
+    xres: None | int = None,
+    yres: None | int = None,
     report: float = 0,
-    report_file: Optional[Path] = None,
-    params: Optional[Sequence[str]] = None,
+    report_file: None | Path = None,
+    params: None | Sequence[str] = None,
 ) -> bytes:
     """Get rpict command.
 
@@ -287,16 +287,16 @@ def rtrace(
     outform: str = "a",
     irradiance: bool = False,
     irradiance_lambertian: bool = False,
-    outspec: Optional[str] = None,
+    outspec: None | str = None,
     trace_exclude: str = "",
     trace_include: str = "",
-    trace_exclude_file: Optional[str | Path] = None,
-    trace_include_file: Optional[str | Path] = None,
+    trace_exclude_file: None | str | Path = None,
+    trace_include_file: None | str | Path = None,
     uncorrelated: bool = False,
-    xres: Optional[int] = None,
-    yres: Optional[int] = None,
-    nproc: Optional[int] = None,
-    params: Optional[Sequence[str]] = None,
+    xres: None | int = None,
+    yres: None | int = None,
+    nproc: None | int = None,
+    params: None | Sequence[str] = None,
     report: bool = False,
     version: bool = False,
 ) -> bytes:

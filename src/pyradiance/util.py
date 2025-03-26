@@ -8,7 +8,7 @@ import re
 import subprocess as sp
 import tempfile
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Sequence
 
 from .anci import BINPATH, handle_called_process_error
 
@@ -24,24 +24,24 @@ from .rt import rpict, rtrace
 @handle_called_process_error
 def evalglare(
     inp,
-    view: Optional[list[str]] = None,
+    view: None | list[str] = None,
     detailed: bool = False,
     ev_only: bool = False,
-    ev: Optional[float] = None,
+    ev: None | float = None,
     smooth: bool = False,
-    threshold: Optional[float] = None,
-    task_area: Optional[tuple] = None,
-    masking_file: Optional[str | Path] = None,
-    band_lum_angle: Optional[float] = None,
-    check_file: Optional[str | Path] = None,
-    correction_mode: Optional[str] = None,
+    threshold: None | float = None,
+    task_area: None | tuple = None,
+    masking_file: None | str | Path = None,
+    band_lum_angle: None | float = None,
+    check_file: None | str | Path = None,
+    correction_mode: None | str = None,
     peak_extraction: bool = True,
     peak_extraction_value: float = 50000,
     bg_lum_mode: int = 0,
     search_radius: float = 0.2,
     version: bool = False,
-    source_color: Optional[tuple[float, float, float]] = None,
-    fast: Optional[int] = None,
+    source_color: None | tuple[float, float, float] = None,
+    fast: None | int = None,
 ):
     """Run evalglare on a Radiance image.
 
@@ -68,7 +68,7 @@ def evalglare(
     Returns:
         Evalglare output
     """
-    stdin = None
+    stdin: None | bytes = None
     cmd = [str(BINPATH / "evalglare")]
     if version:
         cmd.append("-v")
@@ -136,14 +136,14 @@ def evalglare(
 @handle_called_process_error
 def dctimestep(
     *mtx,
-    nstep: Optional[int] = None,
+    nstep: None | int = None,
     header: bool = True,
-    xres: Optional[int] = None,
-    yres: Optional[int] = None,
-    inform: Optional[str] = None,
-    outform: Optional[str] = None,
-    ospec: Optional[str] = None,
-) -> Optional[bytes]:
+    xres: None | int = None,
+    yres: None | int = None,
+    inform: None | str = None,
+    outform: None | str = None,
+    ospec: None | str = None,
+) -> None | bytes:
     """Call dctimestep to perform matrix multiplication.
 
     Args:
@@ -273,11 +273,11 @@ def get_header(inp, dimension: bool = False) -> bytes:
 @handle_called_process_error
 def rad(
     inp,
-    view: Optional[str] = None,
+    view: None | str = None,
     dryrun: bool = False,
     update: bool = False,
     silent: bool = False,
-    varstr: Optional[list[str]] = None,
+    varstr: None | list[str] = None,
 ) -> bytes:
     """Render a RADIANCE scene
 
@@ -331,14 +331,14 @@ def rcode_depth(
     outheader: bool = True,
     inresolution: bool = True,
     outresolution: bool = True,
-    xres: Optional[int] = None,
-    yres: Optional[int] = None,
+    xres: None | int = None,
+    yres: None | int = None,
     inform: str = "a",
     outform: str = "a",
     decode: bool = False,
     compute_intersection: bool = False,
     per_point: bool = False,
-    depth_file: Optional[str] = None,
+    depth_file: None | str = None,
     flush: bool = False,
 ) -> bytes:
     """Encode/decode 16-bit depth map.
@@ -430,8 +430,8 @@ def rcode_ident(
     sep: str = "\n",
     decode: bool = False,
     header: bool = True,
-    xres: Optional[int] = None,
-    yres: Optional[int] = None,
+    xres: None | int = None,
+    yres: None | int = None,
     resstr: bool = True,
     identifiers: bool = False,
     indexes: bool = False,
@@ -500,13 +500,13 @@ def rcode_norm(
     outheader: bool = True,
     inresolution: bool = True,
     outresolution: bool = True,
-    xres: Optional[int] = None,
-    yres: Optional[int] = None,
+    xres: None | int = None,
+    yres: None | int = None,
     inform: str = "a",
     outform: str = "a",
     decode: bool = False,
     per_point: bool = False,
-    norm_file: Optional[str] = None,
+    norm_file: None | str = None,
     flush: bool = False,
 ) -> bytes:
     """Encode/decode 32-bit surface normal map.
@@ -587,12 +587,12 @@ def rcode_norm(
 class Rcomb:
     def __init__(
         self,
-        transform: Optional[str] = None,
-        transform_all: Optional[str] = None,
-        source: Optional[str] = None,
-        expression: Optional[str] = None,
-        concat: Optional[Sequence[str]] = None,
-        outform: Optional[str] = None,
+        transform: None | str = None,
+        transform_all: None | str = None,
+        source: None | str = None,
+        expression: None | str = None,
+        concat: None | Sequence[str] = None,
+        outform: None | str = None,
         header: bool = True,
         silent: bool = False,
     ):
@@ -612,7 +612,7 @@ class Rcomb:
             bytes: output of rcomb
         """
         cmd = [str(BINPATH / "rcomb")]
-        stdin = None
+        stdin: None | bytes = None
         if not header:
             cmd.append("-h")
         if silent:
@@ -636,8 +636,8 @@ class Rcomb:
     def add_input(
         self,
         input: str | Path | bytes,
-        transform: Optional[str] = None,
-        scale: Optional[Sequence[float]] = None,
+        transform: None | str = None,
+        scale: None | Sequence[float] = None,
     ):
         if transform is not None:
             self.cmd.extend(["-c", transform])
@@ -660,16 +660,16 @@ class Rcomb:
 
 def render(
     scene,
-    view: Optional[View] = None,
+    view: None | View = None,
     quality: str = "Medium",
     variability: str = "Medium",
     detail: str = "Medium",
     nproc: int = 1,
     ncssamp: int = 3,
-    resolution: Optional[tuple[int, int]] = None,
+    resolution: None | tuple[int, int] = None,
     ambbounce: int = 0,
     ambcache: bool = True,
-    params: Optional[RayParams] = None,
+    params: None | RayParams = None,
 ) -> bytes:
     """Render a scene.
 
@@ -687,7 +687,6 @@ def render(
         tuple[bytes, int, int]: output of render, width, height
     """
     nproc = 1 if os.name == "nt" else nproc
-    octpath = Path(f"{scene.sid}.oct")
     scenestring = ""
     for _, srf in scene.surfaces.items():
         if not isinstance(srf, Primitive):
@@ -720,7 +719,7 @@ def render(
     os.close(fd)
     radvars = [
         f"ZONE={zone}",
-        f"OCTREE={octpath}",
+        f"OCTREE={scene.octree}",
         f"scene={scenestring}",
         f"materials={materialstring}",
         f"QUALITY={quality}",
@@ -754,14 +753,14 @@ def render(
     xres, yres = int(res[1]), int(res[3])
     if not specout and nproc == 1:
         return rpict(
-            vargs, octpath, params=["-ps", "1"] + param_strs, xres=xres, yres=yres
+            vargs, scene.octree, params=["-ps", "1"] + param_strs, xres=xres, yres=yres
         )
     if nproc > 1 and ambbounce > 0 and ambcache:
         # straight picture output, so just shuffle sample order
         if not specout:
             ord = cnt(xres, yres, shuffled=True)
             pix = rtrace(
-                octree=octpath,
+                octree=scene.octree,
                 rays=vwrays(view=vargs, outform="f", pixpos=ord, xres=xres, yres=yres),
                 inform="f",
                 outform="a",
@@ -784,7 +783,7 @@ def render(
         # else randomize overture calculation to prime ambient cache
         oxres, oyres = int(xres / 6), int(yres / 6)
         rtrace(
-            octree=octpath,
+            octree=scene.octree,
             inform="f",
             params=param_strs,
             nproc=nproc,
@@ -799,7 +798,7 @@ def render(
 
     return getinfo(
         rtrace(
-            octree=octpath,
+            octree=scene.octree,
             params=param_strs,
             rays=vwrays(
                 view=vargs,
@@ -820,11 +819,11 @@ def render(
 @handle_called_process_error
 def rfluxmtx(
     receiver: str | Path,
-    surface: Optional[str | Path] = None,
-    rays: Optional[bytes] = None,
-    params: Optional[Sequence[str]] = None,
-    octree: Optional[Path | str] = None,
-    scene: Optional[Sequence[Path | str]] = None,
+    surface: None | str | Path = None,
+    rays: None | bytes = None,
+    params: None | Sequence[str] = None,
+    octree: None | Path | str = None,
+    scene: None | Sequence[Path | str] = None,
 ) -> bytes:
     """Run rfluxmtx command.
     Args:
@@ -880,12 +879,12 @@ def rmtxop(
 @handle_called_process_error
 def rsensor(
     sensor: Sequence[str | Path],
-    sensor_view: Optional[Sequence[str | Path]] = None,
-    direct_ray: Optional[Sequence[int]] = None,
-    ray_count: Optional[Sequence[int]] = None,
-    octree: Optional[str | Path] = None,
+    sensor_view: None | Sequence[str | Path] = None,
+    direct_ray: None | Sequence[int] = None,
+    ray_count: None | Sequence[int] = None,
+    octree: None | str | Path = None,
     nproc: int = 1,
-    params: Optional[Sequence[str]] = None,
+    params: None | Sequence[str] = None,
 ) -> bytes:
     """Compute sensor signal from a RADIANCE scene
 
@@ -934,7 +933,7 @@ def strip_header(inp) -> bytes:
 
 @handle_called_process_error
 def vwrays(
-    pixpos: Optional[bytes] = None,
+    pixpos: None | bytes = None,
     unbuf: bool = False,
     outform: str = "a",
     ray_count: int = 1,
@@ -944,9 +943,9 @@ def vwrays(
     xres: int = 512,
     yres: int = 512,
     dimensions: bool = False,
-    view: Optional[Sequence[str]] = None,
-    pic: Optional[Path] = None,
-    zbuf: Optional[Path] = None,
+    view: None | Sequence[str] = None,
+    pic: None | Path = None,
+    zbuf: None | Path = None,
 ) -> bytes:
     """vwrays."""
     stdin = None
@@ -994,9 +993,9 @@ class WrapBSDF:
         self,
         inxml=None,
         enforce_window=False,
-        comment: Optional[str] = None,
+        comment: None | str = None,
         correct_solid_angle=False,
-        basis: Optional[str] = None,
+        basis: None | str = None,
         unlink: bool = False,
         unit=None,
         geometry=None,
@@ -1032,10 +1031,10 @@ class WrapBSDF:
     def _add_spectrum(
         self,
         spectrum,
-        tb: Optional[str] = None,
-        tf: Optional[str] = None,
-        rb: Optional[str] = None,
-        rf: Optional[str] = None,
+        tb: None | str = None,
+        tf: None | str = None,
+        rb: None | str = None,
+        rf: None | str = None,
     ):
         arglist = ["-s", spectrum]
         if tf:
@@ -1054,20 +1053,20 @@ class WrapBSDF:
 
     def add_visible(
         self,
-        tb: Optional[str] = None,
-        tf: Optional[str] = None,
-        rb: Optional[str] = None,
-        rf: Optional[str] = None,
+        tb: None | str = None,
+        tf: None | str = None,
+        rb: None | str = None,
+        rf: None | str = None,
     ):
         self.has_visible = True
         return self._add_spectrum("Visible", tb=tb, tf=tf, rb=rb, rf=rf)
 
     def add_solar(
         self,
-        tb: Optional[str] = None,
-        tf: Optional[str] = None,
-        rb: Optional[str] = None,
-        rf: Optional[str] = None,
+        tb: None | str = None,
+        tf: None | str = None,
+        rb: None | str = None,
+        rf: None | str = None,
     ):
         self.has_solar = True
         return self._add_spectrum("Solar", tb=tb, tf=tf, rb=rb, rf=rf)
@@ -1089,8 +1088,8 @@ class Xform:
         inp,
         expand_cmd: bool = True,
         invert: bool = False,
-        iprefix: Optional[str] = None,
-        modifier: Optional[str] = None,
+        iprefix: None | str = None,
+        modifier: None | str = None,
     ):
         """Transform a RADIANCE scene description
 
@@ -1172,15 +1171,15 @@ class Xform:
 @handle_called_process_error
 def xform(
     inp,
-    translate: Optional[tuple[float, float, float]] = None,
+    translate: None | tuple[float, float, float] = None,
     expand_cmd: bool = True,
-    iprefix: Optional[str] = None,
-    modifier: Optional[str] = None,
+    iprefix: None | str = None,
+    modifier: None | str = None,
     invert: bool = False,
-    rotatex: Optional[float] = None,
-    rotatey: Optional[float] = None,
-    rotatez: Optional[float] = None,
-    scale: Optional[float] = None,
+    rotatex: None | float = None,
+    rotatey: None | float = None,
+    rotatez: None | float = None,
+    scale: None | float = None,
     mirrorx: bool = False,
     mirrory: bool = False,
     mirrorz: bool = False,

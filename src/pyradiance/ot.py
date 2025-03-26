@@ -3,7 +3,6 @@ Radiance scene compiler
 """
 
 import subprocess as sp
-from typing import Optional
 
 from .anci import BINPATH, handle_called_process_error
 
@@ -24,7 +23,7 @@ def getbbox(
         list: bounding box
     """
     cmd = [str(BINPATH / "getbbox")]
-    stdin: Optional[bytes] = None
+    stdin: None | bytes = None
     if not header:
         cmd.append("-h")
     if isinstance(path[0], bytes):

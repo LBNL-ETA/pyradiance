@@ -4,7 +4,7 @@ Radiance conversion routines.
 
 import subprocess as sp
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Sequence
 
 from .anci import BINPATH, handle_called_process_error
 
@@ -14,8 +14,8 @@ def obj2rad(
     inp: bytes | str | Path,
     quallist: bool = False,
     flatten: bool = False,
-    mapfile: Optional[str] = None,
-    objname: Optional[str] = None,
+    mapfile: None | str = None,
+    objname: None | str = None,
 ) -> bytes:
     """Convert Wavefront .OBJ file to RADIANCE description.
 
@@ -53,8 +53,8 @@ def obj2rad(
 @handle_called_process_error
 def obj2mesh(
     inp: bytes | str | Path,
-    matfiles: Optional[Sequence[str]] = None,
-    matlib: Optional[str] = None,
+    matfiles: None | Sequence[str] = None,
+    matlib: None | str = None,
     objlim: int = 9,
     maxres: int = 16384,
     silent: bool = False,
@@ -97,7 +97,7 @@ def obj2mesh(
 @handle_called_process_error
 def pkgbsdf(
     *xml: str | Path, frozen: bool = False, stdout: bool = False
-) -> Optional[bytes]:
+) -> None | bytes:
     """Pacakge BSDFs provided as XML for Radiance.
 
     Args:
@@ -129,13 +129,13 @@ def robjutil(
     verbose: bool = False,
     remove_texture_coordinates: bool = False,
     remove_surface_normal: bool = False,
-    remove_surface_by_modifier: Optional[Sequence[str]] = None,
-    keep_surface_by_modifier: Optional[Sequence[str]] = None,
-    remove_surface_by_group: Optional[Sequence[str]] = None,
-    keep_surface_by_group: Optional[Sequence[str]] = None,
-    epsilon: Optional[float] = None,
+    remove_surface_by_modifier: None | Sequence[str] = None,
+    keep_surface_by_modifier: None | Sequence[str] = None,
+    remove_surface_by_group: None | Sequence[str] = None,
+    keep_surface_by_group: None | Sequence[str] = None,
+    epsilon: None | float = None,
     triangulate: bool = False,
-    transform: Optional[str] = None,
+    transform: None | str = None,
 ) -> bytes:
     """Operate on Wavefront .OBJ file
 
@@ -218,18 +218,18 @@ def mgf2rad(*inp, matfile=None, mult=None, dist=None):
 @handle_called_process_error
 def ies2rad(
     *inp: str | Path,
-    libdir: Optional[str] = None,
-    prefdir: Optional[str] = None,
-    outname: Optional[str] = None,
+    libdir: None | str = None,
+    prefdir: None | str = None,
+    outname: None | str = None,
     stdout: bool = False,
-    units: Optional[str] = None,
-    radius: Optional[float] = None,
+    units: None | str = None,
+    radius: None | float = None,
     instancing_geometry: bool = False,
-    lampdat: Optional[str] = None,
-    lamp_type: Optional[str] = None,
-    lamp_color: Optional[str] = None,
-    set_default_lamp_color: Optional[str] = None,
-    multiply_factor: Optional[float] = None,
+    lampdat: None | str = None,
+    lamp_type: None | str = None,
+    lamp_color: None | str = None,
+    set_default_lamp_color: None | str = None,
+    multiply_factor: None | float = None,
 ):
     """Convert IES luminaire data to RADIANCE description.
 
@@ -287,16 +287,16 @@ def ies2rad(
 @handle_called_process_error
 def bsdf2klems(
     *inp,
-    spp: Optional[int] = None,
+    spp: None | int = None,
     half: bool = False,
     quater: bool = False,
     progress_bar: bool = False,
-    progress_bar_length: Optional[int] = None,
-    maxlobes: Optional[int] = None,
+    progress_bar_length: None | int = None,
+    maxlobes: None | int = None,
     forward: bool = False,
     backward: bool = True,
-    expr: Optional[str] = None,
-    file: Optional[str] = None,
+    expr: None | str = None,
+    file: None | str = None,
 ):
     """Generate XML Klems matrix description of a BSDF.
 
@@ -361,12 +361,12 @@ def bsdf2ttree(
     super_samples: int = 256,
     difference_threshold: float = 0.35,
     progress_bar: bool = False,
-    progress_bar_length: Optional[int] = None,
+    progress_bar_length: None | int = None,
     maxlobes: int = 15000,
     forward: bool = False,
     backward: bool = True,
-    expr: Optional[str] = None,
-    file: Optional[str] = None,
+    expr: None | str = None,
+    file: None | str = None,
 ):
     """Generate XML tensor tree description of a BSDF.
 
@@ -439,8 +439,8 @@ def bsdf2ttree(
 def pabopto2bsdf(
     *inp,
     nproc: int = 1,
-    symmetry: Optional[str] = None,
-    angle: Optional[float] = None,
+    symmetry: None | str = None,
+    angle: None | float = None,
     reverse=False,
 ) -> bytes:
     """Convert BSDF measurements to a scattering interpolant representation.

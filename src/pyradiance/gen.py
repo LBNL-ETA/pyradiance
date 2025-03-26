@@ -5,7 +5,7 @@ Radiance generators and scene Manipulators
 import subprocess as sp
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Sequence
 
 from .anci import BINPATH, handle_called_process_error
 
@@ -19,7 +19,7 @@ def genblinds(
     height: float,
     nslats: int,
     angle: float,
-    rcurv: Optional[float] = None,
+    rcurv: None | float = None,
 ) -> bytes:
     """Generate a RADIANCE description of venetian blinds.
 
@@ -55,9 +55,9 @@ def genbox(
     ysiz: float,
     zsiz: float,
     inward: bool = False,
-    beveled: Optional[float] = None,
-    rounded: Optional[float] = None,
-    nsegs: Optional[int] = None,
+    beveled: None | float = None,
+    rounded: None | float = None,
+    nsegs: None | int = None,
     smoothing: bool = False,
     waveout: bool = False,
 ) -> bytes:
@@ -87,19 +87,19 @@ def genbsdf(
     *inp: str | Path,
     nsamp: int = 1,
     nproc: int = 1,
-    params: Optional[Sequence[str]] = None,
+    params: None | Sequence[str] = None,
     enforce_window=False,
-    ttree_rank: Optional[int] = None,
-    ttree_res: Optional[int] = None,
+    ttree_rank: None | int = None,
+    ttree_res: None | int = None,
     color: bool = False,
     reciprocity: bool = True,
-    recover_dir: Optional[str | Path] = None,
+    recover_dir: None | str | Path = None,
     forward: bool = False,
     backward: bool = True,
-    mgf: Optional[str | Path] = None,
+    mgf: None | str | Path = None,
     geom: bool = False,
-    geom_unit: Optional[str] = None,
-    dim: Optional[Sequence[float]] = None,
+    geom_unit: None | str = None,
+    dim: None | Sequence[float] = None,
     **kwargs,
 ) -> bytes:
     """Generate BSDF description from Radiance or MGF input
@@ -179,17 +179,17 @@ def gendaylit(
     latitude: float,
     longitude: float,
     timezone: int,
-    year: Optional[int] = None,
-    dirnorm: Optional[float] = None,
-    diffhor: Optional[float] = None,
-    dirhor: Optional[float] = None,
-    dirnorm_illum: Optional[float] = None,
-    diffhor_illum: Optional[float] = None,
+    year: None | int = None,
+    dirnorm: None | float = None,
+    diffhor: None | float = None,
+    dirhor: None | float = None,
+    dirnorm_illum: None | float = None,
+    diffhor_illum: None | float = None,
     solar: bool = False,
     sky_only: bool = False,
     silent: bool = False,
-    grefl: Optional[float] = None,
-    interval: Optional[int] = None,
+    grefl: None | float = None,
+    interval: None | int = None,
 ) -> bytes:
     """Generates a RADIANCE description of the daylight sources using
     Perez models for direct and diffuse components.
@@ -251,14 +251,14 @@ def gendaymtx(
     average: bool = False,
     sun_only: bool = False,
     sky_only: bool = False,
-    sun_file: Optional[str] = None,
-    sun_mods: Optional[str] = None,
+    sun_file: None | str = None,
+    sun_mods: None | str = None,
     daylight_hours_only: bool = False,
     dryrun: bool = False,
-    sky_color: Optional[list[float]] = None,
-    ground_color: Optional[list[float]] = None,
-    rotate: Optional[float] = None,
-    outform: Optional[str] = None,
+    sky_color: None | list[float] = None,
+    ground_color: None | list[float] = None,
+    rotate: None | float = None,
+    outform: None | str = None,
     onesun: bool = False,
     solar_radiance: bool = False,
     mfactor: int = 1,
@@ -337,8 +337,8 @@ def genrev(
     z_t: str,
     r_t: str,
     nseg: int,
-    expr: Optional[str] = None,
-    file: Optional[str] = None,
+    expr: None | str = None,
+    file: None | str = None,
     smooth: bool = False,
 ) -> bytes:
     cmd = [str(BINPATH / "genrev")]
@@ -364,9 +364,9 @@ def gensdaymtx(
     sun_only: bool = False,
     sky_only: bool = False,
     daylight_hours_only: bool = False,
-    ground_reflectance: Optional[list[float]] = None,
-    rotate: Optional[float] = None,
-    outform: Optional[str] = None,
+    ground_reflectance: None | list[float] = None,
+    rotate: None | float = None,
+    outform: None | str = None,
     onesun: bool = False,
     mfactor: int = 1,
     nthreads: int = 1,
@@ -424,25 +424,25 @@ def gensdaymtx(
 
 @handle_called_process_error
 def gensky(
-    dt: Optional[datetime] = None,
-    latitude: Optional[float] = None,
-    longitude: Optional[float] = None,
-    timezone: Optional[int] = None,
-    altitude: Optional[float] = None,
-    azimuth: Optional[float] = None,
-    year: Optional[int] = None,
+    dt: None | datetime = None,
+    latitude: None | float = None,
+    longitude: None | float = None,
+    timezone: None | int = None,
+    altitude: None | float = None,
+    azimuth: None | float = None,
+    year: None | int = None,
     sunny_with_sun: bool = False,
     sunny_without_sun: bool = False,
     cloudy: bool = False,
     intermediate_with_sun: bool = False,
     intermediate_without_sun: bool = False,
     uniform: bool = False,
-    ground_reflectance: Optional[float] = None,
-    zenith_brightness: Optional[float] = None,
-    horizontal_brightness: Optional[float] = None,
-    solar_radiance: Optional[float] = None,
-    horizontal_direct_irradiance: Optional[float] = None,
-    turbidity: Optional[float] = None,
+    ground_reflectance: None | float = None,
+    zenith_brightness: None | float = None,
+    horizontal_brightness: None | float = None,
+    solar_radiance: None | float = None,
+    horizontal_direct_irradiance: None | float = None,
+    turbidity: None | float = None,
 ) -> bytes:
     """Generate a RADIANCE description of the sky.
 
@@ -520,12 +520,12 @@ def genssky(
     latitude: float = 37.7,
     longitude: float = 122.2,
     timezone: int = 120,
-    year: Optional[int] = None,
+    year: None | int = None,
     res: int = 64,
     cloud_cover: float = 0.0,
     ground_reflectance: float = 0.2,
     broadband_aerosol_optical_depth: float = 0.115,
-    mie_file: Optional[str] = None,
+    mie_file: None | str = None,
     nthreads: int = 1,
     out_dir: str = ".",
     out_name: str = "out",
@@ -573,7 +573,7 @@ def mkillum(
     inp: bytes,
     octree: str | Path,
     nproc: int = 1,
-    params: Optional[Sequence[str]] = None,
+    params: None | Sequence[str] = None,
 ) -> bytes:
     """Compute illum sources for a RADIANCE scene
 

@@ -4,7 +4,7 @@ import os
 import random
 import string
 import tempfile
-from typing import Optional, Literal, NamedTuple
+from typing import Literal, NamedTuple
 
 from .util import rmtxop, rfluxmtx, strip_header, WrapBSDF, Xform
 from .ot import oconv, getbbox
@@ -104,7 +104,7 @@ def get_basis_and_up(basis) -> tuple[str, str, str]:
 
 
 def get_sampling_box(
-    device: Optional[str | bytes] = None, dim: Optional[SamplingBox] = None
+    device: None | str | bytes = None, dim: None | SamplingBox = None
 ) -> SamplingBox:
     dim = SamplingBox(*getbbox(device, warning=False)) if dim is None else dim
 
@@ -155,7 +155,7 @@ def get_sender(hemis: str, up: str, dim: SamplingBox, front: bool) -> str:
 
 # TODO: handle colored BSDF out
 def generate_sdf(
-    sender: str, receiver: str, octree_file: str, params: Optional[list[str]] = None
+    sender: str, receiver: str, octree_file: str, params: None | list[str] = None
 ) -> SDFResult:
     fd, receiver_file = tempfile.mkstemp(suffix=".rad")
     with os.fdopen(fd, "w") as f:
@@ -182,7 +182,7 @@ def generate_sdf(
 
 
 def generate_front_sdf(
-    octree_file: str, basis: str, dim: SamplingBox, params: Optional[list[str]] = None
+    octree_file: str, basis: str, dim: SamplingBox, params: None | list[str] = None
 ):
     face_hemis, behind_hemis, up = get_basis_and_up(basis)
     face_receiver, behind_receiver = get_hemisphere_receivers(
@@ -194,7 +194,7 @@ def generate_front_sdf(
 
 
 def generate_back_sdf(
-    octree_file: str, basis: str, dim: SamplingBox, params: Optional[list[str]] = None
+    octree_file: str, basis: str, dim: SamplingBox, params: None | list[str] = None
 ):
     face_hemis, behind_hemis, up = get_basis_and_up(basis)
     face_receiver, behind_receiver = get_hemisphere_receivers(
@@ -209,14 +209,14 @@ def generate_back_sdf(
 # TODO: Add color out
 def generate_bsdf(
     *inp,
-    params: Optional[list[str]] = None,
+    params: None | list[str] = None,
     recip=True,
     nsamp=2000,
     pctcull=90,
     nproc=1,
     geout=True,
     basis: Literal["kf", "kh", "kq", "u", "r1", "r2", "r4"] = "kf",
-    dim: Optional[SamplingBox] = None,
+    dim: None | SamplingBox = None,
 ) -> BSDFResult:
     result = BSDFResult(SDFResult(), SDFResult())
     param_args = ["-ab", "5", "-ad", "700", "-lw", "3e-6", "-w-"]
@@ -245,9 +245,9 @@ def generate_bsdf(
 
 
 def generate_xml(
-    sol_results: Optional[BSDFResult] = None,
-    vis_results: Optional[BSDFResult] = None,
-    ir_results: Optional[BSDFResult] = None,
+    sol_results: None | BSDFResult = None,
+    vis_results: None | BSDFResult = None,
+    ir_results: None | BSDFResult = None,
     basis: str = "kf",
     unit: str = "meter",
     **kwargs,

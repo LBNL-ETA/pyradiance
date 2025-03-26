@@ -4,7 +4,7 @@ Radiance picture processing utilities.
 
 import subprocess as sp
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Sequence
 
 from .anci import BINPATH, handle_called_process_error
 
@@ -12,13 +12,13 @@ from .anci import BINPATH, handle_called_process_error
 class Pcomb:
     def __init__(
         self,
-        xres: Optional[int] = None,
-        yres: Optional[int] = None,
+        xres: None | int = None,
+        yres: None | int = None,
         inform: str = "a",
         fout: bool = True,
         header: bool = False,
-        expression: Optional[str] = None,
-        source: Optional[str] = None,
+        expression: None | str = None,
+        source: None | str = None,
     ):
         """combine Radiance pictures and/or float matrices
 
@@ -36,7 +36,7 @@ class Pcomb:
             bytes: output of pcomb
         """
         self.has_input = False
-        self.stdin: Optional[bytes] = None
+        self.stdin: None | bytes = None
         self.cmd = [str(BINPATH / "pcomb")]
         if xres is not None:
             self.cmd.extend(["-x", str(xres)])
@@ -83,19 +83,19 @@ class Pcomb:
 @handle_called_process_error
 def pcompos(
     inputs: Sequence[Path | str | bytes],
-    pos: Optional[Sequence[Sequence[float]]] = None,
-    xres: Optional[int] = None,
-    yres: Optional[int] = None,
+    pos: None | Sequence[Sequence[float]] = None,
+    xres: None | int = None,
+    yres: None | int = None,
     spacing: int = 0,
-    background: Optional[tuple[float, float, float]] = None,
-    anchors: Optional[Sequence[str]] = None,
+    background: None | tuple[float, float, float] = None,
+    anchors: None | Sequence[str] = None,
     header: bool = True,
-    lower_threashold: Optional[float] = None,
-    upper_threshold: Optional[float] = None,
-    label: Optional[str] = None,
-    label_height: Optional[int] = None,
-    ncols: Optional[int] = None,
-    anchor_point: Optional[Sequence[str]] = None,
+    lower_threashold: None | float = None,
+    upper_threshold: None | float = None,
+    label: None | str = None,
+    label_height: None | int = None,
+    ncols: None | int = None,
+    anchor_point: None | Sequence[str] = None,
 ) -> bytes:
     """Composite Radiance pictures
 
@@ -180,12 +180,12 @@ def pcond(
     center_weighted: bool = False,
     linear: bool = False,
     fixfrac: float = 0.0,
-    fixpoints: Optional[list[tuple]] = None,
+    fixpoints: None | list[tuple] = None,
     histo: str = "",
     expval: str = "",
     ldmax: float = 100.0,
     lddyn: float = 100.0,
-    primaries: Optional[list[float]] = None,
+    primaries: None | list[float] = None,
     macbeth: str = "",
     mapfile: str = "",
 ) -> bytes:
@@ -260,16 +260,16 @@ def pcond(
 @handle_called_process_error
 def pfilt(
     image: str | Path | bytes,
-    xres: Optional[str] = None,
-    yres: Optional[str] = None,
+    xres: None | str = None,
+    yres: None | str = None,
     pixel_aspect: float = 0,
     pa_correct: bool = False,
-    exposure: Optional[float] = 0,
-    lamp: Optional[str] = None,
-    lampdat: Optional[str] = None,
+    exposure: None | float = 0,
+    lamp: None | str = None,
+    lampdat: None | str = None,
     one_pass: bool = False,
-    gaussian_filter_radius: Optional[float] = None,
-    limitfrac: Optional[float] = None,
+    gaussian_filter_radius: None | float = None,
+    limitfrac: None | float = None,
     hot_threshold: float = 100,
     star_points: int = 0,
     star_spread: float = 0.0001,
@@ -347,8 +347,8 @@ def psign(
     reads_downwards: bool = False,
     height: int = 32,
     aspect: float = 1.67,
-    xsize: Optional[int] = None,
-    ysize: Optional[int] = None,
+    xsize: None | int = None,
+    ysize: None | int = None,
     spacing: float = 0.0,
     fontfile: str = "helvet.fnt",
 ) -> bytes:
@@ -411,7 +411,7 @@ def pvalue(
     reverse_rgb: bool = False,
     interleaving: bool = True,
     brightness: bool = False,
-    outprimary: Optional[str] = None,
+    outprimary: None | str = None,
 ) -> bytes:
     """convert RADIANCE picture to/from alternate formats
     Pvalue converts the pixels of a RADIANCE picture to or from another format.
@@ -477,13 +477,13 @@ def pvalue(
 @handle_called_process_error
 def pvaluer(
     pic: Path | str | bytes,
-    xres: Optional[int] = None,
-    yres: Optional[int] = None,
+    xres: None | int = None,
+    yres: None | int = None,
     inform: str = "a",
     resstr: bool = True,
     dataonly: bool = False,
     header: bool = True,
-    primaries: Optional[list[float]] = None,
+    primaries: None | list[float] = None,
     pxyz: bool = False,
 ) -> bytes:
     """
@@ -532,7 +532,7 @@ def pvaluer(
 @handle_called_process_error
 def ra_tiff(
     inp,
-    out: Optional[str] = None,
+    out: None | str = None,
     gamma: float = 2.2,
     greyscale: bool = False,
     lzw: bool = False,
@@ -543,7 +543,7 @@ def ra_tiff(
     exposure: int = 0,
     reverse: bool = False,
     xyze: bool = False,
-) -> Optional[bytes]:
+) -> None | bytes:
     """ra_tiff - convert RADIANCE picture to/from a TIFF color
     or greyscale image
 
@@ -658,21 +658,21 @@ def ra_ppm(
 @handle_called_process_error
 def falsecolor(
     inp: str | Path | bytes,
-    pic_overlay: Optional[str] = None,
-    contour: Optional[str] = None,
+    pic_overlay: None | str = None,
+    contour: None | str = None,
     extrema: bool = False,
-    scale: Optional[str] = None,
-    digits: Optional[int] = None,
-    label: Optional[str] = None,
-    ndivs: Optional[int] = None,
-    lwidth: Optional[int] = None,
-    lheight: Optional[int] = None,
-    decades: Optional[int] = None,
-    multiplier: Optional[float] = None,
-    palette: Optional[str] = None,
-    redv: Optional[str] = None,
-    grnv: Optional[str] = None,
-    bluv: Optional[str] = None,
+    scale: None | str = None,
+    digits: None | int = None,
+    label: None | str = None,
+    ndivs: None | int = None,
+    lwidth: None | int = None,
+    lheight: None | int = None,
+    decades: None | int = None,
+    multiplier: None | float = None,
+    palette: None | str = None,
+    redv: None | str = None,
+    grnv: None | str = None,
+    bluv: None | str = None,
 ) -> bytes:
     """
     Generate a falsecolor Radiance picture.
