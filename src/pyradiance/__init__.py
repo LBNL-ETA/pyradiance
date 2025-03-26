@@ -6,7 +6,6 @@ make Radiance easier to use and accessible to Python user.
 
 import os
 from importlib.metadata import version
-__version__ = version("pyradiance")
 from .anci import BINPATH, write
 from .cal import cnt, rcalc, rlam, total
 from .bsdf import spec_xyz, xyz_rgb
@@ -111,6 +110,8 @@ from .util import (
     vwrays,
     WrapBSDF,
 )
+
+__version__ = version("pyradiance")
 
 os.environ["RAYPATH"] = (
     "." + os.pathsep + os.path.join(os.path.dirname(__file__), "lib")
