@@ -295,16 +295,6 @@ NB_MODULE(radiance_ext, m) {
 
   m.def("ray_done", &ray_done);
 
-  m.def("parse_view", [](const char *s) {
-    VIEW vp;
-    sscanview(&vp, const_cast<char *>(s));
-    return vp;
-  });
-
-  m.def("viewfile", [](const char *fname, VIEW *vp, RESOLU *rp) {
-    return viewfile(const_cast<char *>(fname), vp, rp);
-  });
-
   m.def("set_option", [](std::vector<std::string> opts) {
     int ac = opts.size();
     char **av = new char *[ac];
