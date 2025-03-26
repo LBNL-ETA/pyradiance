@@ -324,7 +324,6 @@ def rtrace(
         xres: X resolution of the output image.
         yres: Y resolution of the output image.
         nproc: Number of processors to use.
-        options: A SamplingParameters object.
 
     Returns:
         A string of bytes representing the output of rtrace.

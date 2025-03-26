@@ -42,7 +42,7 @@ from .genbsdf import (
 
 from .model import Primitive, Scene
 from .ot import oconv
-from .param import SamplingParameters
+
 from .px import (
     Pcomb,
     falsecolor,
@@ -58,7 +58,6 @@ from .px import (
 if os.name == "posix":
     from .radiance_ext import (
         RCCONTEXT,
-        RayParams,
         RcontribSimulManager,
         RcOutputOp,
         RTdoFIFO,
@@ -71,7 +70,6 @@ if os.name == "posix":
         Resolu,
         calcontext,
         eval,
-        get_default_ray_params,
         get_ray_params,
         initfunc,
         loadfunc,
@@ -83,32 +81,38 @@ if os.name == "posix":
         setspectrsamp,
     )
 
-from .rad_view import View, Resolu, create_default_view, viewfile, parse_view, get_view_args
+from .rad_params import (
+    View,
+    Resolu,
+    create_default_view,
+    viewfile,
+    parse_view,
+    get_view_args,
+    RayParams,
+    get_default_ray_params,
+    get_ray_params_args,
+)
 
-from .rt import RcModifier, mkpmap, rcontrib, rpict, rtrace
+from .rt import mkpmap, Rcontrib, rpict, rtrace
 from .util import (
-    RcombInput,
-    WrapBSDFInput,
     Xform,
     dctimestep,
     evalglare,
     get_header,
     get_image_dimensions,
     getinfo,
-    # load_views,
     load_material_smd,
     parse_primitive,
     rcode_depth,
     rcode_ident,
     rcode_norm,
-    rcomb,
+    Rcomb,
     render,
     rfluxmtx,
     rmtxop,
     rsensor,
-    # rtpict,
     vwrays,
-    wrapbsdf,
+    WrapBSDF,
 )
 
 os.environ["RAYPATH"] = (
@@ -158,10 +162,9 @@ __all__ = [
     "genssky",
     "get_header",
     "get_image_dimensions",
-    # "get_view_resolu",
     "getinfo",
     "ies2rad",
-    # "load_views",
+    "load_views",
     "load_material_smd",
     "mgf2rad",
     "mkillum",
@@ -184,9 +187,8 @@ __all__ = [
     "rcode_depth",
     "rcode_ident",
     "rcode_norm",
-    "rcontrib",
-    "rcomb",
-    "RcombInput",
+    "Rcontrib",
+    "Rcomb",
     "read_rad",
     "render",
     "rfluxmtx",
@@ -205,8 +207,7 @@ __all__ = [
     "total",
     "View",
     "vwrays",
-    "WrapBSDFInput",
-    "wrapbsdf",
+    "WrapBSDF",
     "write",
     "Xform",
     "xyz_rgb",

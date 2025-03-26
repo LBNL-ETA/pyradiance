@@ -4,7 +4,7 @@ Radiance picture processing utilities.
 
 import subprocess as sp
 from pathlib import Path
-from typing import List, Optional, Sequence, Tuple, Union
+from typing import Optional, Sequence
 
 from .anci import BINPATH, handle_called_process_error
 
@@ -55,7 +55,7 @@ class Pcomb:
 
     def add(
         self,
-        image: Union[Path, str, bytes],
+        image: Path | str | bytes,
         original: bool = False,
         scaler: float = 1.0,
     ):
@@ -82,12 +82,12 @@ class Pcomb:
 
 @handle_called_process_error
 def pcompos(
-    inputs: Sequence[Union[Path, str, bytes]],
+    inputs: Sequence[Path | str | bytes],
     pos: Optional[Sequence[Sequence[float]]] = None,
     xres: Optional[int] = None,
     yres: Optional[int] = None,
     spacing: int = 0,
-    background: Optional[Tuple[float, float, float]] = None,
+    background: Optional[tuple[float, float, float]] = None,
     anchors: Optional[Sequence[str]] = None,
     header: bool = True,
     lower_threashold: Optional[float] = None,
@@ -180,12 +180,12 @@ def pcond(
     center_weighted: bool = False,
     linear: bool = False,
     fixfrac: float = 0.0,
-    fixpoints: Optional[List[tuple]] = None,
+    fixpoints: Optional[list[tuple]] = None,
     histo: str = "",
     expval: str = "",
     ldmax: float = 100.0,
     lddyn: float = 100.0,
-    primaries: Optional[List[float]] = None,
+    primaries: Optional[list[float]] = None,
     macbeth: str = "",
     mapfile: str = "",
 ) -> bytes:
@@ -259,7 +259,7 @@ def pcond(
 
 @handle_called_process_error
 def pfilt(
-    image: Union[str, Path, bytes],
+    image: str | Path | bytes,
     xres: Optional[str] = None,
     yres: Optional[str] = None,
     pixel_aspect: float = 0,
@@ -339,8 +339,8 @@ def pfilt(
 @handle_called_process_error
 def psign(
     text: str,
-    background: Tuple[float, float, float] = (1.0, 1.0, 1.0),
-    foreground: Tuple[float, float, float] = (0.0, 0.0, 0.0),
+    background: tuple[float, float, float] = (1.0, 1.0, 1.0),
+    foreground: tuple[float, float, float] = (0.0, 0.0, 0.0),
     reads_to_right: bool = True,
     reads_upwards: bool = False,
     reads_to_left: bool = False,
@@ -398,7 +398,7 @@ def psign(
 
 @handle_called_process_error
 def pvalue(
-    pic: Union[Path, str, bytes],
+    pic: Path | str | bytes,
     unique: bool = False,
     original: bool = False,
     header: bool = True,
@@ -476,14 +476,14 @@ def pvalue(
 
 @handle_called_process_error
 def pvaluer(
-    pic: Union[Path, str, bytes],
+    pic: Path | str | bytes,
     xres: Optional[int] = None,
     yres: Optional[int] = None,
     inform: str = "a",
     resstr: bool = True,
     dataonly: bool = False,
     header: bool = True,
-    primaries: Optional[List[float]] = None,
+    primaries: Optional[list[float]] = None,
     pxyz: bool = False,
 ) -> bytes:
     """
@@ -496,7 +496,7 @@ def pvaluer(
         yres: Y resolution.
         inform: input data format. Default is "a" for ascii.
         header: Set to True if the picture file has a header. Default is False.
-        primaries: List of primaries for XYZ calculation. Default is None.
+        primaries: list of primaries for XYZ calculation. Default is None.
         pxyz: Set to True to calculate XYZ values. Default is False.
 
     Returns:
@@ -657,7 +657,7 @@ def ra_ppm(
 
 @handle_called_process_error
 def falsecolor(
-    inp: Union[str, Path, bytes],
+    inp: str | Path | bytes,
     pic_overlay: Optional[str] = None,
     contour: Optional[str] = None,
     extrema: bool = False,

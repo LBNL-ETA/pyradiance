@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Sequence
 
 from .ot import oconv
-from .rad_view import View
+from .rad_params import View
 
 
 @dataclass

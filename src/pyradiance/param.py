@@ -7,18 +7,6 @@ parameters for running radiance
 
 import argparse
 from pathlib import Path
-from typing import NamedTuple
-
-
-class ColorPrimaries(NamedTuple):
-    xr: float
-    yr: float
-    xg: float
-    yg: float
-    xb: float
-    yb: float
-    xw: float
-    yw: float
 
 
 def pfloat(value_name):

@@ -14,11 +14,10 @@ from .anci import BINPATH, handle_called_process_error
 
 from .bsdf import spec_xyz, xyz_rgb
 from .model import Primitive
-from .rad_view import View
+from .rad_params import View, RayParams, get_ray_params_args
 from .ot import getbbox
 from .px import pvaluer
 from .cal import cnt
-from .param import SamplingParameters
 from .rt import rpict, rtrace
 
 
@@ -596,60 +595,67 @@ class Rcomb:
         outform: Optional[str] = None,
         header: bool = True,
         silent: bool = False,
-    ) -> bytes:
-    """Combine multiple rasters.
+    ):
+        """Combine multiple rasters.
 
-    Args:
-        transform: transform
-        transform_all: transform all
-        source: source
-        expression: expression
-        concat: concat
-        outform: output format
-        header: include header
-        silent: suppress output
+        Args:
+            transform: transform
+            transform_all: transform all
+            source: source
+            expression: expression
+            concat: concat
+            outform: output format
+            header: include header
+            silent: suppress output
 
-    Returns:
-        bytes: output of rcomb
-    """
-    cmd = [str(BINPATH / "rcomb")]
-    stdin = None
-    if not header:
-        cmd.append("-h")
-    if silent:
-        cmd.append("-w")
-    if expression is not None:
-        cmd.extend(["-e", expression])
-    if concat is not None:
-        for c in concat:
-            cmd.extend(["-m", c])
-    if transform_all is not None:
-        cmd.extend(["-C", transform_all])
-    if source is not None:
-        cmd.extend(["-f", source])
-    if outform:
-        cmd.append(f"-f{outform}")
-    if transform is not None:
-        cmd.extend(["-c", transform])
+        Returns:
+            bytes: output of rcomb
+        """
+        cmd = [str(BINPATH / "rcomb")]
+        stdin = None
+        if not header:
+            cmd.append("-h")
+        if silent:
+            cmd.append("-w")
+        if expression is not None:
+            cmd.extend(["-e", expression])
+        if concat is not None:
+            for c in concat:
+                cmd.extend(["-m", c])
+        if transform_all is not None:
+            cmd.extend(["-C", transform_all])
+        if source is not None:
+            cmd.extend(["-f", source])
+        if outform:
+            cmd.append(f"-f{outform}")
+        if transform is not None:
+            cmd.extend(["-c", transform])
+        self.cmd = cmd
+        self.stdin = stdin
 
-    def add_input(self, input: str | Path | bytes, transform: Optional[str] = None, scale: Optional[Sequence[float]] = None):
-        if inp.transform is not None:
-            cmd.extend(["-c", inp.transform])
-        if inp.scale is not None:
-            cmd.extend(["-s", *map(str, inp.scale)])
-        if isinstance(inp.input, bytes):
-            if stdin is not None:
+    def add_input(
+        self,
+        input: str | Path | bytes,
+        transform: Optional[str] = None,
+        scale: Optional[Sequence[float]] = None,
+    ):
+        if transform is not None:
+            self.cmd.extend(["-c", transform])
+        if scale is not None:
+            self.cmd.extend(["-s", *map(str, scale)])
+        if isinstance(input, bytes):
+            if self.stdin is not None:
                 raise ValueError("Only one bytes input allowed")
-            stdin = inp.input
-        elif isinstance(inp.input, (str, Path)):
-            cmd.append(str(inp.input))
+            self.stdin = input
+        elif isinstance(input, (str, Path)):
+            self.cmd.append(str(input))
         else:
             raise TypeError("inp must be a string, Path, or bytes")
         return self
 
     @handle_called_process_error
     def __call__(self):
-        sp.run(cmd, input=stdin, check=True, stdout=sp.PIPE).stdout
+        sp.run(self.cmd, input=self.stdin, check=True, stdout=sp.PIPE).stdout
 
 
 def render(
@@ -663,7 +669,7 @@ def render(
     resolution: Optional[tuple[int, int]] = None,
     ambbounce: int = 0,
     ambcache: bool = True,
-    params: Optional[SamplingParameters] = None,
+    params: Optional[RayParams] = None,
 ) -> bytes:
     """Render a scene.
 
@@ -742,7 +748,7 @@ def render(
     if specout:
         param_strs.append("-co+")
     if params is not None:
-        param_strs.extend(params.args())
+        param_strs.extend(get_ray_params_args(params))
     vargs = view_args(aview)
     res = vwrays(view=vargs, dimensions=True, xres=xres, yres=yres).decode().split()
     xres, yres = int(res[1]), int(res[3])

@@ -5,7 +5,6 @@ Auxiliary functions.
 from pathlib import Path
 from functools import wraps
 from subprocess import CalledProcessError
-from typing import Union
 import os
 
 BINPATH = Path(__file__).parent / "bin"
@@ -31,9 +30,7 @@ def handle_called_process_error(func):
     return wrapper
 
 
-def write(
-    file_path: Union[str, Path], data: Union[str, bytes], overwrite=True, mode="wb"
-) -> str:
+def write(file_path: str | Path, data: str | bytes, overwrite=True, mode="wb") -> str:
     """Write data to a file.
 
     Args:

@@ -102,7 +102,10 @@ def get_basis_and_up(basis) -> tuple[str, str, str]:
         up = "u=-Y"
     return face_hemis, behind_hemis, up
 
-def get_sampling_box(device: Optional[str | bytes] = None, dim: Optional[SamplingBox]=None) -> SamplingBox:
+
+def get_sampling_box(
+    device: Optional[str | bytes] = None, dim: Optional[SamplingBox] = None
+) -> SamplingBox:
     dim = SamplingBox(*getbbox(device, warning=False)) if dim is None else dim
 
     if dim.zmin >= 0:
@@ -113,7 +116,10 @@ def get_sampling_box(device: Optional[str | bytes] = None, dim: Optional[Samplin
         print("Warning: Device far behind Z==0 plane")
     return dim
 
-def get_hemisphere_receivers(face_hemis: str, behind_hemis: str, up: str, out: str=""):
+
+def get_hemisphere_receivers(
+    face_hemis: str, behind_hemis: str, up: str, out: str = ""
+):
     face_receiver = (
         f"#@rfluxmtx {face_hemis} {up} {out}\n\n"
         "void glow receiver_face\n0\n0\n4 1 1 1 0\n\n"
@@ -129,10 +135,7 @@ def get_hemisphere_receivers(face_hemis: str, behind_hemis: str, up: str, out: s
 
 def get_sender(hemis: str, up: str, dim: SamplingBox, front: bool) -> str:
     FEPS = 1e-6
-    sender = (
-        f"#@rfluxmtx {hemis} {up}\n\n"
-        "void polygon sender\n0\n0\n12\n"
-    )
+    sender = f"#@rfluxmtx {hemis} {up}\n\nvoid polygon sender\n0\n0\n12\n"
     if front:
         sender += (
             f"\t{dim.xmin}\t{dim.ymin}\t{dim.zmin - FEPS}\n"
@@ -151,7 +154,9 @@ def get_sender(hemis: str, up: str, dim: SamplingBox, front: bool) -> str:
 
 
 # TODO: handle colored BSDF out
-def generate_sdf(sender: str, receiver:str, octree_file:str, params: Optional[list[str]]=None) -> SDFResult:
+def generate_sdf(
+    sender: str, receiver: str, octree_file: str, params: Optional[list[str]] = None
+) -> SDFResult:
     fd, receiver_file = tempfile.mkstemp(suffix=".rad")
     with os.fdopen(fd, "w") as f:
         f.write(receiver)
@@ -168,7 +173,7 @@ def generate_sdf(sender: str, receiver:str, octree_file:str, params: Optional[li
     visible_coeffs = (0.2651, 0.6701, 0.0648)
     data = strip_header(rmtxop(result, transpose=True, transform=visible_coeffs))
     lines = data.splitlines()
-    half = int(len(lines)/2)
+    half = int(len(lines) / 2)
     trans = b"\n".join(lines[:half])
     refl = b"\n".join(lines[half:])
     os.remove(receiver_file)
@@ -176,21 +181,28 @@ def generate_sdf(sender: str, receiver:str, octree_file:str, params: Optional[li
     return SDFResult(transmittance=trans, reflectance=refl)
 
 
-def generate_front_sdf(octree_file: str, basis: str, dim: SamplingBox, params: Optional[list[str]] = None):
+def generate_front_sdf(
+    octree_file: str, basis: str, dim: SamplingBox, params: Optional[list[str]] = None
+):
     face_hemis, behind_hemis, up = get_basis_and_up(basis)
-    face_receiver, behind_receiver = get_hemisphere_receivers(face_hemis=face_hemis, behind_hemis=behind_hemis, up=up)
+    face_receiver, behind_receiver = get_hemisphere_receivers(
+        face_hemis=face_hemis, behind_hemis=behind_hemis, up=up
+    )
     receiver = face_receiver + behind_receiver
     sender: str = get_sender(face_hemis, up, dim, True)
     return generate_sdf(sender, receiver, octree_file, params=params)
 
 
-def generate_back_sdf(octree_file: str, basis: str, dim: SamplingBox, params: Optional[list[str]] = None):
+def generate_back_sdf(
+    octree_file: str, basis: str, dim: SamplingBox, params: Optional[list[str]] = None
+):
     face_hemis, behind_hemis, up = get_basis_and_up(basis)
-    face_receiver, behind_receiver = get_hemisphere_receivers(face_hemis=face_hemis, behind_hemis=behind_hemis, up=up)
+    face_receiver, behind_receiver = get_hemisphere_receivers(
+        face_hemis=face_hemis, behind_hemis=behind_hemis, up=up
+    )
     receiver = behind_receiver + face_receiver
     sender: str = get_sender(behind_hemis, up, dim, False)
     return generate_sdf(sender, receiver, octree_file, params=params)
-
 
 
 # TODO: Add tensortree out
@@ -206,7 +218,6 @@ def generate_bsdf(
     basis: Literal["kf", "kh", "kq", "u", "r1", "r2", "r4"] = "kf",
     dim: Optional[SamplingBox] = None,
 ) -> BSDFResult:
-
     result = BSDFResult(SDFResult(), SDFResult())
     param_args = ["-ab", "5", "-ad", "700", "-lw", "3e-6", "-w-"]
     if params is not None:
@@ -221,13 +232,13 @@ def generate_bsdf(
     param_args.extend(["-c", str(nx * ny)])
     param_args.extend(["-cs", "3"])
 
-    fd, octree_file = tempfile.mkstemp(suffix='.oct')
+    fd, octree_file = tempfile.mkstemp(suffix=".oct")
     with os.fdopen(fd, "wb") as fp:
         fp.write(oconv(stdin=device, warning=False))
 
     param_args.append("-fd")
-    result.front = generate_front_sdf(octree_file, basis, dim, params = param_args)
-    result.back = generate_back_sdf(octree_file, basis, dim, params = param_args)
+    result.front = generate_front_sdf(octree_file, basis, dim, params=param_args)
+    result.back = generate_back_sdf(octree_file, basis, dim, params=param_args)
 
     os.remove(octree_file)
     return result
@@ -237,14 +248,22 @@ def generate_xml(
     sol_results: Optional[BSDFResult] = None,
     vis_results: Optional[BSDFResult] = None,
     ir_results: Optional[BSDFResult] = None,
-    basis: str="kf",
-    unit: str="meter",
+    basis: str = "kf",
+    unit: str = "meter",
     **kwargs,
 ) -> bytes:
     emissivity_front = emissivity_back = 1.0
     if ir_results is not None:
-        emissivity_front = 1 - float(ir_results.front.transmittance) - float(ir_results.front.reflectance)
-        emissivity_back = 1 - float(ir_results.back.transmittance) - float(ir_results.back.reflectance)
+        emissivity_front = (
+            1
+            - float(ir_results.front.transmittance)
+            - float(ir_results.front.reflectance)
+        )
+        emissivity_back = (
+            1
+            - float(ir_results.back.transmittance)
+            - float(ir_results.back.reflectance)
+        )
 
     wrapper = WrapBSDF(
         basis=basis,

@@ -5,7 +5,7 @@ Radiance generators and scene Manipulators
 import subprocess as sp
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Sequence, Union
+from typing import Optional, Sequence
 
 from .anci import BINPATH, handle_called_process_error
 
@@ -84,7 +84,7 @@ def genbox(
 
 @handle_called_process_error
 def genbsdf(
-    *inp: Union[str, Path],
+    *inp: str | Path,
     nsamp: int = 1,
     nproc: int = 1,
     params: Optional[Sequence[str]] = None,
@@ -93,10 +93,10 @@ def genbsdf(
     ttree_res: Optional[int] = None,
     color: bool = False,
     reciprocity: bool = True,
-    recover_dir: Optional[Union[str, Path]] = None,
+    recover_dir: Optional[str | Path] = None,
     forward: bool = False,
     backward: bool = True,
-    mgf: Optional[Union[str, Path]] = None,
+    mgf: Optional[str | Path] = None,
     geom: bool = False,
     geom_unit: Optional[str] = None,
     dim: Optional[Sequence[float]] = None,
@@ -245,7 +245,7 @@ def gendaylit(
 
 @handle_called_process_error
 def gendaymtx(
-    weather_data: Union[str, Path, bytes],
+    weather_data: str | Path | bytes,
     verbose: bool = False,
     header: bool = True,
     average: bool = False,
@@ -358,7 +358,7 @@ def genrev(
 
 @handle_called_process_error
 def gensdaymtx(
-    weather_data: Union[str, Path, bytes],
+    weather_data: str | Path | bytes,
     verbose: bool = False,
     header: bool = True,
     sun_only: bool = False,
@@ -571,7 +571,7 @@ def genssky(
 @handle_called_process_error
 def mkillum(
     inp: bytes,
-    octree: Union[str, Path],
+    octree: str | Path,
     nproc: int = 1,
     params: Optional[Sequence[str]] = None,
 ) -> bytes:

@@ -4,14 +4,14 @@ Radiance conversion routines.
 
 import subprocess as sp
 from pathlib import Path
-from typing import Optional, Sequence, Union
+from typing import Optional, Sequence
 
 from .anci import BINPATH, handle_called_process_error
 
 
 @handle_called_process_error
 def obj2rad(
-    inp: Union[bytes, str, Path],
+    inp: bytes | str | Path,
     quallist: bool = False,
     flatten: bool = False,
     mapfile: Optional[str] = None,
@@ -52,7 +52,7 @@ def obj2rad(
 
 @handle_called_process_error
 def obj2mesh(
-    inp: Union[bytes, str, Path],
+    inp: bytes | str | Path,
     matfiles: Optional[Sequence[str]] = None,
     matlib: Optional[str] = None,
     objlim: int = 9,
@@ -96,7 +96,7 @@ def obj2mesh(
 
 @handle_called_process_error
 def pkgbsdf(
-    *xml: Union[str, Path], frozen: bool = False, stdout: bool = False
+    *xml: str | Path, frozen: bool = False, stdout: bool = False
 ) -> Optional[bytes]:
     """Pacakge BSDFs provided as XML for Radiance.
 
@@ -124,7 +124,7 @@ def pkgbsdf(
 
 @handle_called_process_error
 def robjutil(
-    inp: Union[str, Path],
+    inp: str | Path,
     radout: bool = False,
     verbose: bool = False,
     remove_texture_coordinates: bool = False,
@@ -217,7 +217,7 @@ def mgf2rad(*inp, matfile=None, mult=None, dist=None):
 
 @handle_called_process_error
 def ies2rad(
-    *inp: Union[str, Path],
+    *inp: str | Path,
     libdir: Optional[str] = None,
     prefdir: Optional[str] = None,
     outname: Optional[str] = None,
@@ -440,7 +440,7 @@ def pabopto2bsdf(
     *inp,
     nproc: int = 1,
     symmetry: Optional[str] = None,
-    angle: Optional[Union[float, str]] = None,
+    angle: Optional[float] = None,
     reverse=False,
 ) -> bytes:
     """Convert BSDF measurements to a scattering interpolant representation.
