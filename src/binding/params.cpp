@@ -14,8 +14,7 @@
 
 
 namespace nb = nanobind;
-// First define a factory function that creates an initialized VIEW
-char *progname = "unknown";
+
 NB_MODULE(rad_params, m) {
     m.doc() = "Radiance common";
 
