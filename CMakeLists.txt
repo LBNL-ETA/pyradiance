@@ -188,17 +188,17 @@ endif()
 # Install directive for scikit-build-core
 install(TARGETS bsdf LIBRARY DESTINATION pyradiance)
 
-nanobind_add_module(rad_view STABLE_ABI NB_STATIC src/binding/view.cpp)
-target_include_directories(rad_view PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/radiance/common)
+nanobind_add_module(rad_params STABLE_ABI NB_STATIC src/binding/params.cpp)
+target_include_directories(rad_params PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/radiance/common ${CMAKE_CURRENT_LIST_DIR}/src/radiance/rt)
 if(UNIX)
-    target_link_libraries(rad_view PRIVATE raycalls radiance cpprad rtrad m)  # use -lm instead of libm.a
+    target_link_libraries(rad_params PRIVATE raycalls radiance cpprad rtrad m)  # use -lm instead of libm.a
 else()
-    target_link_libraries(rad_view PRIVATE raycalls radiance cpprad rtrad raycalls ${MATH_LIBRARY})
+    target_link_libraries(rad_params PRIVATE raycalls radiance cpprad rtrad raycalls ${MATH_LIBRARY})
 endif()
 
 if(APPLE)
-    target_compile_options(rad_view PRIVATE -include stdio.h)
+    target_compile_options(rad_params PRIVATE -include stdio.h)
 endif()
 
 # Install directive for scikit-build-core
-install(TARGETS rad_view LIBRARY DESTINATION pyradiance)
+install(TARGETS rad_params LIBRARY DESTINATION pyradiance)
