@@ -117,198 +117,199 @@ NB_MODULE(rad_params, m) {
     });
 
     m.def("get_view_args", [](VIEW &v) {
-        std::vector<std::string> result;
+        nb::list result;
 
         std::string vt = std::string("-vt") + (char)v.type;
-        result.push_back(vt);
+        result.append(vt);
 
-        result.push_back("-vp");
-        result.push_back(std::to_string(v.vp[0]));
-        result.push_back(std::to_string(v.vp[1]));
-        result.push_back(std::to_string(v.vp[2]));
+        result.append("-vp");
+        result.append(std::to_string(v.vp[0]));
+        result.append(std::to_string(v.vp[1]));
+        result.append(std::to_string(v.vp[2]));
 
-        result.push_back("-vd");
-        result.push_back(std::to_string(v.vdir[0]*v.vdist));
-        result.push_back(std::to_string(v.vdir[1]*v.vdist));
-        result.push_back(std::to_string(v.vdir[2]*v.vdist));
+        result.append("-vd");
+        result.append(std::to_string(v.vdir[0]*v.vdist));
+        result.append(std::to_string(v.vdir[1]*v.vdist));
+        result.append(std::to_string(v.vdir[2]*v.vdist));
 
-        result.push_back("-vu");
-        result.push_back(std::to_string(v.vup[0]));
-        result.push_back(std::to_string(v.vup[1]));
-        result.push_back(std::to_string(v.vup[2]));
+        result.append("-vu");
+        result.append(std::to_string(v.vup[0]));
+        result.append(std::to_string(v.vup[1]));
+        result.append(std::to_string(v.vup[2]));
 
-        result.push_back("-vh");
-        result.push_back(std::to_string(v.horiz));
-        result.push_back("-vv");
-        result.push_back(std::to_string(v.vert));
-        result.push_back("-vs");
-        result.push_back(std::to_string(v.hoff));
-        result.push_back("-vl");
-        result.push_back(std::to_string(v.voff));
-        result.push_back("-vo");
-        result.push_back(std::to_string(v.vfore));
-        result.push_back("-va");
-        result.push_back(std::to_string(v.vaft));
+        result.append("-vh");
+        result.append(std::to_string(v.horiz));
+        result.append("-vv");
+        result.append(std::to_string(v.vert));
+        result.append("-vs");
+        result.append(std::to_string(v.hoff));
+        result.append("-vl");
+        result.append(std::to_string(v.voff));
+        result.append("-vo");
+        result.append(std::to_string(v.vfore));
+        result.append("-va");
+        result.append(std::to_string(v.vaft));
 
         return result;
-        });
+    });
 
 
-  nb::class_<RAYPARAMS>(m, "RayParams")
-      .def_prop_rw(
-          "i", [](RAYPARAMS &param) { return (bool)param.do_irrad; },
-          [](RAYPARAMS &param, const bool val) { param.do_irrad = (int)val; },
-          "do irradiance")
-      .def_prop_rw(
-          "u", [](RAYPARAMS &param) { return (bool)param.rand_samp; },
-          [](RAYPARAMS &param, const bool val) { param.rand_samp = (int)val; },
-          "random sampling")
-      .def_prop_rw(
-          "dj", [](RAYPARAMS &param) { return param.dstrsrc; },
-          [](RAYPARAMS &param, const double val) { param.dstrsrc = val; },
-          "direct jitter")
-      .def_prop_rw(
-          "dt", [](RAYPARAMS &param) { return param.shadthresh; },
-          [](RAYPARAMS &param, const double val) { param.shadthresh = val; },
-          "direct threshold")
-      .def_prop_rw(
-          "dc", [](RAYPARAMS &param) { return param.shadcert; },
-          [](RAYPARAMS &param, const double val) { param.shadcert = val; },
-          "direct certainty")
-      .def_prop_rw(
-          "dr", [](RAYPARAMS &param) { return param.directrelay; },
-          [](RAYPARAMS &param, const int val) { param.directrelay = val; },
-          "direct relay")
-      .def_prop_rw(
-          "dp", [](RAYPARAMS &param) { return param.vspretest; },
-          [](RAYPARAMS &param, const int val) { param.vspretest = val; },
-          "virtual source pretesting")
-      .def_prop_rw(
-          "dv", [](RAYPARAMS &param) { return param.directvis; },
-          [](RAYPARAMS &param, const int val) { param.directvis = val; },
-          "direct visibility")
-      .def_prop_rw(
-          "ds", [](RAYPARAMS &param) { return param.srcsizerat; },
-          [](RAYPARAMS &param, const double val) { param.srcsizerat = val; },
-          "source size aspect ratio")
-      .def_prop_rw(
-          "me",
-          [](RAYPARAMS &param) {
-            return nb::make_tuple(param.cextinction[0], param.cextinction[1],
-                                  param.cextinction[2]);
-          },
-          [](RAYPARAMS &param, const float v1, const float v2, const float v3) {
-            param.cextinction[0] = v1;
-            param.cextinction[1] = v2;
-            param.cextinction[2] = v3;
-          },
-          "medium(mist) extinction coefficients")
-      .def_prop_rw(
-          "ma",
-          [](RAYPARAMS &param) {
-            return nb::make_tuple(param.salbedo[0], param.salbedo[1],
-                                  param.salbedo[2]);
-          },
-          [](RAYPARAMS &param, const float v1, const float v2, const float v3) {
-            param.salbedo[0] = v1;
-            param.salbedo[1] = v2;
-            param.salbedo[2] = v3;
-          },
-          "medium (mist) scattering albedo")
-      .def_prop_rw(
-          "mg", [](RAYPARAMS &param) { return param.seccg; },
-          [](RAYPARAMS &param, const double val) { param.seccg = val; },
-          "medium (mist) eccentricity factor")
-      .def_prop_rw(
-          "ms", [](RAYPARAMS &param) { return param.ssampdist; },
-          [](RAYPARAMS &param, const double val) { param.ssampdist = val; },
-          "medium (mist) sampling distance")
-      .def_prop_rw(
-          "st", [](RAYPARAMS &param) { return param.specthresh; },
-          [](RAYPARAMS &param, const double val) { param.specthresh = val; },
-          "specular threshold")
-      .def_prop_rw(
-          "ss", [](RAYPARAMS &param) { return param.specjitter; },
-          [](RAYPARAMS &param, const double val) { param.specjitter = val; },
-          "specular jitter")
-      .def_prop_rw(
-          "bv", [](RAYPARAMS &param) { return (bool)(param.backvis); },
-          [](RAYPARAMS &param, const bool val) { param.backvis = (int)val; },
-          "source back side visibility")
-      .def_prop_rw(
-          "lr", [](RAYPARAMS &param) { return param.maxdepth; },
-          [](RAYPARAMS &param, const int val) { param.maxdepth = val; },
-          "max depth")
-      .def_prop_rw(
-          "lw", [](RAYPARAMS &param) { return param.minweight; },
-          [](RAYPARAMS &param, const double val) { param.minweight = val; },
-          "minimum ray weight")
-      .def_prop_rw(
-          "af", [](RAYPARAMS &param) { return param.ambfile; },
-          [](RAYPARAMS &param, const std::string val) {
-            strncpy(param.ambfile, val.c_str(), 511);
+    nb::class_<RAYPARAMS>(m, "RayParams")
+        .def_prop_rw(
+            "i", [](RAYPARAMS &param) { return (bool)param.do_irrad; },
+            [](RAYPARAMS &param, const bool val) { param.do_irrad = (int)val; },
+            "do irradiance")
+        .def_prop_rw(
+            "u", [](RAYPARAMS &param) { return (bool)param.rand_samp; },
+            [](RAYPARAMS &param, const bool val) { param.rand_samp = (int)val; },
+            "random sampling")
+        .def_prop_rw(
+            "dj", [](RAYPARAMS &param) { return param.dstrsrc; },
+            [](RAYPARAMS &param, const double val) { param.dstrsrc = val; },
+            "direct jitter")
+        .def_prop_rw(
+            "dt", [](RAYPARAMS &param) { return param.shadthresh; },
+            [](RAYPARAMS &param, const double val) { param.shadthresh = val; },
+            "direct threshold")
+        .def_prop_rw(
+            "dc", [](RAYPARAMS &param) { return param.shadcert; },
+            [](RAYPARAMS &param, const double val) { param.shadcert = val; },
+            "direct certainty")
+        .def_prop_rw(
+            "dr", [](RAYPARAMS &param) { return param.directrelay; },
+            [](RAYPARAMS &param, const int val) { param.directrelay = val; },
+            "direct relay")
+        .def_prop_rw(
+            "dp", [](RAYPARAMS &param) { return param.vspretest; },
+            [](RAYPARAMS &param, const int val) { param.vspretest = val; },
+            "virtual source pretesting")
+        .def_prop_rw(
+            "dv", [](RAYPARAMS &param) { return param.directvis; },
+            [](RAYPARAMS &param, const int val) { param.directvis = val; },
+            "direct visibility")
+        .def_prop_rw(
+            "ds", [](RAYPARAMS &param) { return param.srcsizerat; },
+            [](RAYPARAMS &param, const double val) { param.srcsizerat = val; },
+            "source size aspect ratio")
+        .def_prop_rw(
+            "me",
+            [](RAYPARAMS &param) {
+              return nb::make_tuple(param.cextinction[0], param.cextinction[1],
+                                    param.cextinction[2]);
+            },
+            [](RAYPARAMS &param, const float v1, const float v2, const float v3) {
+              param.cextinction[0] = v1;
+              param.cextinction[1] = v2;
+              param.cextinction[2] = v3;
+            },
+            "medium(mist) extinction coefficients")
+        .def_prop_rw(
+            "ma",
+            [](RAYPARAMS &param) {
+              return nb::make_tuple(param.salbedo[0], param.salbedo[1],
+                                    param.salbedo[2]);
+            },
+            [](RAYPARAMS &param, const float v1, const float v2, const float v3) {
+              param.salbedo[0] = v1;
+              param.salbedo[1] = v2;
+              param.salbedo[2] = v3;
+            },
+            "medium (mist) scattering albedo")
+        .def_prop_rw(
+            "mg", [](RAYPARAMS &param) { return param.seccg; },
+            [](RAYPARAMS &param, const double val) { param.seccg = val; },
+            "medium (mist) eccentricity factor")
+        .def_prop_rw(
+            "ms", [](RAYPARAMS &param) { return param.ssampdist; },
+            [](RAYPARAMS &param, const double val) { param.ssampdist = val; },
+            "medium (mist) sampling distance")
+        .def_prop_rw(
+            "st", [](RAYPARAMS &param) { return param.specthresh; },
+            [](RAYPARAMS &param, const double val) { param.specthresh = val; },
+            "specular threshold")
+        .def_prop_rw(
+            "ss", [](RAYPARAMS &param) { return param.specjitter; },
+            [](RAYPARAMS &param, const double val) { param.specjitter = val; },
+            "specular jitter")
+        .def_prop_rw(
+            "bv", [](RAYPARAMS &param) { return (bool)(param.backvis); },
+            [](RAYPARAMS &param, const bool val) { param.backvis = (int)val; },
+            "source back side visibility")
+        .def_prop_rw(
+            "lr", [](RAYPARAMS &param) { return param.maxdepth; },
+            [](RAYPARAMS &param, const int val) { param.maxdepth = val; },
+            "max depth")
+        .def_prop_rw(
+            "lw", [](RAYPARAMS &param) { return param.minweight; },
+            [](RAYPARAMS &param, const double val) { param.minweight = val; },
+            "minimum ray weight")
+        .def_prop_rw(
+            "af", [](RAYPARAMS &param) { return param.ambfile; },
+            [](RAYPARAMS &param, const std::string val) {
+              strncpy(param.ambfile, val.c_str(), 511);
             param.ambfile[511] = '\0';
-          },
-          "ambient file")
-      .def_prop_rw(
-          "av",
-          [](RAYPARAMS &param) {
-            return nb::make_tuple(param.ambval[0], param.ambval[1],
-                                  param.ambval[2]);
-          },
-          [](RAYPARAMS &param, std::vector<float> vals) {
-            param.ambval[0] = vals[0];
-            param.ambval[1] = vals[1];
-            param.ambval[2] = vals[2];
-          },
-          "ambient values")
-      .def_prop_rw(
-          "aw", [](RAYPARAMS &param) { return param.ambvwt; },
-          [](RAYPARAMS &param, const int val) { param.ambvwt = val; },
-          "ambient weight")
-      .def_prop_rw(
-          "aa", [](RAYPARAMS &param) { return param.ambacc; },
-          [](RAYPARAMS &param, const double val) { param.ambacc = val; },
-          "ambient accuracy")
-      .def_prop_rw(
-          "ar", [](RAYPARAMS &param) { return param.ambres; },
-          [](RAYPARAMS &param, const int val) { param.ambres = val; },
-          "ambient resolution")
-      .def_prop_rw(
-          "ad", [](RAYPARAMS &param) { return param.ambdiv; },
-          [](RAYPARAMS &param, const int val) { param.ambdiv = val; },
-          "ambient division")
-      .def_prop_rw(
-          "abs", [](RAYPARAMS &param) { return param.ambssamp; },
-          [](RAYPARAMS &param, const int val) { param.ambssamp = val; },
-          "ambient super sampling")
-      .def_prop_rw(
-          "ab", [](RAYPARAMS &param) { return param.ambounce; },
-          [](RAYPARAMS &param, const int val) { param.ambounce = val; },
-          "ambient bounce")
-      .def_prop_rw(
-          "ambincl", [](RAYPARAMS &param) { return param.ambincl; },
-          [](RAYPARAMS &param, const bool val) { param.ambincl = val; },
-          "ambient inclusion/exclusion")
-      .def_prop_rw(
-          "amblist",
-          [](RAYPARAMS &param) {
-            nb::list result;
-            for (int i = 0; i < AMBLLEN + 1; i++) {
-              if (amblist[i] == nullptr) {
-                break;
-              }
-              result.append(amblist[i]);
+            },
+            "ambient file")
+        .def_prop_rw(
+            "av",
+            [](RAYPARAMS &param) {
+              return nb::make_tuple(param.ambval[0], param.ambval[1],
+                                    param.ambval[2]);
+            },
+            [](RAYPARAMS &param, std::vector<float> vals) {
+              param.ambval[0] = vals[0];
+              param.ambval[1] = vals[1];
+              param.ambval[2] = vals[2];
+            },
+            "ambient values")
+        .def_prop_rw(
+            "aw", [](RAYPARAMS &param) { return param.ambvwt; },
+            [](RAYPARAMS &param, const int val) { param.ambvwt = val; },
+            "ambient weight")
+        .def_prop_rw(
+            "aa", [](RAYPARAMS &param) { return param.ambacc; },
+            [](RAYPARAMS &param, const double val) { param.ambacc = val; },
+            "ambient accuracy")
+        .def_prop_rw(
+            "ar", [](RAYPARAMS &param) { return param.ambres; },
+            [](RAYPARAMS &param, const int val) { param.ambres = val; },
+            "ambient resolution")
+        .def_prop_rw(
+            "ad", [](RAYPARAMS &param) { return param.ambdiv; },
+            [](RAYPARAMS &param, const int val) { param.ambdiv = val; },
+            "ambient division")
+        .def_prop_rw(
+            "abs", [](RAYPARAMS &param) { return param.ambssamp; },
+            [](RAYPARAMS &param, const int val) { param.ambssamp = val; },
+            "ambient super sampling")
+        .def_prop_rw(
+            "ab", [](RAYPARAMS &param) { return param.ambounce; },
+            [](RAYPARAMS &param, const int val) { param.ambounce = val; },
+            "ambient bounce")
+        .def_prop_rw(
+            "ambincl", [](RAYPARAMS &param) { return param.ambincl; },
+            [](RAYPARAMS &param, const bool val) { param.ambincl = val; },
+            "ambient inclusion/exclusion")
+        .def_prop_rw(
+            "amblist",
+            [](RAYPARAMS &param) {
+                nb::list result;
+                for (int i = 0; i < AMBLLEN + 1; i++) {
+                  if (amblist[i] == nullptr) {
+                    break;
+                  }
+                  result.append(amblist[i]);
+                }
+                return result;
+            },
+            [](RAYPARAMS &param, std::vector<const char *> vals) {
+                char **amblp = amblist;
+                for (int i = 0; i < vals.size(); i++) {
+                  *amblp++ = savqstr(vals[i]);
+                }
+                *amblp = NULL;
             }
-            return result;
-          },
-          [](RAYPARAMS &param, std::vector<const char *> vals) {
-            char **amblp = amblist;
-            for (int i = 0; i < vals.size(); i++) {
-              *amblp++ = savqstr(vals[i]);
-            }
-            *amblp = NULL;
-          });
+        );
 
     m.def("get_default_ray_params", []() {
         RAYPARAMS rp;
