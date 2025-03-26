@@ -1,0 +1,55 @@
+		PICTURE FILTERS AND TRANSLATORS
+		SCCSid "@(#)README 2.8 10/22/96 LBL"
+
+This directory contains special and general purpose filters for RADIANCE
+picture files and converters to and from other image formats.
+
+pcond.h		header file for picture conditioning program pcond
+pic.h		header file for reading and writing pictures
+pict.h		header file defining Macintosh PICT format
+rasterfile.h	header description for Sun rasterfiles
+x11raster.h	header file for X11 routines using images
+aedimage.c	display program for AED 512 color graphics terminal
+clrtab.c	median-cut color quantization routines for 8-bit output
+macbethcal.c	program to calibrate image conversion using Macbeth chart
+neuclrtab.c	neural network color quantization code
+pcomb.c		combine picture files according to calcomp functions
+pcompos.c	program to composite pictures
+pcond.c		condition Radiance picture for display/output
+pcond2.c	pcond input and output conditioning routines for pcond.
+pcond3.c	pcond routines for computing and applying brightness mapping.
+pcond4.c	pcond routines for veiling glare and loss of acuity.
+pextrem.c	program to find min and max values in picture
+pf2.c		routines used by pfilt
+pf3.c		routines for gaussian and box filtering
+pfilt.c		program to post-process picture file
+pflip.c		flip picture file horizontally and/or vertically
+pinterp.c	interpolate and extrapolate pictures with different views
+pmapgen.c	affine transformation for image mapping used by macbethcal
+protate.c	program to rotate picture file 90 degrees clockwise
+psign.c		produce picture from text
+pvalue.c	program to print pixel values
+ra_gif.c	program to convert from RADIANCE to GIF format
+ra_pict.c	convert to Macintosh PICT file
+ra_ppm.c	program to convert between RADIANCE and Poskanzer Pixmaps
+ra_ps.c		program to convert to greyscale PostScript file
+ra_rgbe.c	program to convert from RADIANCE RLE to flat format
+ra_skel.c	skeletal converter between RADIANCE and generic 24-bit format
+ra_t16.c	program to convert between RADIANCE and Targa 15+ bit formats
+ra_t8.c		program to convert between RADIANCE and Targa 8 bit format
+ra_tiff.c	program to convert between RADIANCE and 24-bit TIFF files
+ttyimage.c	program to dump pixel file to dumb terminal
+vgaimage.c	program to display pixel file on VGA or SVGA card
+x11findwind.c	function to find X11 window by name
+x11image.c	picture display driver for X11
+x11raster.c	routines to handle images for X11
+xshowtrace.c	display a picture under X11 and watch the rays get traced
+falsecolor.csh 	C-shell script to produce false color pictures
+normpat.csh	C-shell script to normalize pictures for tiling patterns
+pdfblur.csh	compute views for depth of field blurring
+pgblur.csh	Gaussian blur function
+pmblur.csh	compute views for motion blurring
+pmdblur.csh	compute views for combined motion and depth-of-field blurring
+ran2tiff.csh	expose and convert animation frames using pcond and ra_tiff
+xyzimage.csh	display images correctly for a particular monitor's primaries
+tiff/		TIFF image library

@@ -1,0 +1,12 @@
+{ RCSid $Id: quadratic.cal,v 1.2 2018/11/21 18:10:45 greg Exp $ }
+{
+	quadratic.cal - solve quadratic equation:
+
+	Ax^2 + Bx + C = 0
+}
+
+determ = B*B - 4*A*C;
+
+root1 = (-B + sqrt(determ))/2/A;
+
+root2 = (-B - sqrt(determ))/2/A;
