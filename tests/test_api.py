@@ -8,7 +8,6 @@ import pyradiance as pr
 
 
 class TestPyradianceAPI(unittest.TestCase):
-
     resources_dir = os.path.join(os.path.dirname(__file__), "Resources")
     floor = os.path.join(resources_dir, "floor 1.rad")
     ceiling = os.path.join(resources_dir, "ceiling.rad")
@@ -49,7 +48,7 @@ class TestPyradianceAPI(unittest.TestCase):
         self.assertTrue(self.material in scene.materials)
         self.assertTrue(self.source in scene.sources)
 
-    @unittest.skipIf(os.name=='nt', "test not supported on Windows")
+    @unittest.skipIf(os.name == "nt", "test not supported on Windows")
     def test_parse_view(self):
         inp_str = "-vta -vv 180 -vh 180 -vp 0 0 0 -vd 0 -1 0"
         res = pr.parse_view(inp_str)
@@ -58,7 +57,7 @@ class TestPyradianceAPI(unittest.TestCase):
         self.assertEqual(res.type, "a")
         self.assertEqual(res.horiz, 180)
 
-    @unittest.skipIf(os.name=='nt', "test not supported on Windows")
+    @unittest.skipIf(os.name == "nt", "test not supported on Windows")
     def test_ray_param(self):
         pr.ray_done(1)
         rp = pr.get_ray_params()
@@ -82,7 +81,7 @@ class TestPyradianceAPI(unittest.TestCase):
         self.assertEqual(rp.i, rp2.i)
         pr.set_ray_params()
 
-    @unittest.skipIf(os.name=='nt', "test not supported on Windows")
+    @unittest.skipIf(os.name == "nt", "test not supported on Windows")
     def test_parse_opt(self):
         pr.ray_done(1)
         inp_str = "-ab 8 -ad 1024 -u- -aa .1 -lw 1e-8 -av 1 2 3"
@@ -99,36 +98,74 @@ class TestPyradianceAPI(unittest.TestCase):
     def test_load_material_smd(self):
         path = Path(self.smd_file)
         prim = pr.load_material_smd(path)
-        for v, t in zip(prim[0].fargs, [0.5206966996192932, 0.3083151578903198, 0.02297455072402954, 0.00482973841239237, 0.0]):
+        for v, t in zip(
+            prim[0].fargs,
+            [
+                0.5206966996192932,
+                0.3083151578903198,
+                0.02297455072402954,
+                0.00482973841239237,
+                0.0,
+            ],
+        ):
             self.assertAlmostEqual(v, t, places=4)
         prim2 = pr.load_material_smd(path, spectral=True, roughness=0.2)
-        for v, t in zip(prim2[1].fargs, [1., 1., 1., 0.00482973841239237, 0.2]):
+        for v, t in zip(prim2[1].fargs, [1.0, 1.0, 1.0, 0.00482973841239237, 0.2]):
             self.assertAlmostEqual(v, t, places=4)
 
     def test_create_default_view(self):
         myview = pr.create_default_view()
-        self.assertEqual(myview.type , 'v')
+        self.assertEqual(myview.type, "v")
 
     def test_view_mod(self):
         myview = pr.create_default_view()
-        myview.type = 'a'
-        self.assertEqual(myview.type , 'a')
-        myview.vp = 1,1,1
-        self.assertEqual(myview.vp , (1,1,1))
+        myview.type = "a"
+        self.assertEqual(myview.type, "a")
+        myview.vp = 1, 1, 1
+        self.assertEqual(myview.vp, (1, 1, 1))
 
     def test_view_args(self):
         myview = pr.create_default_view()
-        myview.type = 'a'
-        myview.vp = 1,1,1
+        myview.type = "a"
+        myview.vp = 1, 1, 1
         args = pr.get_view_args(myview)
-        self.assertEqual(args, ['-vta', '-vp', '1.000000', '1.000000', '1.000000', '-vd', '0.000000', '1.000000', '0.000000', '-vu', '0.000000', '0.000000', '1.000000', '-vh', '45.000000', '-vv', '45.000000', '-vs', '0.000000', '-vl', '0.000000', '-vo', '0.000000', '-va', '0.000000'])
+        self.assertEqual(
+            args,
+            [
+                "-vta",
+                "-vp",
+                "1.000000",
+                "1.000000",
+                "1.000000",
+                "-vd",
+                "0.000000",
+                "1.000000",
+                "0.000000",
+                "-vu",
+                "0.000000",
+                "0.000000",
+                "1.000000",
+                "-vh",
+                "45.000000",
+                "-vv",
+                "45.000000",
+                "-vs",
+                "0.000000",
+                "-vl",
+                "0.000000",
+                "-vo",
+                "0.000000",
+                "-va",
+                "0.000000",
+            ],
+        )
 
     def test_parse_view(self):
         view = "-vta -vp 1 2 3 -vd 4 5 6 -vv 180 -vh 170"
         myview = pr.parse_view(view)
-        self.assertEqual(myview.type, 'a')
-        self.assertEqual(myview.vp, (1,2,3))
-        self.assertEqual(myview.vdir, (4,5,6))
+        self.assertEqual(myview.type, "a")
+        self.assertEqual(myview.vp, (1, 2, 3))
+        self.assertEqual(myview.vdir, (4, 5, 6))
         self.assertEqual(myview.horiz, 170)
         self.assertEqual(myview.vert, 180)
 
@@ -143,12 +180,67 @@ class TestPyradianceAPI(unittest.TestCase):
         params.ambincl = True
         params.amblist = ["test"]
         args = pr.get_ray_params_args(params)
-        self.assertEqual(args, ['-u+', '-bv', '-dt', '0.030000', '-dc', '0.750000', '-dj', '0.000000', '-dr', '2', '-dp', '512', '-dv', '-ds', '0.200000', '-st', '0.150000', '-ss', '1.000000', '-lr', '-10', '-lw', '0.000100', '-av', '0.000000', '0.000000', '0.000000', '-aw', '0', '-aa', '0.100000', '-ar', '256', '-ad', '1024', '-as', '512', '-ab', '3', '-ai', 'test', '-me', '0.000000', '0.000000', '0.000000', '-ma', '0.000000', '0.000000', '0.000000', '-mg', '0.000000', '-ms', '0.000000'])
-
+        self.assertEqual(
+            args,
+            [
+                "-u+",
+                "-bv",
+                "-dt",
+                "0.030000",
+                "-dc",
+                "0.750000",
+                "-dj",
+                "0.000000",
+                "-dr",
+                "2",
+                "-dp",
+                "512",
+                "-dv",
+                "-ds",
+                "0.200000",
+                "-st",
+                "0.150000",
+                "-ss",
+                "1.000000",
+                "-lr",
+                "-10",
+                "-lw",
+                "0.000100",
+                "-av",
+                "0.000000",
+                "0.000000",
+                "0.000000",
+                "-aw",
+                "0",
+                "-aa",
+                "0.100000",
+                "-ar",
+                "256",
+                "-ad",
+                "1024",
+                "-as",
+                "512",
+                "-ab",
+                "3",
+                "-ai",
+                "test",
+                "-me",
+                "0.000000",
+                "0.000000",
+                "0.000000",
+                "-ma",
+                "0.000000",
+                "0.000000",
+                "0.000000",
+                "-mg",
+                "0.000000",
+                "-ms",
+                "0.000000",
+            ],
+        )
 
 
 class TestPyradianceCLI(unittest.TestCase):
-
     resources_dir = os.path.join(os.path.dirname(__file__), "Resources")
     floor = os.path.join(resources_dir, "floor 1.rad")
     ceiling = os.path.join(resources_dir, "ceiling.rad")
@@ -164,11 +256,13 @@ class TestPyradianceCLI(unittest.TestCase):
 
     def test_gensky(self):
         res = pr.gensky(
-            datetime(2022, 2, 1, 12), 37, 122, 120,
+            datetime(2022, 2, 1, 12),
+            37,
+            122,
+            120,
         )
         ptypes = {p.ptype for p in pr.parse_primitive(res.decode())}
         self.assertEqual(ptypes, {"light", "brightfunc", "source"})
-
 
     def test_genssky(self):
         pass
@@ -189,9 +283,9 @@ class TestPyradianceCLI(unittest.TestCase):
     def test_render(self):
         """Test the render function."""
         aview = pr.View()
-        aview.type = 'a'
+        aview.type = "a"
         aview.vp = (1, 2, 1)
-        aview.vdir = (0, -1 ,0)
+        aview.vdir = (0, -1, 0)
         aview.vu = (0, 0, 1)
         aview.horiz = 180
         aview.vert = 180
@@ -201,7 +295,14 @@ class TestPyradianceCLI(unittest.TestCase):
         scene.add_material(self.material)
         scene.add_source(self.source)
         scene.add_view(aview)
-        img = pr.render(scene, quality='low', ambbounce=1, nproc=4, ambcache=True, resolution=(800,800))
+        img = pr.render(
+            scene,
+            quality="low",
+            ambbounce=1,
+            nproc=4,
+            ambcache=True,
+            resolution=(800, 800),
+        )
         os.remove(scene.octree)
         os.remove(scene._moctree)
         os.remove(f"{scene.sid}.amb")
@@ -257,7 +358,8 @@ class TestPyradianceCLI(unittest.TestCase):
             height=1,
             nslats=10,
             angle=45,
-            rcurv = 0,)
+            rcurv=0,
+        )
 
     def test_genbsdf(self):
         sol_mat = pr.ShadingMaterial(0.5, 0, 0)
@@ -276,7 +378,9 @@ class TestPyradianceCLI(unittest.TestCase):
         ir_blinds = pr.generate_blinds(ir_mat, geom)
         sol_results = pr.generate_bsdf(sol_blinds, nsamp=10, params=["-ab", "1"])
         vis_results = pr.generate_bsdf(vis_blinds, nsamp=10, params=["-ab", "1"])
-        ir_results = pr.generate_bsdf(ir_blinds, basis='u', nsamp=10, params=["-ab", "1"])
+        ir_results = pr.generate_bsdf(
+            ir_blinds, basis="u", nsamp=10, params=["-ab", "1"]
+        )
         xml = pr.generate_xml(sol_results, vis_results, ir_results)
 
     def test_rcontrib(self):

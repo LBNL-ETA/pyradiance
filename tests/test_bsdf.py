@@ -5,7 +5,6 @@ from pyradiance import bsdf
 
 
 class TestBSDF(unittest.TestCase):
-
     resources_dir = os.path.join(os.path.dirname(__file__), "Resources")
 
     def test_BSDF(self):
@@ -17,6 +16,7 @@ class TestBSDF(unittest.TestCase):
         self.assertAlmostEqual(_a[0], 7.6699e-4)
         _sv = bsdf.query(sddata, 0, 0, 180, 0)
         self.assertAlmostEqual(_sv[1], 4.9971852)
+
 
 if __name__ == "__main__":
     unittest.main()
