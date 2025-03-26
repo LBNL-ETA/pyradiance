@@ -41,7 +41,7 @@ jobs:
       run: |
         mkdir -p wheelhouse
         for whl in dist/*.whl; do
-          auditwheel repair "$whl" --plat manylinux_2_34 -w wheelhouse/
+          auditwheel repair "$whl" --plat manylinux_2_34_x86_64 -w wheelhouse/
         done
         # Replace original wheels with repaired ones
         cp wheelhouse/*.whl dist/ || true
