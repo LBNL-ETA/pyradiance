@@ -132,6 +132,20 @@ class TestPyradianceAPI(unittest.TestCase):
         self.assertEqual(myview.horiz, 170)
         self.assertEqual(myview.vert, 180)
 
+    def test_get_default_ray_params(self):
+        params = pr.get_default_ray_params()
+        params.ab = 3
+        self.assertEqual(params.ab, 3)
+
+    def test_get_ray_params_args(self):
+        params = pr.get_default_ray_params()
+        params.ab = 3
+        params.ambincl = True
+        params.amblist = ["test"]
+        args = pr.get_ray_params_args(params)
+        self.assertEqual(args, ['-u+', '-bv', '-dt', '0.030000', '-dc', '0.750000', '-dj', '0.000000', '-dr', '2', '-dp', '512', '-dv', '-ds', '0.200000', '-st', '0.150000', '-ss', '1.000000', '-lr', '-10', '-lw', '0.000100', '-av', '0.000000', '0.000000', '0.000000', '-aw', '0', '-aa', '0.100000', '-ar', '256', '-ad', '1024', '-as', '512', '-ab', '3', '-ai', 'test', '-me', '0.000000', '0.000000', '0.000000', '-ma', '0.000000', '0.000000', '0.000000', '-mg', '0.000000', '-ms', '0.000000'])
+
+
 
 class TestPyradianceCLI(unittest.TestCase):
 
