@@ -51,8 +51,12 @@ jobs:
     - name: upload wheels
       uses: actions/upload-artifact@v4
       with:
-        name: dist-${{ matrix.os }}
+        name: dist-${{ matrix.os }}-python-${{ matrix.python-version }}
         path: ./dist/*.whl
+        if-no-files-found: warn
+        compression-level: 6
+        overwrite: false
+        include-hidden-files: false
 
 
   publish-pypi:
@@ -70,6 +74,7 @@ jobs:
     - name: Download artifacts
       uses: actions/download-artifact@v4
       with:
+        pattern: dist-*
         path: downloaded_dist
 
     - name: Create dist directory
