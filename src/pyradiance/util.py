@@ -1018,7 +1018,7 @@ class WrapBSDF:
             self.cmd.extend(["-C", comment])
         if geometry:
             self.cmd.extend(["-g", geometry])
-        fields_keys = ["n", "m", "d", "c", "ef", "eb", "eo", "t", "h", "w"]
+        fields_keys = ["n", "m", "d", "c", "ef", "eb", "eo", "tir", "t", "h", "w"]
         fields = []
         for key in fields_keys:
             if key in kwargs:
