@@ -35,6 +35,7 @@ from .genbsdf import (
     ShadingMaterial,
     BlindsGeometry,
     generate_blinds,
+    generate_blinds_for_bsdf,
     generate_bsdf,
     generate_xml,
 )

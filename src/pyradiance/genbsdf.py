@@ -69,7 +69,7 @@ def generate_blinds(mat: ShadingMaterial, geom: BlindsGeometry) -> bytes:
         random.choices(string.ascii_letters + string.digits, k=5)
     )
     name_random_strings = "".join(
-        random.choices(string.ascii_letters + string.digits, k=8)
+        random.choices(string.ascii_letters + string.digits, k=5)
     )
     material_name = f"blinds_material_{mat_random_strings}"
     blinds_name = f"blinds_{name_random_strings}"
@@ -84,12 +84,13 @@ def generate_blinds(mat: ShadingMaterial, geom: BlindsGeometry) -> bytes:
         geom.angle,
         geom.rcurv,
     )
-    # xform -rz -90 -rx -90 -t 0 0 -0.939693
+    return material.bytes + blinds
+
+
+def generate_blinds_for_bsdf(mat: ShadingMaterial, geom: BlindsGeometry) -> bytes:
+    prims = generate_blinds(mat, geom)
     thickness = geom.depth * math.cos(math.radians(geom.angle))
-    return (
-        material.bytes
-        + Xform(blinds).rotatez(-90).rotatex(-90).translate(0, 0, -thickness)()
-    )
+    return Xform(prims).rotatez(-90).rotatex(-90).translate(0, 0, -thickness)()
 
 
 def get_basis_and_up(basis) -> tuple[str, str, str]:
