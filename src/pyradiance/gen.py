@@ -529,6 +529,8 @@ def genssky(
     nthreads: int = 1,
     out_dir: str = ".",
     out_name: str = "out",
+    dir_norm_illum: None | float = None,
+    diff_hor_illum: None | float = None,
 ) -> bytes:
     """Generate a RADIANCE description of the spectral sky.
 
@@ -538,11 +540,18 @@ def genssky(
         longitude: longitude, only apply if dt is not None
         timezone: timezone, only apply if dt is not None
         year: year, only apply if dt is not None
-        cloud_cover: CIE overcast sky
-        ground_reflectance: ground reflectance
-        solar_radiance: solar radiance in watts/steradian/meter^2
-        horizontal_direct_irradiance: horizontal direct irradiance in watts/meter^2
-        turbidity: turbidity factor
+        res: hsr image resolution, default: 64,
+        cloud_cover: cloud cover 0.0: clear, 1.0: overcast,
+        ground_reflectance: default: 0.2,
+        broadband_aerosol_optical_depth: default: 0.115,
+        mie_file: mie scattering coefficient source file
+        nthreads: number of threads used for precomputation, default:1,
+        out_dir: directory to save precomputed data that can be reused, default to current working directory. 
+            This can be changed to RAYPATH for cross-section data reused.
+        out_name: output file name, defautl: "out"
+        dir_norm_illum: direct normal illuminance to calibrate the output against,
+        diff_hor_illum: diffuse horizontal illuminance to calibrate the output against.
+
 
     Returns:
         str: output of gensky
@@ -565,6 +574,8 @@ def genssky(
         cmd.extend(["-l", str(mie_file)])
     cmd.extend(["-p", out_dir])
     cmd.extend(["-f", out_name])
+    if (dir_norm_illum is not None) and (diff_hor_illum is not None):
+        cmd.extend(["-L", str(dir_norm_illum), str(diff_hor_illum)])
     return sp.run(cmd, stderr=sp.PIPE, stdout=sp.PIPE, check=False).stdout
 
 
