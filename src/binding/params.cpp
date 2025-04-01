@@ -111,8 +111,11 @@ NB_MODULE(rad_params, m) {
         return vp;
     });
 
-    m.def("viewfile", [](const char *fname, VIEW *vp, RESOLU *rp) {
-        return viewfile(const_cast<char *>(fname), vp, rp);
+    m.def("viewfile", [](const char *fname) {
+        VIEW vp;
+        RESOLU *rp;
+        viewfile(const_cast<char *>(fname), &vp, rp);
+        return vp;
     });
 
     m.def("get_view_args", [](VIEW &v) {
