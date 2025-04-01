@@ -373,9 +373,9 @@ class TestPyradianceCLI(unittest.TestCase):
             angle=45,
             rcurv=1,
         )
-        sol_blinds = pr.generate_blinds(sol_mat, geom)
-        vis_blinds = pr.generate_blinds(vis_mat, geom)
-        ir_blinds = pr.generate_blinds(ir_mat, geom)
+        sol_blinds = pr.generate_blinds_for_bsdf(sol_mat, geom)
+        vis_blinds = pr.generate_blinds_for_bsdf(vis_mat, geom)
+        ir_blinds = pr.generate_blinds_for_bsdf(ir_mat, geom)
         sol_results = pr.generate_bsdf(sol_blinds, nsamp=10, params=["-ab", "1"])
         vis_results = pr.generate_bsdf(vis_blinds, nsamp=10, params=["-ab", "1"])
         ir_results = pr.generate_bsdf(
