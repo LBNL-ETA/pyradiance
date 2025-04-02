@@ -13,8 +13,8 @@ from typing import Sequence
 from .anci import BINPATH, handle_called_process_error
 
 from .bsdf import spec_xyz, xyz_rgb
-from .model import Primitive
-from .rad_params import View, RayParams, get_ray_params_args
+from .model import Primitive, Scene
+from .rad_params import View, RayParams, get_ray_params_args, get_view_args
 from .ot import getbbox
 from .px import pvaluer
 from .cal import cnt
@@ -23,7 +23,7 @@ from .rt import rpict, rtrace
 
 @handle_called_process_error
 def evalglare(
-    inp,
+    inp: str | bytes | Path,
     view: None | list[str] = None,
     detailed: bool = False,
     ev_only: bool = False,
@@ -135,7 +135,7 @@ def evalglare(
 
 @handle_called_process_error
 def dctimestep(
-    *mtx,
+    *mtx: str | bytes,
     nstep: None | int = None,
     header: bool = True,
     xres: None | int = None,
@@ -189,7 +189,7 @@ def dctimestep(
 
 @handle_called_process_error
 def getinfo(
-    *inputs: str | Path | bytes,
+    *inputs: tuple[str | Path | bytes, ...],
     dimension_only: bool = False,
     dimension: bool = False,
     strip_header: bool = False,
@@ -248,7 +248,7 @@ def get_image_dimensions(image: str | Path | bytes) -> tuple[int, int]:
 
 
 @handle_called_process_error
-def get_header(inp, dimension: bool = False) -> bytes:
+def get_header(inp: str | Path | bytes, dimension: bool = False) -> bytes:
     """Get header information from a Radiance file.
 
     Args:
@@ -272,7 +272,7 @@ def get_header(inp, dimension: bool = False) -> bytes:
 
 @handle_called_process_error
 def rad(
-    inp,
+    inp: str | Path,
     view: None | str = None,
     dryrun: bool = False,
     update: bool = False,
@@ -319,7 +319,7 @@ def read_rad(fpath: str) -> list[Primitive]:
     with open(fpath) as rdr:
         lines = rdr.readlines()
     if any(line.startswith("!") for line in lines):
-        lines = xform(fpath).decode().splitlines()
+        lines = Xform(fpath)().decode().splitlines()
     return parse_primitive("\n".join(lines))
 
 
@@ -495,7 +495,7 @@ def rcode_ident(
 
 @handle_called_process_error
 def rcode_norm(
-    inp,
+    inp: str | Path | bytes,
     inheader: bool = True,
     outheader: bool = True,
     inresolution: bool = True,
@@ -607,9 +607,6 @@ class Rcomb:
             outform: output format
             header: include header
             silent: suppress output
-
-        Returns:
-            bytes: output of rcomb
         """
         cmd = [str(BINPATH / "rcomb")]
         stdin: None | bytes = None
@@ -638,7 +635,17 @@ class Rcomb:
         input: str | Path | bytes,
         transform: None | str = None,
         scale: None | Sequence[float] = None,
-    ):
+    ) -> "Rcomb":
+        """Insert commands for inputs
+
+        Args:
+            input: input can be file path or bytes
+            transform: transform string
+            scale: sequence of scaling factors
+
+        Returns:
+            self
+        """
         if transform is not None:
             self.cmd.extend(["-c", transform])
         if scale is not None:
@@ -659,7 +666,7 @@ class Rcomb:
 
 
 def render(
-    scene,
+    scene: Scene,
     view: None | View = None,
     quality: str = "Medium",
     variability: str = "Medium",
@@ -679,6 +686,7 @@ def render(
         variability: Variability level.
         detail: Detail level.
         nproc: Number of processes to use.
+        ncssamp: Number of channels to sample
         ambbounce: Number of ambient bounces.
         ambcache: Use ambient cache.
         params: Sampling parameters.
@@ -748,7 +756,7 @@ def render(
         param_strs.append("-co+")
     if params is not None:
         param_strs.extend(get_ray_params_args(params))
-    vargs = view_args(aview)
+    vargs = get_view_args(aview)
     res = vwrays(view=vargs, dimensions=True, xres=xres, yres=yres).decode().split()
     xres, yres = int(res[1]), int(res[3])
     if not specout and nproc == 1:
@@ -826,13 +834,17 @@ def rfluxmtx(
     scene: None | Sequence[Path | str] = None,
 ) -> bytes:
     """Run rfluxmtx command.
+
     Args:
-        scene: A Scene object.
-        sender: A Sender.
-        receiver: A Radiance SensorGrid.
-        option: Radiance parameters for rfluxmtx command as a list of strings.
-    Sender: stdin, polygon
-    Receiver: surface with -o
+        receiver: receiver file path
+        surface: input surface file path, mutually exclusive with rays
+        rays: input rays bytes, mutually exclusive with surface
+        params: ray tracing parameters
+        octree: octree file path
+        scene: list of scene files
+
+    Returns:
+        The results of rfluxmtx in bytes
     """
     cmd = [str(BINPATH / "rfluxmtx")]
     if params:
@@ -852,11 +864,28 @@ def rfluxmtx(
     return sp.run(cmd, check=True, stdout=sp.PIPE, input=rays).stdout
 
 
+# TODO: update to latest rmtxop interface
 @handle_called_process_error
 def rmtxop(
-    inp, outform="a", transpose=False, scale=None, transform=None, reflectance=None
-):
-    """Run rmtxop command."""
+    inp: str | Path | bytes,
+    outform: str = "a",
+    transpose: bool = False,
+    scale: None | float = None,
+    transform: None | Sequence[float] = None,
+    reflectance: None | str = None,
+) -> bytes:
+    """Run rmtxop command.
+
+    Args:
+        inp: input
+        outform: output format: 'a', 'f', 'd', 'c'
+        transpose: whether to transpose matrix
+        scale: scaling factor
+        transform: transform factors for each channel
+
+    Returns:
+        The results of rmtxop in bytes
+    """
     cmd = [str(BINPATH / "rmtxop")]
     stdin = None
     if transpose:
@@ -896,6 +925,7 @@ def rsensor(
         octree: Octree file
         nproc: Number of processors to use
         params: Additional parameters for rsensor command
+
     Returns:
         Output of rsensor command
     """
@@ -921,9 +951,9 @@ def rsensor(
 
 
 @handle_called_process_error
-def strip_header(inp) -> bytes:
+def strip_header(inp: bytes) -> bytes:
     """Use getinfo to strip the header from a Radiance file."""
-    cmd = ["getinfo", "-"]
+    cmd = [str(BINPATH / "getinfo"), "-"]
     if isinstance(inp, bytes):
         stdin = inp
     else:
@@ -978,12 +1008,12 @@ def vwrays(
 
 @handle_called_process_error
 def vwright(
-    view,
+    view: View,
     distance: float = 0,
 ) -> bytes:
     """Run vwright."""
     cmd = [str(BINPATH / "vwright")]
-    cmd.extend(view.args())
+    cmd.extend(get_view_args(view))
     cmd.append(str(distance))
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
@@ -991,16 +1021,29 @@ def vwright(
 class WrapBSDF:
     def __init__(
         self,
-        inxml=None,
-        enforce_window=False,
+        inxml: None | str | Path = None,
+        enforce_window: bool = False,
         comment: None | str = None,
-        correct_solid_angle=False,
+        correct_solid_angle: bool = False,
         basis: None | str = None,
         unlink: bool = False,
-        unit=None,
-        geometry=None,
-        **kwargs,
+        unit: None | str = None,
+        geometry: None | str = None,
+        **kwargs: str | float,
     ):
+        """Initialize wrapper operation of BSDF data into XML
+
+        Args:
+            inxml: input xml file
+            enforce_window: Enforcing LBNL Window XML schema,
+            comment: additional comment to add to XML,
+            correct_solid_angle: Correct the input BSDF by solid angles,
+            basis: BSDF basis to use, "kf", "kh", "kq",
+            unlink: Whether to remove input file after creating XML file,
+            unit: BSDF geometry unit,
+            geometry: Whether to include geometry in XML,
+            **kwargs: Additional tags to be passed into XML
+        """
         self.has_visible = False
         self.has_solar = False
         self.cmd = [str(BINPATH / "wrapBSDF")]
@@ -1047,7 +1090,7 @@ class WrapBSDF:
             arglist.extend(["-rb", str(rb)])
         if len(arglist) == 2:
             print("At least one of tf, tb, rf, rb should be provided for", spectrum)
-            return
+            return self
         self.cmd.extend(arglist)
         return self
 
@@ -1057,7 +1100,18 @@ class WrapBSDF:
         tf: None | str = None,
         rb: None | str = None,
         rf: None | str = None,
-    ):
+    ) -> "WrapBSDF":
+        """Insert commands for visible data
+
+        Args:
+            tb: back transmittance file
+            tf: front transmittance file
+            rb: back reflectance file
+            rf: front reflectance file
+
+        Returns:
+            self
+        """
         self.has_visible = True
         return self._add_spectrum("Visible", tb=tb, tf=tf, rb=rb, rf=rf)
 
@@ -1067,7 +1121,18 @@ class WrapBSDF:
         tf: None | str = None,
         rb: None | str = None,
         rf: None | str = None,
-    ):
+    ) -> "WrapBSDF":
+        """Insert commands for solar data
+
+        Args:
+            tb: back transmittance file
+            tf: front transmittance file
+            rb: back reflectance file
+            rf: front reflectance file
+
+        Returns:
+            self
+        """
         self.has_solar = True
         return self._add_spectrum("Solar", tb=tb, tf=tf, rb=rb, rf=rf)
 
@@ -1085,27 +1150,23 @@ class WrapBSDF:
 class Xform:
     def __init__(
         self,
-        inp,
+        inp: str | Path | bytes,
         expand_cmd: bool = True,
         invert: bool = False,
         iprefix: None | str = None,
         modifier: None | str = None,
     ):
-        """Transform a RADIANCE scene description
-
-        Notes:
-            Iterate and arrays are not supported.
+        """Initialize a transformation operation of a RADIANCE scene description
 
         Args:
-            inp: Input file or string
-            translate: Translation vector
+            inp: Input file or bytes
             expand_cmd: Set to True to expand command
             iprefix: Prefix identifier
             modifier: Set surface modifier to this name
             invert: Invert surface normal
         """
         self.inp = inp
-        self.stdin = None
+        self.stdin: None | bytes = None
         self.args = [str(BINPATH / "xform")]
         if not expand_cmd:
             self.args.append("-c")
@@ -1116,43 +1177,116 @@ class Xform:
         if invert:
             self.args.append("-I")
 
-    def translate(self, x: float, y: float, z: float):
+    def translate(self, x: float, y: float, z: float) -> "Xform":
+        """Insert translate command.
+
+        Args:
+            x: translation in x coordinate
+            y: translation in y coordinate
+            z: translation in z coordinate
+
+        Returns:
+            self
+        """
         self.args.extend(["-t", str(x), str(y), str(z)])
         return self
 
-    def rotatex(self, deg: float):
+    def rotatex(self, deg: float) -> "Xform":
+        """Insert rotation around x axis command.
+
+        Args:
+            deg: rotation in degree
+
+        Returns:
+            self
+        """
         self.args.extend(["-rx", str(deg)])
         return self
 
-    def rotatey(self, deg: float):
+    def rotatey(self, deg: float) -> "Xform":
+        """Insert rotation around x axis command.
+
+        Args:
+            deg: rotation in degree
+
+        Returns:
+            self
+        """
         self.args.extend(["-ry", str(deg)])
         return self
 
-    def rotatez(self, deg: float):
+    def rotatez(self, deg: float) -> "Xform":
+        """Insert rotation around x axis command.
+
+        Args:
+            deg: rotation in degree
+
+        Returns:
+            self
+        """
         self.args.extend(["-rz", str(deg)])
         return self
 
-    def scale(self, ratio: float):
+    def scale(self, ratio: float) -> "Xform":
+        """Insert rotation around x axis command.
+
+        Args:
+            deg: rotation in degree
+
+        Returns:
+            self
+        """
         self.args.extend(["-s", str(ratio)])
         return self
 
-    def mirrorx(self):
+    def mirrorx(self) -> "Xform":
+        """Insert mirror about yz plane command.
+
+        Returns:
+            self
+        """
         self.args.append("-mx")
         return self
 
-    def mirrory(self):
+    def mirrory(self) -> "Xform":
+        """Insert mirror about xz plane command.
+
+        Returns:
+            self
+        """
         self.args.append("-my")
         return self
 
-    def mirrorz(self):
+    def mirrorz(self) -> "Xform":
+        """Insert mirror about xy plane command.
+
+        Returns:
+            self
+        """
         self.args.append("-mz")
         return self
 
-    def array(self, number: int):
+    def array(self, number: int) -> "Xform":
+        """Insert array command.
+
+        Args:
+            number: array number
+
+        Returns:
+            self
+        """
         self.args.extend(["-a", str(number)])
         return self
 
-    def iterate(self, number: int):
+    def iterate(self, number: int) -> "Xform":
+        """Insert iterate command.
+
+        Args:
+            number: iterate number
+
+        Returns:
+            self
+        """
         self.args.extend(["-i", str(number)])
         return self
 
@@ -1168,83 +1302,8 @@ class Xform:
         return self._execute()
 
 
-@handle_called_process_error
-def xform(
-    inp,
-    translate: None | tuple[float, float, float] = None,
-    expand_cmd: bool = True,
-    iprefix: None | str = None,
-    modifier: None | str = None,
-    invert: bool = False,
-    rotatex: None | float = None,
-    rotatey: None | float = None,
-    rotatez: None | float = None,
-    scale: None | float = None,
-    mirrorx: bool = False,
-    mirrory: bool = False,
-    mirrorz: bool = False,
-) -> bytes:
-    """Transform a RADIANCE scene description
-
-    Notes:
-        Iterate and arrays are not supported.
-
-    Args:
-        inp: Input file or string
-        translate: Translation vector
-        expand_cmd: Set to True to expand command
-        iprefix: Prefix identifier
-        mprefix: Set surface modifier to this name
-        invert: Invert surface normal
-        rotatex: Rotate the scene degrees about the x axis.
-            A positive rotation corresponds to
-        rotatey: Rotate the scene degrees about the y axis.
-        rotatez: Rotate the scene degrees about the z axis.
-        scale: Scale the scene by this factor
-        mirrorx: Mirror the scene about the yz plane.
-        mirrory: Mirror the scene about the xz plane.
-        mirrorz: Mirror the scene about the xy plane.
-
-    Returns:
-        The transformed scene description in bytes
-
-    """
-    print("This functino is deprecated, please use Xform() instead")
-    stdin = None
-    cmd = [str(BINPATH / "xform")]
-    if not expand_cmd:
-        cmd.append("-c")
-    if iprefix:
-        cmd.extend(["-n", iprefix])
-    if modifier:
-        cmd.extend(["-m", modifier])
-    if invert:
-        cmd.append("-I")
-    if rotatex:
-        cmd.extend(["-rx", str(rotatex)])
-    if rotatey:
-        cmd.extend(["-ry", str(rotatey)])
-    if rotatez:
-        cmd.extend(["-rz", str(rotatez)])
-    if scale:
-        cmd.extend(["-s", str(scale)])
-    if mirrorx:
-        cmd.append("-mx")
-    if mirrory:
-        cmd.append("-my")
-    if mirrorz:
-        cmd.append("-mz")
-    if translate is not None:
-        cmd.extend(["-t", *(str(v) for v in translate)])
-    if isinstance(inp, bytes):
-        stdin = inp
-    else:
-        cmd.append(inp)
-    return sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
-
-
 def load_material_smd(
-    file: Path, roughness: float = 0.0, spectral=False, metal=False
+    file: Path, roughness: float = 0.0, spectral: bool = False, metal: bool = False
 ) -> list[Primitive]:
     """Generate Radiance primitives from csv file from spectral
     material database (spectraldb.com).
@@ -1253,7 +1312,7 @@ def load_material_smd(
         file: Path to .csv file
         roughness: Roughtness of material
         spectral: Output spectral primitives
-        metal: Material is metal
+        metal: Whether material is metal
 
     Returns:
         A list of primitives
@@ -1325,33 +1384,3 @@ def parse_primitive(pstr: str) -> list[Primitive]:
         rarg = [float(next(itokens)) for _ in range(int(nrarg))]
         res.append(Primitive(modifier, ptype, identifier, sarg, rarg))
     return res
-
-
-def view_args(view: View):
-    return [
-        f"-vt{view.type}",
-        "-vp",
-        str(view.vp[0]),
-        str(view.vp[1]),
-        str(view.vp[2]),
-        "-vd",
-        str(view.vdir[0]),
-        str(view.vdir[1]),
-        str(view.vdir[2]),
-        "-vu",
-        str(view.vu[0]),
-        str(view.vu[1]),
-        str(view.vu[2]),
-        "-vh",
-        str(view.horiz),
-        "-vv",
-        str(view.vert),
-        "-vo",
-        str(view.vfore),
-        "-va",
-        str(view.vaft),
-        "-vs",
-        str(view.hoff),
-        "-vl",
-        str(view.voff),
-    ]

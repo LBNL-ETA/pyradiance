@@ -37,24 +37,23 @@ def cnt(
 
 @handle_called_process_error
 def rcalc(
-    inp,
-    sep=None,
-    inform=None,
-    incount=1,
-    outform=None,
-    passive=False,
-    pass_negative=False,
-    inlimit=None,
-    outlimit=None,
-    source=None,
-    expr=None,
-    assign=None,
-    exact_only=False,
-    ignore_newlines=False,
-    silent=False,
+    inp: str | Path | bytes,
+    sep: None | str = None,
+    inform: None | str = None,
+    incount: int = 1,
+    outform: None | str = None,
+    passive: bool = False,
+    pass_negative: bool = False,
+    inlimit: None | int = None,
+    outlimit: None | int = None,
+    source: None | str = None,
+    expr: None | str = None,
+    assign: None | str = None,
+    exact_only: bool = False,
+    ignore_newlines: bool = False,
+    silent: bool = False,
 ) -> bytes:
-    """
-    Run rcalc
+    """Run rcalc
 
     Args:
         inp: input data
@@ -116,17 +115,17 @@ def rcalc(
 
 @handle_called_process_error
 def total(
-    inp,
-    mean=False,
-    sumpower=0,
-    multiply=False,
-    find_max=False,
-    find_min=False,
+    inp: None | str | Path,
+    mean: bool = False,
+    sumpower: int = 0,
+    multiply: bool = False,
+    find_max: bool = False,
+    find_min: bool = False,
     inform: None | str = None,
-    incount=1,
+    incount: int = 1,
     outform: None | str = None,
     substep: None | int = None,
-    substep_reset=True,
+    substep_reset: bool = True,
     inlimit: None | int = None,
     outlimit: None | int = None,
     sep: None | str = None,
@@ -193,13 +192,12 @@ def total(
 
 @handle_called_process_error
 def rlam(
-    *inputs,
+    *inputs: str | Path | bytes,
 ) -> bytes:
     """Laminate records from multiple files.
 
     Args:
-        inputs: list of input files or bytes. There can
-        only be one bytes input.
+        inputs: list of input files or bytes. There can only be one bytes input.
 
     Returns:
         bytes: output of rlam
@@ -215,5 +213,4 @@ def rlam(
             stdins.append(inp)
     if len(stdins) > 0:
         stdin = b"\x00".join(stdins)
-    breakpoint()
     return sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout

@@ -30,7 +30,9 @@ def handle_called_process_error(func):
     return wrapper
 
 
-def write(file_path: str | Path, data: str | bytes, overwrite=True, mode="wb") -> str:
+def write(
+    file_path: str | Path, data: str | bytes, overwrite: bool = True, mode: str = "wb"
+) -> str:
     """Write data to a file.
 
     Args:

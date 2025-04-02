@@ -210,6 +210,7 @@ __all__ = [
     "BlindsGeometry",
     "generate_blinds",
     "generate_bsdf",
+    "generate_blinds_for_bsdf",
     "generate_xml",
     "Resolu",
     "create_default_view",

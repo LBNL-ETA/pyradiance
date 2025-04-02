@@ -23,7 +23,6 @@ class Pcomb:
         """combine Radiance pictures and/or float matrices
 
         Args:
-            inputs: list of PcombInput
             xres: horizontal resolution
             yres: vertical resolution
             inform: input data format. Default is "a" for ascii.
@@ -31,9 +30,6 @@ class Pcomb:
             header: if True, write header
             expression: expression
             source: source
-
-        Returns:
-            bytes: output of pcomb
         """
         self.has_input = False
         self.stdin: None | bytes = None
@@ -58,7 +54,17 @@ class Pcomb:
         image: Path | str | bytes,
         original: bool = False,
         scaler: float = 1.0,
-    ):
+    ) -> "Pcomb":
+        """Add images to command.
+
+        Args:
+            image: Input image file or bytes
+            original: keep original exposure
+            scaler: Scaling factor
+
+        Returns:
+            self
+        """
         if original:
             self.cmd.append("-o")
         self.cmd.extend(["-s", str(scaler)])
@@ -72,6 +78,7 @@ class Pcomb:
         else:
             raise ValueError(f"Unsupported input type: {type(image)}")
         self.has_input = True
+        return self
 
     @handle_called_process_error
     def __call__(self):
@@ -531,7 +538,7 @@ def pvaluer(
 
 @handle_called_process_error
 def ra_tiff(
-    inp,
+    inp: str | Path | bytes,
     out: None | str = None,
     gamma: float = 2.2,
     greyscale: bool = False,
@@ -612,7 +619,7 @@ def ra_tiff(
 
 @handle_called_process_error
 def ra_ppm(
-    inp,
+    inp: str | Path | bytes,
     gamma: float = 2.2,
     greyscale: bool = False,
     reverse: bool = False,

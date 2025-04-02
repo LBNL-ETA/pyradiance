@@ -21,14 +21,10 @@ def obj2rad(
 
     Args:
         inp: Path to OBJ file
-        quallist: Produce a list of qualifiers from which to construct a
-            mapping for the given .OBJ file.
+        quallist: Produce a list of qualifiers from which to construct a mapping for the given .OBJ file.
         flatten: Flatten all faces, effectively ignoring vertex normal information.
         mapfile: Mapping rules files for assigning material names for the surfaces.
-        objname: Specify the name of this object, though it will be overriden by any
-           "o" statements in the input file.  If this option is absent, and there
-           are no "o" statements, obj2rad will attempt to name surfaces based
-           on their group associations.
+        objname: Specify the name of this object, though it will be overriden by any "o" statements in the input file.  If this option is absent, and there are no "o" statements, obj2rad will attempt to name surfaces based on their group associations.
 
     Returns:
         The converted RADIANCE scene description in bytes
@@ -96,7 +92,7 @@ def obj2mesh(
 
 @handle_called_process_error
 def pkgbsdf(
-    *xml: str | Path, frozen: bool = False, stdout: bool = False
+    *xml: tuple[str | Path, ...], frozen: bool = False, stdout: bool = False
 ) -> None | bytes:
     """Pacakge BSDFs provided as XML for Radiance.
 
@@ -192,7 +188,12 @@ def robjutil(
 
 
 @handle_called_process_error
-def mgf2rad(*inp, matfile=None, mult=None, dist=None):
+def mgf2rad(
+    *inp: str,
+    matfile: None | str = None,
+    mult: None | float = None,
+    dist: None | float = None,
+):
     """Convert Materials and Geometry Format file to RADIANCE description.
 
     Args:
@@ -208,16 +209,16 @@ def mgf2rad(*inp, matfile=None, mult=None, dist=None):
     if matfile is not None:
         cmd.extend(["-m", matfile])
     if mult is not None:
-        cmd.extend(["-e", mult])
+        cmd.extend(["-e", str(mult)])
     if dist is not None:
-        cmd.extend(["-g", dist])
+        cmd.extend(["-g", str(dist)])
     cmd.extend(inp)
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
 @handle_called_process_error
 def ies2rad(
-    *inp: str | Path,
+    *inp: tuple[str | Path, ...],
     libdir: None | str = None,
     prefdir: None | str = None,
     outname: None | str = None,
@@ -240,15 +241,13 @@ def ies2rad(
         outname: Output file name root.
         stdout: Print the output to stdout.
         units: Set the units of the output file.
-        rad: ignore the crude geometry given by the IES input file and use instead an illum sphere with radius rad.
-        instancing_geometry: compile MGF detail geometry into a separate octree and create a single
-            instance referencing it.
+        radius: ignore the crude geometry given by the IES input file and use instead an illum sphere with radius rad.
+        instancing_geometry: compile MGF detail geometry into a separate octree and create a single instance referencing it.
         lampdat: map lamp name to xy chromaticity and lumen depreciation data.
         lamp_type: lamp type.
         lamp_color: set lamp color to red green blue if lamp type is unknown.
         set_default_lamp_color: set default lamp color according to the entry for lamp in the lookup table.
-        multiply_factor: multiply all output quantities by this factor. This is the best way to scale
-            fixture brightness for different lamps.
+        multiply_factor: multiply all output quantities by this factor. This is the best way to scale fixture brightness for different lamps.
 
     Returns:
         The output of the command
@@ -275,7 +274,7 @@ def ies2rad(
     if lamp_color is not None:
         if len(lamp_color) != 3:
             raise ValueError("lamp_color should be a list of 3 values.")
-        cmd.extend(["-c", lamp_color])
+        cmd.extend(["-c", str(lamp_color[0]), str(lamp_color[1]), str(lamp_color[2])])
     if set_default_lamp_color is not None:
         cmd.extend(["-u", set_default_lamp_color])
     if multiply_factor is not None:
@@ -286,7 +285,7 @@ def ies2rad(
 
 @handle_called_process_error
 def bsdf2klems(
-    *inp,
+    *inp: str,
     spp: None | int = None,
     half: bool = False,
     quater: bool = False,
@@ -330,8 +329,9 @@ def bsdf2klems(
         cmd.append(f"p{progress_bar_length}")
     if len(inp) == 1 and not inp[0]:
         # xml input
-        if inp[0].endswith(".xml"):
-            cmd.append(inp[0])
+        inp0: str = inp[0]
+        if inp0.endswith(".xml"):
+            cmd.append(inp0)
         # func input
         else:
             if forward:
@@ -342,7 +342,7 @@ def bsdf2klems(
                 cmd.extend(["-e", expr])
             if file is not None:
                 cmd.extend(["-f", file])
-            cmd.append(inp[0])
+            cmd.append(inp0)
     # sir input
     else:
         if maxlobes is not None:
@@ -353,7 +353,7 @@ def bsdf2klems(
 
 @handle_called_process_error
 def bsdf2ttree(
-    *inp,
+    *inp: str,
     isotropic: bool = False,
     reciprocity_averaging: bool = True,
     resolution: int = 6,
@@ -437,7 +437,7 @@ def bsdf2ttree(
 
 @handle_called_process_error
 def pabopto2bsdf(
-    *inp,
+    *inp: tuple[str, ...],
     nproc: int = 1,
     symmetry: None | str = None,
     angle: None | float = None,
@@ -448,16 +448,9 @@ def pabopto2bsdf(
     Args:
         inp: pab-opto Mountain files, need two or more.
         nproc: number of processors to use.
-        symmetry: BSDF symmetry, which is one of "isotropic", "quadrilateral", "bilateral",
-           "up", or "anisotropic".  Any of these may be abbreviated with as little as a
-           single letter, and case is ignored.
-        angle: cull scattered measurements that are nearer to grazing than the given angle
-           in degrees.  If the word "auto" (which can be abbreviated as 'a' or 'A') is
-           given instead of an angle, then the near-grazing angle will be determined by the
-           lowest incident angle measurement present in the input data.  This is sometimes
-           necessary to eliminate noise and edge effects that some measurements exhibit near grazing.
-        reverse: reverses the assumed sample orientation front-to-back, and is discussed below under
-            the "#intheta" header entry.
+        symmetry: BSDF symmetry, which is one of "isotropic", "quadrilateral", "bilateral", "up", or "anisotropic".  Any of these may be abbreviated with as little as a single letter, and case is ignored.
+        angle: cull scattered measurements that are nearer to grazing than the given angle in degrees.  If the word "auto" (which can be abbreviated as 'a' or 'A') is given instead of an angle, then the near-grazing angle will be determined by the lowest incident angle measurement present in the input data.  This is sometimes necessary to eliminate noise and edge effects that some measurements exhibit near grazing.
+        reverse: reverses the assumed sample orientation front-to-back, and is discussed below under the "#intheta" header entry.
 
     Returns:
         SIR data in bytes

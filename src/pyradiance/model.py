@@ -14,7 +14,7 @@ from .ot import oconv
 from .rad_params import View
 
 
-@dataclass
+@dataclass(slots=True)
 class Primitive:
     """Radiance Primitive.
 
