@@ -9,6 +9,7 @@ version = "1.0.2"
 description = "Python inteface for Radiance"
 readme = "README.md"
 requires-python = ">=3.10"
+dependencies = ["numpy == 2.2.4"]
 authors = [
     { name = "Taoning Wang", email = "taonignwang@lbl.gov" },
 ]
