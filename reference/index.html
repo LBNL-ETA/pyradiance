@@ -6960,7 +6960,7 @@ errors defaults to 'strict'.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Insert rotation around x axis command.</p>
+        <p>Insert scaling command.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -6976,13 +6976,14 @@ errors defaults to 'strict'.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                <code>deg</code>
+                <code>ratio</code>
             </td>
             <td>
+                  <code><span title="float">float</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>rotation in degree</p>
+                <p>scaling factor</p>
               </div>
             </td>
             <td>
@@ -7350,6 +7351,7 @@ function (default=15000). Setting the value to 0 turns off this limit.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
+                  <code><span title="bytes">bytes</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -7630,6 +7632,7 @@ function (default=15000). Setting the value to 0 turns off this limit.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
+                  <code><span title="bytes">bytes</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -8271,6 +8274,7 @@ function (default=15000). Setting the value to 0 turns off this limit.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
+                  <code><span title="bytes">bytes</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -9628,6 +9632,7 @@ Perez models for direct and diffuse components.</p>
       <tbody>
           <tr class="doc-section-item">
 <td><code>bytes</code></td>            <td>
+                  <code><span title="bytes">bytes</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -9875,6 +9880,7 @@ Perez models for direct and diffuse components.</p>
       <tbody>
           <tr class="doc-section-item">
 <td><code>bytes</code></td>            <td>
+                  <code><span title="bytes">bytes</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -10974,6 +10980,22 @@ This can be changed to RAYPATH for cross-section data reused.</p>
           </tr>
           <tr class="doc-section-item">
             <td>
+                <code>prefdir</code>
+            </td>
+            <td>
+                  <code>None | <span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Set the library subdirectory.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
                 <code>outname</code>
             </td>
             <td>
@@ -11147,6 +11169,7 @@ This can be changed to RAYPATH for cross-section data reused.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
+                  <code><span title="bytes">bytes</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -11392,6 +11415,7 @@ material database (spectraldb.com).</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
+                  <code><span title="bytes">bytes</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -12047,7 +12071,7 @@ Args:
                 <code>inp</code>
             </td>
             <td>
-                  <code><span title="tuple">tuple</span>[<span title="str">str</span>, ...]</code>
+                  <code><span title="str">str</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -12111,6 +12135,7 @@ Args:
                 <code>reverse</code>
             </td>
             <td>
+                  <code><span title="bool">bool</span></code>
             </td>
             <td>
               <div class="doc-md-description">
