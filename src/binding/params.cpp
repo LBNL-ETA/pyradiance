@@ -281,7 +281,7 @@ NB_MODULE(rad_params, m) {
             [](RAYPARAMS &param, const int val) { param.ambdiv = val; },
             "ambient division")
         .def_prop_rw(
-            "as", [](RAYPARAMS &param) { return param.ambssamp; },
+            "as_", [](RAYPARAMS &param) { return param.ambssamp; },
             [](RAYPARAMS &param, const int val) { param.ambssamp = val; },
             "ambient super sampling")
         .def_prop_rw(

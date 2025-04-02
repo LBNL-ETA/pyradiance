@@ -39,7 +39,7 @@ class TestRcontribSimulManager(unittest.TestCase):
         rparams.ad = 350
         rparams.ab = 6
         rparams.aa = 0
-        rparams.as = 0
+        rparams.as_ = 0
         rparams.st = 0
         cndx = [0, 1, 2, 3]
         wlpart = [780, 588, 480, 380]
