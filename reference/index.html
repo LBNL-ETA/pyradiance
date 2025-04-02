@@ -1423,6 +1423,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#pyradiance.genbox" class="md-nav__link">
+    <span class="md-ellipsis">
+      genbox
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pyradiance.gendaylit" class="md-nav__link">
     <span class="md-ellipsis">
       gendaylit
@@ -2880,6 +2889,15 @@
   <a href="#pyradiance.genblinds" class="md-nav__link">
     <span class="md-ellipsis">
       genblinds
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyradiance.genbox" class="md-nav__link">
+    <span class="md-ellipsis">
+      genbox
     </span>
   </a>
   
@@ -5780,17 +5798,161 @@ errors defaults to 'strict'.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Initialize wrapper operation of BSDF data into XML
-Args:
-    inxml: input xml file
-    enforce_window: Enforcing LBNL Window XML schema,
-    comment: additional comment to add to XML,
-    correct_solid_angle: Correct the input BSDF by solid angles,
-    basis: BSDF basis to use, "kf", "kh", "kq",
-    unlink: Whether to remove input file after creating XML file,
-    unit: BSDF geometry unit,
-    geometry: Whether to include geometry in XML,
-    **kwargs: Additional tags to be passed into XML</p>
+        <p>Initialize wrapper operation of BSDF data into XML</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>inxml</code>
+            </td>
+            <td>
+                  <code>None | <span title="str">str</span> | <span title="pathlib.Path">Path</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>input xml file</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>enforce_window</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Enforcing LBNL Window XML schema,</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>comment</code>
+            </td>
+            <td>
+                  <code>None | <span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>additional comment to add to XML,</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>correct_solid_angle</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Correct the input BSDF by solid angles,</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>basis</code>
+            </td>
+            <td>
+                  <code>None | <span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>BSDF basis to use, "kf", "kh", "kq",</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>unlink</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Whether to remove input file after creating XML file,</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>unit</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>BSDF geometry unit,</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>geometry</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Whether to include geometry in XML,</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>**kwargs</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Additional tags to be passed into XML</p>
+              </div>
+            </td>
+            <td>
+                  <code>{}</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     </div>
@@ -5808,12 +5970,86 @@ Args:
 
     <div class="doc doc-contents ">
 
-        <p>Insert commands for solar data
-Args:
-    tb: back transmittance file
-    tf: front transmittance file
-    rb: back reflectance file
-    rf: front reflectance file</p>
+        <p>Insert commands for solar data</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>tb</code>
+            </td>
+            <td>
+                  <code>None | <span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>back transmittance file</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>tf</code>
+            </td>
+            <td>
+                  <code>None | <span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>front transmittance file</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>rb</code>
+            </td>
+            <td>
+                  <code>None | <span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>back reflectance file</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>rf</code>
+            </td>
+            <td>
+                  <code>None | <span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>front reflectance file</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -5853,12 +6089,86 @@ Args:
 
     <div class="doc doc-contents ">
 
-        <p>Insert commands for visible data
-Args:
-    tb: back transmittance file
-    tf: front transmittance file
-    rb: back reflectance file
-    rf: front reflectance file</p>
+        <p>Insert commands for visible data</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>tb</code>
+            </td>
+            <td>
+                  <code>None | <span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>back transmittance file</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>tf</code>
+            </td>
+            <td>
+                  <code>None | <span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>front transmittance file</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>rb</code>
+            </td>
+            <td>
+                  <code>None | <span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>back reflectance file</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>rf</code>
+            </td>
+            <td>
+                  <code>None | <span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>front reflectance file</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -6052,9 +6362,38 @@ Args:
 
     <div class="doc doc-contents ">
 
-        <p>Insert array command.
-Args:
-    number: array number</p>
+        <p>Insert array command.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>number</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>array number</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -6094,9 +6433,38 @@ Args:
 
     <div class="doc doc-contents ">
 
-        <p>Insert iterate command.
-Args:
-    number: iterate number</p>
+        <p>Insert iterate command.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>number</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>iterate number</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -6136,9 +6504,37 @@ Args:
 
     <div class="doc doc-contents ">
 
-        <p>Insert mirror about yz plane command.
-Args:
-    deg: rotation in degree</p>
+        <p>Insert mirror about yz plane command.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>deg</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>rotation in degree</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -6218,9 +6614,37 @@ Args:
 
     <div class="doc doc-contents ">
 
-        <p>Insert mirror about xy plane command.
-Args:
-    deg: rotation in degree</p>
+        <p>Insert mirror about xy plane command.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>deg</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>rotation in degree</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -6260,9 +6684,38 @@ Args:
 
     <div class="doc doc-contents ">
 
-        <p>Insert rotation around x axis command.
-Args:
-    deg: rotation in degree</p>
+        <p>Insert rotation around x axis command.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>deg</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>rotation in degree</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -6302,9 +6755,38 @@ Args:
 
     <div class="doc doc-contents ">
 
-        <p>Insert rotation around x axis command.
-Args:
-    deg: rotation in degree</p>
+        <p>Insert rotation around x axis command.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>deg</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>rotation in degree</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -6344,9 +6826,38 @@ Args:
 
     <div class="doc doc-contents ">
 
-        <p>Insert rotation around x axis command.
-Args:
-    deg: rotation in degree</p>
+        <p>Insert rotation around x axis command.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>deg</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>rotation in degree</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -6386,9 +6897,37 @@ Args:
 
     <div class="doc doc-contents ">
 
-        <p>Insert rotation around x axis command.
-Args:
-    deg: rotation in degree</p>
+        <p>Insert rotation around x axis command.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>deg</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>rotation in degree</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -6428,11 +6967,70 @@ Args:
 
     <div class="doc doc-contents ">
 
-        <p>Insert translate command.
-Args:
-    x: translation in x coordinate
-    y: translation in y coordinate
-    z: translation in z coordinate</p>
+        <p>Insert translate command.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>x</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>translation in x coordinate</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>y</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>translation in y coordinate</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>z</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>translation in z coordinate</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -6500,6 +7098,7 @@ Args:
                 <code>inp</code>
             </td>
             <td>
+                  <code><span title="str">str</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -6731,6 +7330,7 @@ function (default=15000). Setting the value to 0 turns off this limit.</p>
                 <code>inp</code>
             </td>
             <td>
+                  <code><span title="str">str</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -8123,6 +8723,238 @@ function (default=15000). Setting the value to 0 turns off this limit.</p>
 <div class="doc doc-object doc-function">
 
 
+<h3 id="pyradiance.genbox" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">genbox</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">xsiz</span><span class="p">,</span> <span class="n">ysiz</span><span class="p">,</span> <span class="n">zsiz</span><span class="p">,</span> <span class="n">inward</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">beveled</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rounded</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nsegs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">smoothing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">waveout</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Generate a box.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>mat</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>material name</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>name</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>box name</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>xsiz</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>size in x dimension</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>ysiz</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>size in y dimension</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>zsiz</code>
+            </td>
+            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>size in z dimension</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>inward</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>box facing inward</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>beveled</code>
+            </td>
+            <td>
+                  <code>None | <span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>beveled size</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>rounded</code>
+            </td>
+            <td>
+                  <code>None | <span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>rounded corner size</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>nsegs</code>
+            </td>
+            <td>
+                  <code>None | <span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>number of segments</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>smoothing</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>to smooth</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>waveout</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>wavefront (.obj) out</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="bytes">bytes</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>the box</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h3 id="pyradiance.gendaylit" class="doc doc-heading">
             <code class="highlight language-python"><span class="n">gendaylit</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="n">latitude</span><span class="p">,</span> <span class="n">longitude</span><span class="p">,</span> <span class="n">timezone</span><span class="p">,</span> <span class="n">year</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dirnorm</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">diffhor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dirhor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dirnorm_illum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">diffhor_illum</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">solar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sky_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">grefl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interval</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
@@ -8689,7 +9521,7 @@ Perez models for direct and diffuse components.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Generate an annual Perez sky matrix from a weather tape.</p>
+        <p>Generate an annual spectral sky matrix from a weather tape.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -8881,17 +9713,18 @@ Perez models for direct and diffuse components.</p>
           </tr>
           <tr class="doc-section-item">
             <td>
-                <code>solar_radiance</code>
+                <code>nthreads</code>
             </td>
             <td>
+                  <code><span title="int">int</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>solar radiance</p>
+                <p>number of threads to use for precomputations</p>
               </div>
             </td>
             <td>
-                <em>required</em>
+                  <code>1</code>
             </td>
           </tr>
       </tbody>
@@ -8912,7 +9745,7 @@ Perez models for direct and diffuse components.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>output of gendaymtx</p>
+                <p>output of gensdaymtx</p>
               </div>
             </td>
           </tr>
@@ -10350,6 +11183,7 @@ material database (spectraldb.com).</p>
                 <code>inp</code>
             </td>
             <td>
+                  <code><span title="str">str</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -11075,6 +11909,7 @@ on their group associations.</p>
                 <code>inp</code>
             </td>
             <td>
+                  <code><span title="str">str</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -13113,6 +13948,7 @@ conversion. Default is False.</p>
                 <code>inp</code>
             </td>
             <td>
+                  <code><span title="str">str</span> | <span title="pathlib.Path">Path</span> | <span title="bytes">bytes</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -13128,6 +13964,7 @@ conversion. Default is False.</p>
                 <code>sep</code>
             </td>
             <td>
+                  <code>None | <span title="str">str</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -13143,6 +13980,7 @@ conversion. Default is False.</p>
                 <code>inform</code>
             </td>
             <td>
+                  <code>None | <span title="str">str</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -13158,6 +13996,7 @@ conversion. Default is False.</p>
                 <code>incount</code>
             </td>
             <td>
+                  <code><span title="int">int</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -13173,6 +14012,7 @@ conversion. Default is False.</p>
                 <code>outform</code>
             </td>
             <td>
+                  <code>None | <span title="str">str</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -13188,6 +14028,7 @@ conversion. Default is False.</p>
                 <code>passive</code>
             </td>
             <td>
+                  <code><span title="bool">bool</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -13203,6 +14044,7 @@ conversion. Default is False.</p>
                 <code>pass_negative</code>
             </td>
             <td>
+                  <code><span title="bool">bool</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -13218,6 +14060,7 @@ conversion. Default is False.</p>
                 <code>inlimit</code>
             </td>
             <td>
+                  <code>None | <span title="int">int</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -13233,6 +14076,7 @@ conversion. Default is False.</p>
                 <code>outlimit</code>
             </td>
             <td>
+                  <code>None | <span title="int">int</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -13248,6 +14092,7 @@ conversion. Default is False.</p>
                 <code>source</code>
             </td>
             <td>
+                  <code>None | <span title="str">str</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -13263,6 +14108,7 @@ conversion. Default is False.</p>
                 <code>expr</code>
             </td>
             <td>
+                  <code>None | <span title="str">str</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -13278,6 +14124,7 @@ conversion. Default is False.</p>
                 <code>assign</code>
             </td>
             <td>
+                  <code>None | <span title="str">str</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -13293,6 +14140,7 @@ conversion. Default is False.</p>
                 <code>exact_only</code>
             </td>
             <td>
+                  <code><span title="bool">bool</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -13308,6 +14156,7 @@ conversion. Default is False.</p>
                 <code>ignore_newlines</code>
             </td>
             <td>
+                  <code><span title="bool">bool</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -13323,6 +14172,7 @@ conversion. Default is False.</p>
                 <code>silent</code>
             </td>
             <td>
+                  <code><span title="bool">bool</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -14366,14 +15216,118 @@ or not to include header on output when decoding</p>
 
     <div class="doc doc-contents ">
 
-        <p>Run rfluxmtx command.
-Args:
-    receiver: receiver file path
-    surface: input surface file path, mutually exclusive with rays
-    rays: input rays bytes, mutually exclusive with surface
-    params: ray tracing parameters
-    octree: octree file path
-    scene: list of scene files</p>
+        <p>Run rfluxmtx command.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>receiver</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span> | <span title="pathlib.Path">Path</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>receiver file path</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>surface</code>
+            </td>
+            <td>
+                  <code>None | <span title="str">str</span> | <span title="pathlib.Path">Path</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>input surface file path, mutually exclusive with rays</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>rays</code>
+            </td>
+            <td>
+                  <code>None | <span title="bytes">bytes</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>input rays bytes, mutually exclusive with surface</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>params</code>
+            </td>
+            <td>
+                  <code>None | <span title="typing.Sequence">Sequence</span>[<span title="str">str</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>ray tracing parameters</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>octree</code>
+            </td>
+            <td>
+                  <code>None | <span title="pathlib.Path">Path</span> | <span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>octree file path</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>scene</code>
+            </td>
+            <td>
+                  <code>None | <span title="typing.Sequence">Sequence</span>[<span title="pathlib.Path">Path</span> | <span title="str">str</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>list of scene files</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -14433,10 +15387,11 @@ Args:
                 <code>inputs</code>
             </td>
             <td>
+                  <code><span title="str">str</span> | <span title="pathlib.Path">Path</span> | <span title="bytes">bytes</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>list of input files or bytes. There can</p>
+                <p>list of input files or bytes. There can only be one bytes input.</p>
               </div>
             </td>
             <td>
@@ -14485,13 +15440,97 @@ Args:
 
     <div class="doc doc-contents ">
 
-        <p>Run rmtxop command.
-Args:
-    inp: input
-    outform: output format: 'a', 'f', 'd', 'c'
-    transpose: whether to transpose matrix
-    scale: scaling factor
-    transform: transform factors for each channel</p>
+        <p>Run rmtxop command.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>inp</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>input</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>outform</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>output format: 'a', 'f', 'd', 'c'</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;a&#39;</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>transpose</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>whether to transpose matrix</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>scale</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>scaling factor</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>transform</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>transform factors for each channel</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -15473,6 +16512,7 @@ material names to include in the trace.</p>
                 <code>inp</code>
             </td>
             <td>
+                  <code>None | <span title="str">str</span> | <span title="pathlib.Path">Path</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -15488,6 +16528,7 @@ material names to include in the trace.</p>
                 <code>mean</code>
             </td>
             <td>
+                  <code><span title="bool">bool</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -15503,6 +16544,7 @@ material names to include in the trace.</p>
                 <code>sumpower</code>
             </td>
             <td>
+                  <code><span title="int">int</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -15518,6 +16560,7 @@ material names to include in the trace.</p>
                 <code>multiply</code>
             </td>
             <td>
+                  <code><span title="bool">bool</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -15533,6 +16576,7 @@ material names to include in the trace.</p>
                 <code>find_max</code>
             </td>
             <td>
+                  <code><span title="bool">bool</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -15548,6 +16592,7 @@ material names to include in the trace.</p>
                 <code>find_min</code>
             </td>
             <td>
+                  <code><span title="bool">bool</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -15579,6 +16624,7 @@ material names to include in the trace.</p>
                 <code>incount</code>
             </td>
             <td>
+                  <code><span title="int">int</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -15626,6 +16672,7 @@ material names to include in the trace.</p>
                 <code>substep_reset</code>
             </td>
             <td>
+                  <code><span title="bool">bool</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -15814,6 +16861,7 @@ material names to include in the trace.</p>
                 <code>overwrite</code>
             </td>
             <td>
+                  <code><span title="bool">bool</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -15829,6 +16877,7 @@ material names to include in the trace.</p>
                 <code>mode</code>
             </td>
             <td>
+                  <code><span title="str">str</span></code>
             </td>
             <td>
               <div class="doc-md-description">
