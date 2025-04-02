@@ -193,7 +193,7 @@ def mgf2rad(
     matfile: None | str = None,
     mult: None | float = None,
     dist: None | float = None,
-):
+) -> bytes:
     """Convert Materials and Geometry Format file to RADIANCE description.
 
     Args:
@@ -231,13 +231,13 @@ def ies2rad(
     lamp_color: None | str = None,
     set_default_lamp_color: None | str = None,
     multiply_factor: None | float = None,
-):
+) -> bytes:
     """Convert IES luminaire data to RADIANCE description.
 
     Args:
         inp: Path to IES file
         libdir: Path to directory where the library files are located.
-        prefdir Set the library subdirectory.
+        prefdir: Set the library subdirectory.
         outname: Output file name root.
         stdout: Print the output to stdout.
         units: Set the units of the output file.
@@ -296,7 +296,7 @@ def bsdf2klems(
     backward: bool = True,
     expr: None | str = None,
     file: None | str = None,
-):
+) -> bytes:
     """Generate XML Klems matrix description of a BSDF.
 
     Args:
@@ -367,7 +367,7 @@ def bsdf2ttree(
     backward: bool = True,
     expr: None | str = None,
     file: None | str = None,
-):
+) -> bytes:
     """Generate XML tensor tree description of a BSDF.
 
     Args:
@@ -437,11 +437,11 @@ def bsdf2ttree(
 
 @handle_called_process_error
 def pabopto2bsdf(
-    *inp: tuple[str, ...],
+    *inp: str,
     nproc: int = 1,
     symmetry: None | str = None,
     angle: None | float = None,
-    reverse=False,
+    reverse: bool=False,
 ) -> bytes:
     """Convert BSDF measurements to a scattering interpolant representation.
 

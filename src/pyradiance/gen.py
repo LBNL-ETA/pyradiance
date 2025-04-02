@@ -193,7 +193,7 @@ def gendaymtx(
     onesun: bool = False,
     solar_radiance: bool = False,
     mfactor: int = 1,
-):
+) -> bytes:
     """Generate an annual Perez sky matrix from a weather tape.
 
     Args:
@@ -301,7 +301,7 @@ def gensdaymtx(
     onesun: bool = False,
     mfactor: int = 1,
     nthreads: int = 1,
-):
+) -> bytes:
     """Generate an annual spectral sky matrix from a weather tape.
 
     Args:

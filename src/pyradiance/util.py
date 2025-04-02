@@ -42,7 +42,7 @@ def evalglare(
     version: bool = False,
     source_color: None | tuple[float, float, float] = None,
     fast: None | int = None,
-):
+) -> bytes:
     """Run evalglare on a Radiance image.
 
     Args:
@@ -1228,10 +1228,10 @@ class Xform:
         return self
 
     def scale(self, ratio: float) -> "Xform":
-        """Insert rotation around x axis command.
+        """Insert scaling command.
 
         Args:
-            deg: rotation in degree
+            ratio: scaling factor
 
         Returns:
             self
