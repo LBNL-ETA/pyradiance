@@ -282,7 +282,7 @@ class TestPyradianceCLI(unittest.TestCase):
 
     def test_render(self):
         """Test the render function."""
-        aview = pr.View()
+        aview = pr.create_default_view()
         aview.type = "a"
         aview.vp = (1, 2, 1)
         aview.vdir = (0, -1, 0)
