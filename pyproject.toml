@@ -5,7 +5,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "pyradiance"
-version = "1.0.3"
+version = "1.0.4"
 description = "Python inteface for Radiance"
 readme = "README.md"
 requires-python = ">=3.10"
