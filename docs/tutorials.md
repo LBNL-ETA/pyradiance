@@ -30,7 +30,9 @@ scene.add_source("Sources/sky.rad")
 In order to render a image, we'd also need to define camera/view.
 Here, we are defining a view at (1, 1, 1.5), facing (1, 0, 0). We use default values for the rest of the view parameters.
 ```python
-aview = pr.View(position=(1, 1.5, 1), direction=(1, 0, 0))
+aview = pr.create_default_view()
+aview.vp = (1, 1.5, 1)
+aview.vdir = (1, 0, 0)
 ```
 Then, we add this view to our scene.
 ```python

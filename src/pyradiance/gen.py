@@ -61,6 +61,24 @@ def genbox(
     smoothing: bool = False,
     waveout: bool = False,
 ) -> bytes:
+    """Generate a box.
+
+    Args:
+        mat: material name
+        name: box name
+        xsiz: size in x dimension
+        ysiz: size in y dimension
+        zsiz: size in z dimension
+        inward: box facing inward
+        beveled: beveled size
+        rounded: rounded corner size
+        nsegs: number of segments
+        smoothing: to smooth
+        waveout: wavefront (.obj) out
+
+    Returns:
+        the box
+    """
     cmd = [str(BINPATH / "genbox")]
     cmd.append(mat)
     cmd.append(name)
@@ -80,97 +98,6 @@ def genbox(
     if waveout:
         cmd.append("-o")
     return sp.run(cmd, stdout=sp.PIPE).stdout
-
-
-@handle_called_process_error
-def genbsdf(
-    *inp: str | Path,
-    nsamp: int = 1,
-    nproc: int = 1,
-    params: None | Sequence[str] = None,
-    enforce_window=False,
-    ttree_rank: None | int = None,
-    ttree_res: None | int = None,
-    color: bool = False,
-    reciprocity: bool = True,
-    recover_dir: None | str | Path = None,
-    forward: bool = False,
-    backward: bool = True,
-    mgf: None | str | Path = None,
-    geom: bool = False,
-    geom_unit: None | str = None,
-    dim: None | Sequence[float] = None,
-    **kwargs,
-) -> bytes:
-    """Generate BSDF description from Radiance or MGF input
-
-    Examples:
-        >>> genbsdf('material.mat', 'blinds.rad', nsamp=50, nproc=4)
-
-    Args:
-        inp: Input files. This can be a list of files or a single string with
-        nsamp: Number of samples to generate. Default is 1.
-        nproc: Number of processors to use. Default is 1.
-        params: A list of parameters to pass to genBSDF.
-        enforce_window: Set to True to enforce the window. Default is False.
-        ttree_rank: Tensor tree rank, 3 for isotropic and 4 for anisotropic BSDF.
-        ttree_res: Tensor tree BSDF resolution, e.g., 5 6 7.
-        color: Set to True to generate color BSDF. Default is False.
-        reciprocity: Set to False to disable reciprocity. Default is True.
-        recover_dir: Set to a path to recover from a previous run.
-        forward: Set to True to generate forward BSDF. Default is False.
-        backward: Set to True to generate backward BSDF. Default is True.
-        mgf: Set to a path to a MGF file to use.
-        geom: Set to True to generate geometry BSDF. Default is False.
-        geom_unit: Set to a unit to use for geometry BSDF.
-        dim: Set to a list of 6 numbers to use for geometry BSDF.
-        kwargs: Additional parameters to pass to genBSDF.
-
-    Returns:
-        str: Output of genBSDF.
-    """
-    cmd = [str(BINPATH / "genBSDF")]
-    if recover_dir is not None:
-        cmd += ["-recover", str(recover_dir)]
-        return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
-    cmd += ["-n", str(nproc), "-c", str(nsamp)]
-    if params is not None:
-        cmd += ["-r", " ".join(params)]
-    if ttree_rank is not None:
-        if ttree_rank not in (3, 4):
-            raise ValueError("ttree_rank must be 3 or 4")
-        if ttree_res is None:
-            raise ValueError("ttree_res must be specified if ttree_rank is specified")
-        cmd += [f"-t{ttree_rank}", str(ttree_res)]
-    reciprocity_sign = "+" if reciprocity else "-"
-    cmd.append(f"{reciprocity_sign}a")
-    if geom:
-        if geom_unit is None:
-            raise ValueError("geom_unit must be specified if geom is True")
-        geom_sign = "+" if geom else "-"
-        cmd += [f"{geom_sign}geom", geom_unit]
-    forward_sign = "+" if forward else "-"
-    cmd.append(f"{forward_sign}f")
-    backward_sign = "+" if backward else "-"
-    cmd.append(f"{backward_sign}b")
-    mgf = "+" if mgf else "-"
-    cmd.append(f"{mgf}mgf")
-    color_sign = "+" if color else "-"
-    cmd.append(f"{color_sign}C")
-    if dim is not None:
-        cmd += ["-dim", *[str(d) for d in dim]]
-    if enforce_window:
-        cmd.append("-W")
-        required = set(("m", "n", "t"))
-        if set(kwargs).intersection(required) != required:
-            raise ValueError("enforce_window requires m, n, and t to be specified")
-    fields = []
-    for key in ("n", "m", "d", "c", "ef", "eb", "eo", "t", "h", "w"):
-        if key in kwargs:
-            fields.append(f"{key}={kwargs[key]}")
-    cmd += ["-s", ";".join(fields)]
-    cmd.extend([str(i) for i in inp])
-    return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
 @handle_called_process_error
@@ -203,12 +130,16 @@ def gendaylit(
         dirnorm: direct normal irradiance
         diffhor: diffuse horizontal irradiance
         dirhor: direct horizontal irradiance, either this or dirnorm
-        dirnormp: direct normal illuminance
-        diffhorp: diffuse horizontal illuminance
+        dirnorm_illum: direct normal illuminance
+        diffhor_illum: diffuse horizontal illuminance
         solar: if True, include solar position
+        sky_only: sky description only
+        silent: supress warnings,
+        grefl: ground reflectance
+        interval: interval for epw data
 
     Returns:
-        str: output of gendaylit
+        output of gendaylit
     """
     cmd = [
         str(BINPATH / "gendaylit"),
@@ -262,7 +193,7 @@ def gendaymtx(
     onesun: bool = False,
     solar_radiance: bool = False,
     mfactor: int = 1,
-):
+) -> bytes:
     """Generate an annual Perez sky matrix from a weather tape.
 
     Args:
@@ -370,8 +301,8 @@ def gensdaymtx(
     onesun: bool = False,
     mfactor: int = 1,
     nthreads: int = 1,
-):
-    """Generate an annual Perez sky matrix from a weather tape.
+) -> bytes:
+    """Generate an annual spectral sky matrix from a weather tape.
 
     Args:
         weather_data: weather data
@@ -385,10 +316,10 @@ def gensdaymtx(
         rotate: rotate
         outform: outform
         onesun: onesun
-        solar_radiance: solar radiance
+        nthreads: number of threads to use for precomputations
 
     Returns:
-        bytes: output of gendaymtx
+        bytes: output of gensdaymtx
     """
     stdin = None
     cmd = [str(BINPATH / "gensdaymtx")]
@@ -546,7 +477,7 @@ def genssky(
         broadband_aerosol_optical_depth: default: 0.115,
         mie_file: mie scattering coefficient source file
         nthreads: number of threads used for precomputation, default:1,
-        out_dir: directory to save precomputed data that can be reused, default to current working directory. 
+        out_dir: directory to save precomputed data that can be reused, default to current working directory.
             This can be changed to RAYPATH for cross-section data reused.
         out_name: output file name, defautl: "out"
         dir_norm_illum: direct normal illuminance to calibrate the output against,

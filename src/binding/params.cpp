@@ -38,7 +38,7 @@ NB_MODULE(rad_params, m) {
         .def(nb::init<>())
         .def_prop_rw(
           "type", [](VIEW &v) { return (char)v.type; },
-          [](VIEW &v, const char t) { v.type = (int)t; })
+          [](VIEW &v, const char t) { v.type = (int)t; }, "View types: 'v': perspective, 'l': parallel, 'c': cylindrical panorma, 'h': hemispherical fisheye, 'a': angular fisheye, 's': planispherical fisheye")
         .def_prop_rw(
           "vp",
           [](VIEW &v) { return nb::make_tuple(v.vp[0], v.vp[1], v.vp[2]); },
@@ -46,7 +46,7 @@ NB_MODULE(rad_params, m) {
             v.vp[0] = nb::cast<double>(pos[0]);
             v.vp[1] = nb::cast<double>(pos[1]);
             v.vp[2] = nb::cast<double>(pos[2]);
-          })
+          }, "View position: x, y, z")
         .def_prop_rw(
           "vdir",
           [](VIEW &v) {
@@ -56,7 +56,7 @@ NB_MODULE(rad_params, m) {
             v.vdir[0] = nb::cast<double>(dir[0]);
             v.vdir[1] = nb::cast<double>(dir[1]);
             v.vdir[2] = nb::cast<double>(dir[2]);
-          })
+          }, "View direction: x, y, z")
         .def_prop_rw(
           "vu",
           [](VIEW &v) { return nb::make_tuple(v.vup[0], v.vup[1], v.vup[2]); },
@@ -64,14 +64,14 @@ NB_MODULE(rad_params, m) {
             v.vup[0] = nb::cast<double>(up[0]);
             v.vup[1] = nb::cast<double>(up[1]);
             v.vup[2] = nb::cast<double>(up[2]);
-          })
+          }, "View up direction: x, y, z")
         .def_rw("vdist", &VIEW::vdist)
-        .def_rw("horiz", &VIEW::horiz)
-        .def_rw("vert", &VIEW::vert)
-        .def_rw("hoff", &VIEW::hoff)
-        .def_rw("voff", &VIEW::voff)
-        .def_rw("vfore", &VIEW::vfore)
-        .def_rw("vaft", &VIEW::vaft)
+        .def_rw("horiz", &VIEW::horiz, "View horizontal size")
+        .def_rw("vert", &VIEW::vert, "View vertical size")
+        .def_rw("hoff", &VIEW::hoff, "View horizontal offset")
+        .def_rw("voff", &VIEW::voff, "View vertical offset")
+        .def_rw("vfore", &VIEW::vfore, "View fore clipping plane")
+        .def_rw("vaft", &VIEW::vaft, "View aft clipping plane")
         .def_prop_rw(
           "hvec",
           [](VIEW &v) {
@@ -127,14 +127,14 @@ NB_MODULE(rad_params, m) {
         VIEW vp;
         sscanview(&vp, const_cast<char *>(s));
         return vp;
-    });
+    }, "Parse a view string into a View object");
 
     m.def("viewfile", [](const char *fname) {
         VIEW vp;
         RESOLU *rp;
         viewfile(const_cast<char *>(fname), &vp, rp);
         return vp;
-    });
+    }, "Read a view file into a View object");
 
     m.def("get_view_args", [](VIEW &v) {
         nb::list result;
@@ -171,7 +171,7 @@ NB_MODULE(rad_params, m) {
         result.append(std::to_string(v.vaft));
 
         return result;
-    });
+    }, "Returns a list of string for the view");
 
 
     nb::class_<RAYPARAMS>(m, "RayParams")
@@ -299,7 +299,7 @@ NB_MODULE(rad_params, m) {
             [](RAYPARAMS &param, const int val) { param.ambdiv = val; },
             "ambient division")
         .def_prop_rw(
-            "abs", [](RAYPARAMS &param) { return param.ambssamp; },
+            "as_", [](RAYPARAMS &param) { return param.ambssamp; },
             [](RAYPARAMS &param, const int val) { param.ambssamp = val; },
             "ambient super sampling")
         .def_prop_rw(
@@ -420,5 +420,5 @@ NB_MODULE(rad_params, m) {
         args.append(std::to_string(r.ssampdist));
 
         return args;
-    });
+    }, "Returns a list of strings given a RayParams object");
 }

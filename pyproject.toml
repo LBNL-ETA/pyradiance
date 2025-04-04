@@ -5,10 +5,11 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "pyradiance"
-version = "1.0.2"
+version = "1.0.3"
 description = "Python inteface for Radiance"
 readme = "README.md"
 requires-python = ">=3.10"
+dependencies = ["numpy == 2.2.4"]
 authors = [
     { name = "Taoning Wang", email = "taonignwang@lbl.gov" },
 ]
