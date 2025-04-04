@@ -15,6 +15,22 @@
 
 namespace nb = nanobind;
 
+std::string viewstr(VIEW &v) {
+    char buffer[512];  
+    snprintf(buffer, sizeof(buffer),
+        " -vt%c -vp %.6g %.6g %.6g -vd %.6g %.6g %.6g -vu %.6g %.6g %.6g"
+        " -vh %.6g -vv %.6g -vo %.6g -va %.6g -vs %.6g -vl %.6g",
+        v.type,
+        v.vp[0], v.vp[1], v.vp[2],
+        v.vdir[0]*v.vdist, v.vdir[1]*v.vdist, v.vdir[2]*v.vdist,
+        v.vup[0], v.vup[1], v.vup[2],
+        v.horiz, v.vert,
+        v.vfore, v.vaft,
+        v.hoff, v.voff
+    );
+    return std::string(buffer);
+}
+
 NB_MODULE(rad_params, m) {
     m.doc() = "Radiance common";
 
@@ -77,7 +93,9 @@ NB_MODULE(rad_params, m) {
             v.vvec[2] = nb::cast<double>(vec[2]);
           })
         .def_rw("hn2", &VIEW::hn2)  /* DOT(hvec,hvec) */
-        .def_rw("vn2", &VIEW::vn2); /* DOT(vvec,vvec) */
+        .def_rw("vn2", &VIEW::vn2) /* DOT(vvec,vvec) */
+        .def("__repr__", &viewstr)
+        .def("__str__", &viewstr);
 
     m.def("create_default_view", []() {
         VIEW v = {0};  // Zero-initialize the struct
