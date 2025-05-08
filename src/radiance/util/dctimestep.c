@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: dctimestep.c,v 2.49 2022/03/11 02:44:33 greg Exp $";
+static const char RCSid[] = "$Id: dctimestep.c,v 2.53 2025/03/27 16:34:23 greg Exp $";
 #endif
 /*
  * Compute time-step result using Daylight Coefficient method.
@@ -20,6 +20,7 @@ char	*progname;			/* global argv[0] */
 static int
 sum_images(const char *fspec, const CMATRIX *cv, FILE *fout)
 {
+	static int	runcnt = 0;
 	int	myDT = DTfromHeader;
 	COLR	*scanline = NULL;
 	CMATRIX	*pmat = NULL;
@@ -28,8 +29,9 @@ sum_images(const char *fspec, const CMATRIX *cv, FILE *fout)
 
 	if (cv->ncols != 1)
 		error(INTERNAL, "expected vector in sum_images()");
-	for (i = 0; i < cv->nrows; i++) {
-		const COLORV	*scv = cv_lval(cv,i);
+	for (i = cv->nrows; i-- > 0; ) {
+		const int	r = runcnt&1 ? i : cv->nrows-1 - i;
+		const COLORV	*scv = cv_lval(cv,r);
 		int		flat_file = 0;
 		char		fname[1024];
 		FILE		*fp;
@@ -39,14 +41,17 @@ sum_images(const char *fspec, const CMATRIX *cv, FILE *fout)
 		char		*err;
 							/* check for zero */
 		if ((scv[RED] == 0) & (scv[GRN] == 0) & (scv[BLU] == 0) &&
-				(myDT != DTfromHeader) | (i < cv->nrows-1))
+				(myDT != DTfromHeader) | (i > 0))
 			continue;
 							/* open next picture */
-		sprintf(fname, fspec, i);
+		sprintf(fname, fspec, r);
 		if ((fp = fopen(fname, "rb")) == NULL) {
 			sprintf(errmsg, "cannot open picture '%s'", fname);
 			error(SYSTEM, errmsg);
 		}
+#ifdef getc_unlocked
+		flockfile(fp);
+#endif
 		dt = DTfromHeader;
 		if ((err = cm_getheader(&dt, NULL, NULL, NULL, NULL, fp)) != NULL)
 			error(USER, err);
@@ -74,7 +79,7 @@ sum_images(const char *fspec, const CMATRIX *cv, FILE *fout)
 		}
 							/* flat file check */
 		if ((data_start = ftell(fp)) > 0 && fseek(fp, 0L, SEEK_END) == 0) {
-			flat_file = (ftell(fp) == data_start + sizeof(COLR)*xr*yr);
+			flat_file = (ftell(fp) >= data_start + sizeof(COLR)*xr*yr);
 			if (fseek(fp, data_start, SEEK_SET) < 0) {
 				sprintf(errmsg, "cannot seek on picture '%s'", fname);
 				error(SYSTEM, errmsg);
@@ -104,6 +109,7 @@ sum_images(const char *fspec, const CMATRIX *cv, FILE *fout)
 	free(scanline);
 	i = cm_write(pmat, myDT, fout);			/* write picture */
 	cm_free(pmat);					/* free data */
+	++runcnt;					/* for zig-zagging */
 	return(i);
 }
 
@@ -244,7 +250,7 @@ main(int argc, char *argv[])
 		nsteps = smtx->ncols;
 						/* load BSDF */
 		if (argv[a+1][0] != '!' &&
-				(ccp = strrchr(argv[a+1], '.')) != NULL &&
+				(ccp = strrchr(argv[a+1], '.')) > argv[a+1] &&
 				!strcasecmp(ccp+1, "XML"))
 			Tmat = cm_loadBTDF(argv[a+1]);
 		else
@@ -264,7 +270,7 @@ main(int argc, char *argv[])
 	}
 						/* prepare output stream */
 	if ((ofspec != NULL) & (nsteps == 1) && hasNumberFormat(ofspec)) {
-		sprintf(fnbuf, ofspec, 1);
+		sprintf(fnbuf, ofspec, 0);
 		ofspec = fnbuf;
 	}
 	if (ofspec != NULL && !hasNumberFormat(ofspec)) {
@@ -275,7 +281,7 @@ main(int argc, char *argv[])
 		}
 		ofspec = NULL;			/* only need to open once */
 	}
-	if (hasNumberFormat(argv[a])) {		/* generating image(s) */
+	if (hasNumberFormat(argv[a])) {		/* loading image vector(s) */
 		if (outfmt != DTrgbe) {
 			error(WARNING, "changing output type to -oc");
 			outfmt = DTrgbe;
@@ -317,7 +323,7 @@ main(int argc, char *argv[])
 			}
 		else if (!sum_images(argv[a], cmtx, ofp))
 			return(1);
-	} else {				/* generating vector/matrix */
+	} else {				/* loading view matrix */
 		CMATRIX	*Vmat = cm_load(argv[a], 0, cmtx->nrows, DTfromHeader);
 		CMATRIX	*rmtx = cm_multiply(Vmat, cmtx);
 		cm_free(Vmat);
@@ -345,7 +351,7 @@ main(int argc, char *argv[])
 					if ((outfmt != DTrgbe) & (outfmt != DTxyze)) {
 						fprintf(ofp, "NROWS=%d\n", rvec->nrows);
 						fprintf(ofp, "NCOLS=%d\n", rvec->ncols);
-						fputs("NCOMP=3\n", ofp);
+						fputncomp(3, ofp);
 					}
 					if ((outfmt == DTfloat) | (outfmt == DTdouble))
 						fputendian(ofp);
@@ -377,7 +383,7 @@ main(int argc, char *argv[])
 				if ((outfmt != DTrgbe) & (outfmt != DTxyze)) {
 					fprintf(ofp, "NROWS=%d\n", rmtx->nrows);
 					fprintf(ofp, "NCOLS=%d\n", rmtx->ncols);
-					fputs("NCOMP=3\n", ofp);
+					fputncomp(3, ofp);
 				}
 				if ((outfmt == DTfloat) | (outfmt == DTdouble))
 					fputendian(ofp);

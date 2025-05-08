@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: loadvars.c,v 2.21 2023/06/10 20:20:51 greg Exp $";
+static const char	RCSid[] = "$Id: loadvars.c,v 2.23 2025/02/06 21:45:00 greg Exp $";
 #endif
 /*
  *  Routines for loading and checking variables from file.
@@ -311,6 +311,21 @@ fltvalue(				/* check float variable for legal values */
 }
 
 
+int
+singlevar(				/* assigned single value? */
+	VARIABLE *vp
+)
+{
+	if (vp->fixval == catvalues)
+		return(0);
+
+	return((vp->fixval == strvalue) |
+			(vp->fixval == fltvalue) |
+			(vp->fixval == intvalue) |
+			(vp->fixval == qualvalue) |
+			(vp->fixval == boolvalue));
+}
+
 void
 printvars(				/* print variable values */
 	FILE	*fp
@@ -322,7 +337,9 @@ printvars(				/* print variable values */
 	for (i = 0; i < NVARS; i++)		/* print each variable */
 	    for (j = 0; j < vdef(i); j++) {	/* print each assignment */
 		fputs(vnam(i), fp);
-		fputs("= ", fp);
+		fputc('=', fp);
+		if (!singlevar(&vv[i]))
+			fputc(' ', fp);
 		k = clipline = ( vv[i].fixval == catvalues ? 64 : 236 )
 				- strlen(vnam(i)) ;
 		cp = nvalue(i, j);

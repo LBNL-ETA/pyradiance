@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rpmain.c,v 2.35 2024/10/30 16:47:03 greg Exp $";
+static const char	RCSid[] = "$Id: rpmain.c,v 2.39 2025/04/23 01:57:04 greg Exp $";
 #endif
 /*
  *  rpmain.c - main for rpict batch rendering program
@@ -13,6 +13,7 @@ static const char	RCSid[] = "$Id: rpmain.c,v 2.35 2024/10/30 16:47:03 greg Exp $
 #include  "platform.h"
 #include  "rtprocess.h" /* getpid() */
 #include  "ray.h"
+#include  "func.h"
 #include  "source.h"
 #include  "ambient.h"
 #include  "random.h"
@@ -32,7 +33,6 @@ char  *octname;				/* octree name */
 char  *sigerr[NSIG];			/* signal error messages */
 char  *errfile = NULL;			/* error output file */
 
-extern time_t  time();
 extern time_t  tstart;			/* start time */
 
 extern int  ralrm;			/* seconds between reports */
@@ -109,6 +109,8 @@ main(int  argc, char  *argv[])
 	strcat(RFeatureList, RPICT_FEATURES);
 	if (argc > 1 && !strcmp(argv[1], "-features"))
 		return feature_status(argc-2, argv+2);
+					/* initialize calcomp routines */
+	initfunc();
 					/* option city */
 	for (i = 1; i < argc; i++) {
 						/* expand arguments */
@@ -241,10 +243,6 @@ main(int  argc, char  *argv[])
 				check(2,"s");
 			recover = argv[++i];
 			break;
-		case 't':				/* timer */
-			check(2,"i");
-			ralrm = atoi(argv[++i]);
-			break;
 #ifdef  PERSIST
 		case 'P':				/* persist file */
 			if (argv[i][2] == 'P') {
@@ -257,6 +255,10 @@ main(int  argc, char  *argv[])
 			persistfile(argv[++i]);
 			break;
 #endif
+		case 't':				/* timer */
+			check(2,"i");
+			ralrm = atoi(argv[++i]);
+			break;
 		case 'w':				/* warnings */
 			rval = erract[WARNING].pf != NULL;
 			check_bool(2,rval);
@@ -354,7 +356,6 @@ main(int  argc, char  *argv[])
 	ray_init_pmap();     /* PMAP: set up & load photon maps */
 
 	marksources();			/* find and mark sources */
-
 	setambient();			/* initialize ambient calculation */
 	
 	fflush(stdout);			/* in case we're duplicating header */

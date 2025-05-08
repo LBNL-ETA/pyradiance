@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: replmarks.c,v 2.18 2021/02/12 00:53:56 greg Exp $";
+static const char RCSid[] = "$Id: replmarks.c,v 2.21 2025/04/23 01:57:04 greg Exp $";
 #endif
 /*
  * Replace markers in Radiance scene description with objects or instances.
@@ -139,10 +139,10 @@ userr:
 void
 convert(		/* replace marks in a stream */
 	char	*name,
-	register FILE	*fin
+	FILE	*fin
 )
 {
-	register int	c;
+	int	c;
 
 	while ((c = getc(fin)) != EOF) {
 		if (isspace(c))				/* blank */
@@ -172,7 +172,7 @@ cvcomm(		/* convert a command */
 )
 {
 	FILE	*pin;
-	char	buf[512], *fgetline();
+	char	buf[512];
 
 	fgetline(buf, sizeof(buf), fin);
 	if (expand) {
@@ -183,7 +183,10 @@ cvcomm(		/* convert a command */
 			exit(1);
 		}
 		convert(buf, pin);
-		pclose(pin);
+		if (pclose(pin) != 0)
+			fprintf(stderr,
+			"%s: (%s): warning - bad status from \"%s\"\n",
+					progname, fname, buf);
 	} else
 		printf("\n%s\n", buf);
 }
@@ -195,10 +198,9 @@ cvobject(		/* convert an object */
 	FILE	*fin
 )
 {
-	extern char	*fgetword();
 	char	buf[128], typ[16], nam[128];
 	int	i, n;
-	register int	j;
+	int	j;
 
 	if (fgetword(buf, sizeof(buf), fin) == NULL ||
 			fgetword(typ, sizeof(typ), fin) == NULL ||
@@ -243,7 +245,7 @@ readerr:
 void
 replace(		/* replace marker */
 	char	*fname,
-	register struct mrkr	*m,
+	struct mrkr	*m,
 	char	*mark,
 	FILE	*fin
 )
@@ -297,7 +299,7 @@ edgecmp(			/* compare two edges, descending order */
 
 int
 buildxf(		/* build transform for marker */
-	register char	*xf,
+	char	*xf,
 	double	markscale,
 	FILE	*fin
 )
@@ -307,7 +309,7 @@ buildxf(		/* build transform for marker */
 	FVECT	xvec, yvec, zvec;
 	double	xlen;
 	int	n;
-	register int	i;
+	int	i;
 	/*
 	 * Read and sort vectors:  longest is hypotenuse,
 	 *	second longest is x' axis,
@@ -380,7 +382,7 @@ buildxf(		/* build transform for marker */
 
 int
 addrot(		/* compute rotation (x,y,z) => (xp,yp,zp) */
-	register char	*xf,
+	char	*xf,
 	FVECT xp,
 	FVECT yp,
 	FVECT zp

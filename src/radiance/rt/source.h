@@ -1,4 +1,4 @@
-/* RCSid $Id: source.h,v 2.25 2024/11/09 15:21:32 greg Exp $ */
+/* RCSid $Id: source.h,v 2.27 2025/01/18 03:49:00 greg Exp $ */
 /*
  *  source.h - header file for ray tracing sources.
  *
@@ -170,6 +170,14 @@ extern void	nopart(SRCINDEX *si, RAY *r);
 extern void	cylpart(SRCINDEX *si, RAY *r);
 extern void	flatpart(SRCINDEX *si, RAY *r);
 extern double	scylform(int sn, FVECT dir);
+					/* defined in srcskipload.c */
+extern int	sskip_dim[2];		/* source skip image size */
+extern int	srcskip_open(char *bmpspec, char *scorrimg);
+extern int	srcskip_getrow(int row, int *sndx, float *scorr);
+extern int	*srcskip_ndxmap(void);
+extern float	*srcskip_corrmap(void);
+extern void	srcskip_close(void);
+extern void	srcskip_free_maps(void);
 					/* defined in srcsupp.c */
 extern void	initstypes(void);
 extern int	newsource(void);

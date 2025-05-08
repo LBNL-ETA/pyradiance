@@ -1,4 +1,4 @@
-/* RCSid $Id: RtraceSimulManager.h,v 2.20 2024/12/16 20:18:36 greg Exp $ */
+/* RCSid $Id: RtraceSimulManager.h,v 2.22 2025/01/09 17:25:37 greg Exp $ */
 /*
  *  RtraceSimulManager.h
  *
@@ -36,7 +36,8 @@ public:
 					LoadOctree(octn);
 				}
 				~RadSimulManager() {
-					Cleanup();
+					// Cleanup();
+					if (ray_pnprocs > 0) ray_pclose(0);
 				}
 				/// Load octree and prepare renderer
 	bool			LoadOctree(const char *octn);
@@ -96,9 +97,9 @@ class RtraceSimulManager : public RadSimulManager {
 	static void		RTracer(RAY *r);
 				// Call-back for FIFO
 	static int		Rfifout(RAY *r);
+protected:
 				// Check for changes to render flags, etc.
 	bool			UpdateMode();
-protected:
 	RNUMBER			lastRayID;	// last ray ID assigned
 public:
 	int			rtFlags;	// operation (RT*) flags
@@ -111,6 +112,15 @@ public:
 				}
 				~RtraceSimulManager() {
 					FlushQueue();
+				}
+				/// Load octree and prepare renderer
+	bool			LoadOctree(const char *octn) {
+					if ((octn != NULL) & (octname != NULL) &&
+							!strcmp(octn, octname))
+						return true;
+					srcFollowed.NewBitMap(0);
+					curFlags &= ~RTtraceSources;
+					return RadSimulManager::LoadOctree(octn);
 				}
 				/// Set number of computation threads (0 => #cores)
 	int			SetThreadCount(int nt = 0) {
@@ -152,12 +162,17 @@ public:
 	int			FlushQueue();
 				/// Close octree, free data, return status
 	int			Cleanup(bool everything = false) {
-					SetCookedCall(NULL);
-					SetTraceCall(NULL);
-					rtFlags = 0;
+					int	st = RadSimulManager::Cleanup(everything);
+					srcFollowed.NewBitMap(0);
+					curFlags &= ~RTtraceSources;
+					if (everything) {
+						SetCookedCall(NULL);
+						SetTraceCall(NULL);
+						rtFlags &= ~RTmask;
+					}
 					UpdateMode();
 					lastRayID = 0;
-					return RadSimulManager::Cleanup(everything);
+					return st;
 				}
 };
 
@@ -169,4 +184,3 @@ IsZeroVec(const FVECT vec)
 }
 
 #endif /* RtraceSimulManager_h */
-

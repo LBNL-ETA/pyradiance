@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.56 2024/08/21 20:42:20 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.58 2025/01/18 03:49:00 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -64,7 +64,7 @@ typedef struct ray {
 	int	*slights;	/* list of lights to test for scattering */
 	RNUMBER	rno;		/* unique ray number */
 	OBJECT	robj;		/* intersected object number */
-	int	rsrc;		/* source we're aiming for */
+	int	rsrc;		/* source we're aiming for (or ones to skip) */
 	float	rweight;	/* cumulative weight (for termination) */
 	float	gecc;		/* scattering eccentricity coefficient */
 	SCOLOR	rcoef;		/* contribution coefficient w.r.t. parent */

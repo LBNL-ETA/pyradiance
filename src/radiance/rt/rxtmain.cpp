@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.10 2024/10/31 19:02:38 greg Exp $";
+static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.13 2025/04/22 17:12:25 greg Exp $";
 #endif
 /*
  *  rxtmain.cpp - main for per-ray calculation program
@@ -12,6 +12,7 @@ static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.10 2024/10/31 19:02:38 greg Ex
 #include  "rtprocess.h" /* getpid() */
 #include  "platform.h"
 #include  "RtraceSimulManager.h"
+#include  "func.h"
 
 extern char	*progname;		/* global argv[0] */
 
@@ -80,6 +81,8 @@ main(int  argc, char  *argv[])
 	strcat(RFeatureList, RXTRACE_FEATURES);
 	if (argc > 1 && !strcmp(argv[1], "-features"))
 		return feature_status(argc-2, argv+2);
+					/* initialize calcomp routines */
+	initfunc();
 					/* add trace notify function */
 	for (i = 0; addobjnotify[i] != NULL; i++)
 		;
@@ -142,7 +145,7 @@ main(int  argc, char  *argv[])
 			break;
 		case 'I':				/* immed. irradiance */
 			rval = myRTmanager.rtFlags & RTimmIrrad;
-			check_bool(3,rval);
+			check_bool(2,rval);
 			if (rval) myRTmanager.rtFlags |= RTimmIrrad;
 			else myRTmanager.rtFlags &= ~RTimmIrrad;
 			break;
@@ -303,7 +306,9 @@ main(int  argc, char  *argv[])
 	rval = setspectrsamp(CNDX, WLPART);
 	if (rval < 0)
 		error(USER, "unsupported spectral sampling");
-	if (out_prims != NULL) {
+	if (sens_curve != NULL)
+		out_prims = NULL;
+	else if (out_prims != NULL) {
 		if (!rval)
 			error(WARNING, "spectral range incompatible with color output");
 	} else if (NCSAMP == 3)
@@ -357,7 +362,11 @@ main(int  argc, char  *argv[])
 		printf("SOFTWARE= %s\n", VersionID);
 		fputnow(stdout);
 		if (rval > 0)		/* saved from setrtoutput() call */
-			printf("NCOMP=%d\n", rval);
+			fputncomp(rval, stdout);
+		if (NCSAMP > 3)
+			fputwlsplit(WLPART, stdout);
+		if ((out_prims != stdprims) & (out_prims != NULL))
+			fputprims(out_prims, stdout);
 		if ((outform == 'f') | (outform == 'd'))
 			fputendian(stdout);
 		fputformat(formstr(outform), stdout);

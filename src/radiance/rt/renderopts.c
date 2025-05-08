@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: renderopts.c,v 2.26 2024/04/05 17:55:25 greg Exp $";
+static const char	RCSid[] = "$Id: renderopts.c,v 2.28 2025/04/22 18:08:48 greg Exp $";
 #endif
 /*
  *  renderopts.c - process common rendering options
@@ -10,6 +10,7 @@ static const char	RCSid[] = "$Id: renderopts.c,v 2.26 2024/04/05 17:55:25 greg E
 #include "copyright.h"
 
 #include  "ray.h"
+#include  "func.h"
 #include  "paths.h"
 #include  "pmapopt.h"
 
@@ -313,6 +314,16 @@ getrenderopt(		/* get next render option */
 			return(1);
 		}
 		break;
+	case 'f':				/* .cal file */
+		check(2,"s");
+		loadfunc(av[1]);
+		return(1);
+	case 'e':				/* .cal expression */
+		check(2,"s");
+		if (!strchr(av[1], '=') && !strchr(av[1], ':'))
+			break;
+		scompile(av[1], NULL, 0);
+		return(1);
 #if MAXCSAMP>3
 	case 'c':				/* spectral sampling */
 		switch (av[0][2]) {

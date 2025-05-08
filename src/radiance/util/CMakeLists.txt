@@ -2,7 +2,7 @@ add_executable(evalglare evalglare.c pictool.c)
 target_include_directories(evalglare PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
 target_link_libraries(evalglare PRIVATE rtrad reetz ${MATH_LIBRARY})
 
-add_executable(dctimestep dctimestep.c cmbsdf.c cmatrix.c)
+add_executable(dctimestep dctimestep.c cmbsdf.c cmconst.c cmatrix.c)
 target_include_directories(dctimestep PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
 target_link_libraries(dctimestep PRIVATE rtrad ${MATH_LIBRARY})
 
@@ -22,11 +22,11 @@ add_executable(rttree_reduce rttree_reduce.c)
 target_include_directories(rttree_reduce PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
 target_link_libraries(rttree_reduce rtrad ${MATH_LIBRARY})
 
-add_executable(rmtxop rmtxop.c rmatrix.c cmbsdf.c cmatrix.c)
+add_executable(rmtxop rmtxop.c rmatrix.c cmconst.c cmbsdf.c cmatrix.c rmconvert.c)
 target_include_directories(rmtxop PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
 target_link_libraries(rmtxop PRIVATE rtrad ${MATH_LIBRARY})
 
-add_executable(rcomb rcomb.c rmatrix.c cmbsdf.c cmatrix.c)
+add_executable(rcomb rcomb.c cmconst.c rmatrix.c)
 target_include_directories(rcomb PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
 target_link_libraries(rcomb PRIVATE rtrad radiance ${MATH_LIBRARY})
 

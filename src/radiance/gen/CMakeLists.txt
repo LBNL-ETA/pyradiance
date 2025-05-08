@@ -1,5 +1,3 @@
-
-
 add_executable(genbeads genbeads.c hermite3.c)
 target_link_libraries(genbeads PRIVATE ${MATH_LIBRARY})
 
@@ -19,7 +17,7 @@ add_executable(genssky genssky.c sun.c atmos.c)
 target_include_directories(genssky PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common ${CMAKE_CURRENT_SOURCE_DIR}/../rt)
 target_link_libraries(genssky rtrad ${MATH_LIBRARY} Threads::Threads)
 
-add_executable(gensdaymtx gensdaymtx.c sun.c atmos.c)
+add_executable(gensdaymtx gensdaymtx.c sun.c atmos.c loadEPW.c)
 target_include_directories(gensdaymtx PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common ${CMAKE_CURRENT_SOURCE_DIR}/../rt)
 target_link_libraries(gensdaymtx rtrad ${MATH_LIBRARY} Threads::Threads)
 
@@ -27,13 +25,17 @@ add_executable(gendaylit gendaylit.c sun.c)
 target_include_directories(gendaylit PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
 target_link_libraries(gendaylit PRIVATE rtrad ${MATH_LIBRARY})
 
-add_executable(gendaymtx gendaymtx.c sun.c)
+add_executable(gendaymtx gendaymtx.c sun.c loadEPW.c)
 target_include_directories(gendaymtx PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
 target_link_libraries(gendaymtx PRIVATE rtrad ${MATH_LIBRARY})
 
 add_executable(genblinds genblinds.c)
 target_include_directories(genblinds PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
 target_link_libraries(genblinds PRIVATE rtrad ${MATH_LIBRARY})
+
+add_executable(genglaze genglaze.c)
+target_include_directories(genglaze PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
+target_link_libraries(genglaze PRIVATE rtrad ${MATH_LIBRARY})
 
 add_executable(genprism genprism.c)
 target_include_directories(genprism PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
@@ -85,6 +87,7 @@ install(TARGETS
   genclock
   gendaylit
   gendaymtx
+  genglaze
   gensdaymtx
   genprism
   genrev

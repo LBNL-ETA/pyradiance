@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_brdf.c,v 2.41 2024/04/05 01:10:26 greg Exp $";
+static const char	RCSid[] = "$Id: m_brdf.c,v 2.44 2024/12/18 17:57:06 greg Exp $";
 #endif
 /*
  *  Shading for materials with arbitrary BRDF's
@@ -208,7 +208,6 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 	RAY  *r
 )
 {
-	int  hitfront = 1;
 	BRDFDAT  nd;
 	RAY  sr;
 	int  hasrefl, hastrans;
@@ -254,7 +253,6 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 			nd.pnorm[i] = -nd.pnorm[i];
 			r->pert[i] = -r->pert[i];
 		}
-		hitfront = 0;
 	}
 	copyscolor(nd.mcolor, r->pcol);		/* get pattern color */
 	smultscolor(nd.rdiff, nd.mcolor);	/* modify diffuse values */
@@ -263,7 +261,7 @@ m_brdf(			/* color a ray that hit a BRDTfunc material */
 	hastrans = (sintens(nd.tdiff) > FTINY);
 						/* load cal file */
 	nd.dp = NULL;
-	mf = getfunc(m, 9, 0x3f, 0);
+	mf = getfunc(m, 9, 0x3F, 0);
 						/* compute transmitted ray */
 	setbrdfunc(&nd);
 	errno = 0;
@@ -348,10 +346,6 @@ m_brdf2(			/* color a ray that hit a BRDF material */
 						/* always a shadow */
 	if (r->crtype & SHADOW)
 		return(1);
-						/* check arguments */
-	if ((m->oargs.nsargs < (hasdata(m->otype)?4:2)) | (m->oargs.nfargs <
-			((m->otype==MAT_TFUNC)|(m->otype==MAT_TDATA)?6:4)))
-		objerror(m, USER, "bad # arguments");
 						/* check for back side */
 	if (r->rod < 0.0) {
 		if (!backvis) {
@@ -362,6 +356,10 @@ m_brdf2(			/* color a ray that hit a BRDF material */
 		flipsurface(r);			/* reorient if backvis */
 	} else
 		raytexture(r, m->omod);
+						/* check arguments */
+	if ((m->oargs.nsargs < (hasdata(m->otype)?4:2)) | (m->oargs.nfargs <
+			((m->otype==MAT_TFUNC)|(m->otype==MAT_TDATA)?6:4)))
+		objerror(m, USER, "bad # arguments");
 
 	nd.mp = m;
 	nd.pr = r;
@@ -434,8 +432,7 @@ setbrdfunc(			/* set up brdf function and variables */
 	varset("NxP`", '=', vec[0]/funcxf.sca);
 	varset("NyP`", '=', vec[1]/funcxf.sca);
 	varset("NzP`", '=', vec[2]/funcxf.sca);
-	varset("RdotP`", '=', np->pdot <= -1.0 ? -1.0 :
-			np->pdot >= 1.0 ? 1.0 : np->pdot);
+	varset("RdotP`", '=', np->pdot);
 	scolor_color(ctmp, np->mcolor);		/* should use scolor_rgb()? */
 	varset("CrP", '=', colval(ctmp,RED));
 	varset("CgP", '=', colval(ctmp,GRN));

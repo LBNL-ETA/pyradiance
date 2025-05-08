@@ -48,6 +48,7 @@ set(MATOBJS
     m_mirror.c
     m_direct.c
     m_mist.c
+    m_wgmdf.c
     fprism.c
     m_alias.c
     m_bsdf.c

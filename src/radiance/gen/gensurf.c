@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensurf.c,v 2.30 2024/12/10 17:22:39 greg Exp $";
+static const char RCSid[] = "$Id: gensurf.c,v 2.33 2025/04/23 01:57:04 greg Exp $";
 #endif
 /*
  *  gensurf.c - program to generate functional surfaces
@@ -40,6 +40,7 @@ char  texname[] = "Phong";
 
 int  smooth = 0;		/* apply smoothing? */
 int  objout = 0;		/* output .OBJ format? */
+int  rev = 0;			/* invert normal directions? */
 
 char  *modname, *surfname;
 
@@ -54,7 +55,8 @@ struct {
 } datarec;			/* our recorded data */
 
 /* XXX this is redundant with rt/noise3.c, should go to a library */
-double  l_hermite(), l_bezier(), l_bspline(), l_dataval();
+double  l_hermite(char *), l_bezier(char *),
+		l_bspline(char *), l_dataval(char *);
 
 typedef struct {
 	int  valid;	/* point is valid (vertex number) */
@@ -109,6 +111,8 @@ main(int argc, char *argv[])
 			smooth++;
 		else if (!strcmp(argv[i], "-o"))
 			objout++;
+		else if (!strcmp(argv[i], "-i"))
+			rev = 1;
 		else
 			goto userror;
 
@@ -150,7 +154,8 @@ main(int argc, char *argv[])
 						/* print header */
 	fputs("# ", stdout);
 	printargs(argc, argv, stdout);
-	eclock = 1;
+	doptimize(1);
+	eclock++;
 						/* initialize */
 	comprow(-1.0/m, row0, n);
 	comprow(0.0, row1, n);
@@ -356,6 +361,10 @@ putsquare(		/* put out a square */
 	int  axis;
 	FVECT  v1, v2, vc1, vc2;
 	int  ok1, ok2;
+
+	if (rev) {			/* reverse normals? */
+		POINT  *pt = p1; p1 = p2; p2 = pt;
+	}
 					/* compute exact normals */
 	ok1 = (p0->valid && p1->valid && p2->valid);
 	if (ok1) {
@@ -536,7 +545,10 @@ compnorms(		/* compute row of averaged normals */
 			fvsum(v2, r1[0].p, r1[-1].p, -1.0);
 		else
 			fvsum(v2, r1[1].p, r1[-1].p, -1.0);
-		fcross(r1[0].n, v1, v2);
+		if (rev)
+			fcross(r1[0].n, v2, v1);
+		else
+			fcross(r1[0].n, v1, v2);
 		normalize(r1[0].n);
 	skip:
 		r0++; r1++; r2++;

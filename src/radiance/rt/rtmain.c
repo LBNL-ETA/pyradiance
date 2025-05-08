@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.56 2024/10/30 16:47:03 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.58 2025/04/22 17:12:25 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -13,6 +13,7 @@ static const char	RCSid[] = "$Id: rtmain.c,v 2.56 2024/10/30 16:47:03 greg Exp $
 #include  "rtprocess.h" /* getpid() */
 #include  "resolu.h"
 #include  "ray.h"
+#include  "func.h"
 #include  "source.h"
 #include  "ambient.h"
 #include  "random.h"
@@ -114,6 +115,8 @@ main(int  argc, char  *argv[])
 	strcat(RFeatureList, RTRACE_FEATURES);
 	if (argc > 1 && !strcmp(argv[1], "-features"))
 		return feature_status(argc-2, argv+2);
+					/* initialize calcomp routines */
+	initfunc();
 					/* add trace notify function */
 	for (i = 0; addobjnotify[i] != NULL; i++)
 		;
@@ -348,7 +351,9 @@ main(int  argc, char  *argv[])
 	rval = setspectrsamp(CNDX, WLPART);
 	if (rval < 0)
 		error(USER, "unsupported spectral sampling");
-	if (out_prims != NULL) {
+	if (sens_curve != NULL)
+		out_prims = NULL;
+	else if (out_prims != NULL) {
 		if (!rval)
 			error(WARNING, "spectral range incompatible with color output");
 	} else if (NCSAMP == 3)

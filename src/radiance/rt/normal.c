@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: normal.c,v 2.84 2024/04/05 01:10:26 greg Exp $";
+static const char RCSid[] = "$Id: normal.c,v 2.87 2024/12/20 16:29:50 greg Exp $";
 #endif
 /*
  *  normal.c - shading function for normal materials.
@@ -56,7 +56,6 @@ typedef struct {
 	short  specfl;		/* specularity flags, defined above */
 	SCOLOR  mcolor;		/* color of this material */
 	SCOLOR  scolor;		/* color of specular component */
-	FVECT  vrefl;		/* vector in direction of reflected ray */
 	FVECT  prdir;		/* vector in transmitted direction */
 	double  alpha2;		/* roughness squared */
 	double  rdiff, rspec;	/* reflected specular, diffuse */
@@ -135,7 +134,7 @@ dirnorm(		/* compute source contribution */
 		dtmp = np->alpha2;
 						/* + source if flat */
 		if (np->specfl & SP_FLAT)
-			dtmp += omega * (0.25/PI);
+			dtmp += (1. - dstrsrc) * omega * (0.25/PI);
 						/* half vector */
 		VSUB(vtmp, ldir, np->rp->rdir);
 		d2 = DOT(vtmp, np->pnorm);
@@ -226,7 +225,7 @@ m_normal(			/* color a ray that hit something normal */
 		VCOPY(nd.pnorm, r->ron);
 		nd.pdot = r->rod;
 	}
-	if (r->ro != NULL && isflat(r->ro->otype))
+	if (!hastexture && r->ro != NULL && isflat(r->ro->otype))
 		nd.specfl |= SP_FLAT;
 	if (nd.pdot < .001)
 		nd.pdot = .001;			/* non-zero for dirnorm() */
@@ -304,25 +303,23 @@ m_normal(			/* color a ray that hit something normal */
 						/* check threshold */
 		if (!(nd.specfl & SP_PURE) && specthresh >= nd.rspec-FTINY)
 			nd.specfl |= SP_RBLT;
-						/* compute reflected ray */
-		VSUM(nd.vrefl, r->rdir, nd.pnorm, 2.*nd.pdot);
-						/* penetration? */
-		if (hastexture && DOT(nd.vrefl, r->ron) <= FTINY)
-			VSUM(nd.vrefl, r->rdir, r->ron, 2.*r->rod);
-		checknorm(nd.vrefl);
 	}
 						/* reflected ray */
 	if ((nd.specfl&(SP_REFL|SP_PURE|SP_RBLT)) == (SP_REFL|SP_PURE)) {
 		RAY  lr;
 		if (rayorigin(&lr, REFLECTED, r, nd.scolor) == 0) {
-			VCOPY(lr.rdir, nd.vrefl);
+						/* compute reflected ray */
+			VSUM(lr.rdir, r->rdir, nd.pnorm, 2.*nd.pdot);
+						/* penetration? */
+			if (hastexture && DOT(lr.rdir, r->ron) <= FTINY)
+				VSUM(lr.rdir, r->rdir, r->ron, 2.*r->rod);
+			checknorm(lr.rdir);
 			rayvalue(&lr);
 			smultscolor(lr.rcol, lr.rcoef);
 			copyscolor(r->mcol, lr.rcol);
 			saddscolor(r->rcol, lr.rcol);
 			r->rmt = r->rot;
-			if (nd.specfl & SP_FLAT &&
-					!hastexture | (r->crtype & AMBIENT))
+			if (nd.specfl & SP_FLAT && r->crtype & AMBIENT)
 				r->rmt += raydistance(&lr);
 		}
 	}

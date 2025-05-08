@@ -1,4 +1,4 @@
-/* RCSid $Id: cmatrix.h,v 2.14 2023/11/21 01:30:20 greg Exp $ */
+/* RCSid $Id: cmatrix.h,v 2.16 2025/04/19 17:12:59 greg Exp $ */
 /*
  * Color matrix routine declarations.
  *
@@ -15,9 +15,17 @@
 extern "C" {
 #endif
 
-/* Data types for file loading */
-enum {DTfromHeader=0, DTrgbe, DTxyze, DTspec, DTfloat, DTascii, DTdouble, DTend};
+/* Data types for file loading (used to be an enum) */
+#define DTfromHeader	0
+#define DTrgbe		1
+#define DTxyze		2
+#define DTspec		3
+#define DTfloat		4
+#define DTascii		5
+#define	DTdouble	6
+#define DTend		7
 
+/* Defined in cmconst.c */
 extern const char	stdin_name[];
 extern const char	*cm_fmt_id[];
 extern const int	cm_elem_size[];

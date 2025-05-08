@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genrev.c,v 2.15 2024/12/10 17:22:39 greg Exp $";
+static const char	RCSid[] = "$Id: genrev.c,v 2.17 2025/04/23 01:57:04 greg Exp $";
 #endif
 /*
  *  genrev.c - program to generate functions of rotation about z
@@ -33,8 +33,14 @@ static const char	RCSid[] = "$Id: genrev.c,v 2.15 2024/12/10 17:22:39 greg Exp $
 
 
 void
-computen(nzp, nrp, z0, r0, z1, r1)		/* compute normal */
-double  *nzp, *nrp, z0, r0, z1, r1;
+computen(			/* compute normal */
+	double  *nzp,
+	double  *nrp,
+	double z0,
+	double r0,
+	double z1,
+	double r1
+)
 {
 	double  dr, dz, len;
 
@@ -86,9 +92,10 @@ l_bspline(char *nm)
 
 
 int
-main(argc, argv)
-int  argc;
-char  *argv[];
+main(
+	int  argc,
+	char  *argv[]
+)
 {
 	char  stmp[256];
 	char  *modname;
@@ -135,7 +142,8 @@ char  *argv[];
 
 	fputs("# ", stdout);
 	printargs(argc, argv, stdout);
-	eclock = 1;
+	doptimize(1);
+	eclock++;
 
 	lastnz = lastnr = 0.0;
 	t = 0.0;
@@ -218,5 +226,3 @@ userror:
 			argv[0]);
 	return 1;
 }
-
-

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxpmain.cpp,v 2.4 2024/11/06 18:28:52 greg Exp $";
+static const char	RCSid[] = "$Id: rxpmain.cpp,v 2.8 2025/04/22 17:12:25 greg Exp $";
 #endif
 /*
  *  rxpmain.cpp - main for rxpict batch rendering program
@@ -13,6 +13,7 @@ static const char	RCSid[] = "$Id: rxpmain.cpp,v 2.4 2024/11/06 18:28:52 greg Exp
 #include  "rtprocess.h" /* getpid() */
 #include  "platform.h"
 #include  "RpictSimulManager.h"
+#include  "func.h"
 
 extern char  *progname;			/* argv[0] */
 const char  *sigerr[NSIG];		/* signal error messages */
@@ -57,16 +58,26 @@ static void printdefaults(void);
 		"AdaptiveShadowTesting\nOutputs=v,l\n" \
 		"OutputCS=RGB,XYZ,prims,spec\n"
 
-
 void
 quit(int code)			/* quit program */
 {
-	if (!code)
-		code = myRPmanager.Cleanup();
-
-	exit(code);
+	exit(code);		// don't bother about freeing anything
 }
 
+/* Set default options */
+static void
+default_options(void)
+{
+	shadthresh = .05;
+	shadcert = .5;
+	srcsizerat = .25;
+	directrelay = 1;
+	ambacc = 0.2;
+	ambres = 64;
+	ambdiv = 512;
+	ambssamp = 128;
+	maxdepth = 7;
+}
 
 int
 main(int  argc, char  *argv[])
@@ -97,6 +108,10 @@ main(int  argc, char  *argv[])
 	strcat(RFeatureList, RXPICT_FEATURES);
 	if (argc > 1 && !strcmp(argv[1], "-features"))
 		return feature_status(argc-2, argv+2);
+					/* initialize calcomp routines */
+	initfunc();
+					/* set defaults */
+	default_options();
 					/* option city */
 	for (i = 1; i < argc; i++) {
 						/* expand arguments */
@@ -509,7 +524,7 @@ progReporter(double pct)
 void
 rpict(int seq, char *pout, char *zout, char *prvr)
 /*
- * If seq is greater than zero, then we will render a sequence of
+ * If seq is greater than zero, we will render a sequence of
  * images based on view parameter strings read from the standard input.
  * If pout is NULL, then all images will be sent to the standard ouput.
  * If seq is greater than zero and prvr is an integer, then it is the
@@ -555,7 +570,7 @@ rpict(int seq, char *pout, char *zout, char *prvr)
 		if (!dtype)
 			error(USER, "ResumeFrame() failed");
 		if (!seq)
-			return;		// all done if we're running a sequence
+			return;		// all done if not a sequence
 	}
 	do {
 		if (prvr)		// have view from sequence recovery?
@@ -607,5 +622,5 @@ rpict(int seq, char *pout, char *zout, char *prvr)
 							zout ? dbuf : zout)
 					&& !seq | (errno != EEXIST))
 			error(USER, "RenderFrame() failed");
-	} while (seq++);		// all done if we're running a sequence
+	} while (seq++);		// all done if not a sequence
 }

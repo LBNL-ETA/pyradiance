@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.8 2024/11/07 20:56:09 greg Exp $";
+static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.17 2025/04/22 17:12:25 greg Exp $";
 #endif
 /*
  *  rxcmain.c - main for rxcontrib ray contribution tracer
@@ -35,7 +35,7 @@ RcontribSimulManager	myRCmanager;	// global rcontrib simulation manager
 				"Outputs=V,W\n" \
 				"OutputCS=RGB,spec\n"
 
-void	rxcontrib(const int rstart = 0);
+static void	rxcontrib(const int rstart = 0);
 
 static void
 printdefaults(void)			/* print default values to stdout */
@@ -47,8 +47,7 @@ printdefaults(void)			/* print default values to stdout */
 	if (myRCmanager.HasFlag(RTimmIrrad))
 		printf("-I+\t\t\t\t# immediate irradiance on\n");
 	printf("-n %-2d\t\t\t\t# number of rendering processes\n", nproc);
-	if (myRCmanager.xres > 0)
-		printf("-x %-9d\t\t\t# x resolution\n", myRCmanager.xres);
+	printf("-x %-9d\t\t\t# x resolution\n", myRCmanager.xres);
 	printf("-y %-9d\t\t\t# y resolution\n", myRCmanager.yres);
 	printf(myRCmanager.HasFlag(RTlimDist) ?
 			"-ld+\t\t\t\t# limit distance on\n" :
@@ -56,7 +55,7 @@ printdefaults(void)			/* print default values to stdout */
 	printf("-f%c%c\t\t\t\t# format input/output = %s/%s\n",
 			inpfmt, outfmt, formstr(inpfmt), formstr(outfmt));
 	if (report_intvl > 0)
-		printf("-t %-9d\t\t\t#  time between reports\n", report_intvl);
+		printf("-t %-9d\t\t\t# time between reports\n", report_intvl);
 	printf(erract[WARNING].pf != NULL ?
 			"-w+\t\t\t\t# warning messages on\n" :
 			"-w-\t\t\t\t# warning messages off\n");
@@ -75,7 +74,7 @@ onsig(				/* fatal signal */
 		_exit(signo);
 
 #ifdef SIGALRM
-	alarm(180);			/* allow 3 minutes to clean up */
+	alarm(600);			/* allow 10 minutes to clean up */
 	signal(SIGALRM, SIG_DFL);	/* make certain we do die */
 #endif
 	eputs("signal - ");
@@ -95,18 +94,6 @@ sigdie(			/* set fatal signal */
 		signal(signo, SIG_IGN);
 	sigerr[signo] = msg;
 }
-
-/*const char **/
-/*formstr(int f)				// return format identifier*/
-/*{*/
-/*	switch (f) {*/
-/*	case 'a': return("ascii");*/
-/*	case 'f': return("float");*/
-/*	case 'd': return("double");*/
-/*	case 'c': return(NCSAMP==3 ? COLRFMT : SPECFMT);*/
-/*	}*/
-/*	return("unknown");*/
-/*}*/
 
 /* set input/output format */
 static void
@@ -144,6 +131,23 @@ fmterr:
 	error(USER, errmsg);
 }
 
+/* Set default options */
+static void
+default_options(void)
+{
+	rand_samp = 1;
+	dstrsrc = 0.9;
+	directrelay = 3;
+	vspretest = 512;
+	srcsizerat = .2;
+	specthresh = .02;
+	specjitter = 1.;
+	maxdepth = -10;
+	minweight = 2e-3;
+	ambres = 256;
+	ambdiv = 350;
+	ambounce = 1;
+}
 
 /* Set overriding options */
 static void
@@ -153,7 +157,6 @@ override_options(void)
 	ambssamp = 0;
 	ambacc = 0;
 }
-
 
 int
 main(int argc, char *argv[])
@@ -185,6 +188,8 @@ main(int argc, char *argv[])
 					/* initialize calcomp routines early */
 	initfunc();
 	calcontext(RCCONTEXT);
+					/* set rcontrib defaults */
+	default_options();
 					/* option city */
 	for (i = 1; i < argc; i++) {
 						/* expand arguments */
@@ -237,10 +242,6 @@ main(int argc, char *argv[])
 			if (rval) erract[WARNING].pf = wputs;
 			else erract[WARNING].pf = NULL;
 			break;
-		case 'e':			/* .cal expression */
-			check(2,"s");
-			scompile(argv[++i], NULL, 0);
-			break;
 		case 'l':			/* limit distance */
 			if (argv[i][2] != 'd')
 				goto badopt;
@@ -253,12 +254,7 @@ main(int argc, char *argv[])
 			check_bool(2,rval);
 			myRCmanager.SetFlag(RTimmIrrad, rval);
 			break;
-		case 'f':			/* .cal file or force or format */
-			if (!argv[i][2]) {
-				check(2,"s");
-				loadfunc(argv[++i]);
-				break;
-			}
+		case 'f':			/* force or format */
 			if (argv[i][2] == 'o') {
 				check_bool(3,force_open);
 				break;
@@ -339,6 +335,11 @@ main(int argc, char *argv[])
 	myRCmanager.LoadOctree(argv[argc-1]);
 					// add to header
 	myRCmanager.AddHeader(argc-1, argv);
+	{
+		char	buf[128] = "SOFTWARE= ";
+		strcpy(buf+10, VersionID);
+		myRCmanager.AddHeader(buf);
+	}
 					// prepare output files
 	if (recover)
 		myRCmanager.outOp = RCOrecover;
@@ -352,9 +353,7 @@ main(int argc, char *argv[])
 	if (rval >= myRCmanager.GetRowMax()) {
 		error(WARNING, "nothing left to compute");
 		quit(0);
-	}				// add processes as requested
-	myRCmanager.SetThreadCount(nproc);
-
+	}
 	rxcontrib(rval);		/* trace ray contributions (loop) */
 
 	quit(0);	/* exit clean */
@@ -409,7 +408,7 @@ getRayBundle(FVECT *orig_dir = NULL)
 	int	n2go = myRCmanager.accum;
 
 	switch (inpfmt) {
-	case 'a':				// ASCII input
+	case 'a':			// ASCII input
 		if (!orig_dir)
 			return skipWords(6*n2go);
 		while (n2go-- > 0) {
@@ -422,12 +421,13 @@ getRayBundle(FVECT *orig_dir = NULL)
 			orig_dir += 2;
 		}
 		break;
-	case 'f':				// float input
+	case 'f':			// float input
 		if (!orig_dir)
 			return skipBytes(6*sizeof(float)*n2go);
 #ifdef SMLFLT
 		if (getbinary(orig_dir, sizeof(FVECT), 2*n2go, stdin) != 2*n2go)
 			return false;
+		orig_dir += 2*n2go;
 #else
 		while (n2go-- > 0) {
 			float	fvecs[6];
@@ -439,12 +439,13 @@ getRayBundle(FVECT *orig_dir = NULL)
 		}
 #endif
 		break;
-	case 'd':				// double input
+	case 'd':			// double input
 		if (!orig_dir)
 			return skipBytes(6*sizeof(double)*n2go);
 #ifndef SMLFLT
 		if (getbinary(orig_dir, sizeof(FVECT), 2*n2go, stdin) != 2*n2go)
 			return false;
+		orig_dir += 2*n2go;
 #else
 		while (n2go-- > 0) {
 			double	dvecs[6];
@@ -460,13 +461,10 @@ getRayBundle(FVECT *orig_dir = NULL)
 		error(INTERNAL, "unsupported format in getRayBundle()");
 		return false;
 	}
-	int	warned = 0;		// normalize directions
-	n2go = myRCmanager.accum;
+	n2go = myRCmanager.accum;	// normalize directions
 	while (n2go-- > 0) {
 		orig_dir -= 2;
-		if (normalize(orig_dir[1]) == 0)
-			if (!warned++)
-				error(WARNING, "zero ray direction on input");
+		normalize(orig_dir[1]);
 	}
 	return true;
 }
@@ -494,6 +492,9 @@ rxcontrib(const int rstart)
 		}
 		last_report = tstart = time(0);
 	}
+					// start children as requested
+	myRCmanager.SetThreadCount(nproc);
+
 	while (r < totRows) {		// loop until done
 		time_t	tnow;
 		if (!getRayBundle(odarr))
@@ -503,10 +504,10 @@ rxcontrib(const int rstart)
 		r++;
 		if (report_intvl <= 0)
 			continue;
-		tnow = time(0);		// time to report progress?
-		if (r == totRows)
-			myRCmanager.FlushQueue();
-		else if (tnow < last_report+report_intvl)
+		if (r == totRows)	// need to finish up?
+			myRCmanager.SetThreadCount(1);
+		tnow = time(0);
+		if ((r < totRows) & (tnow < last_report+report_intvl))
 			continue;
 		sprintf(errmsg, "%.2f%% done after %.3f hours\n",
 				100.*myRCmanager.GetRowFinished()/totRows,
@@ -562,8 +563,7 @@ quit(
 	int  code
 )
 {
-	if (!code && myRCmanager.Ready())	// clean up on normal exit
-		code = myRCmanager.Cleanup();
+	myRCmanager.FlushQueue();	// leave nothing in queue
 
 	exit(code);
 }

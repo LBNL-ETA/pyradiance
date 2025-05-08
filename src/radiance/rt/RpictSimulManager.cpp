@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.12 2024/09/16 23:49:13 greg Exp $";
+static const char RCSid[] = "$Id: RpictSimulManager.cpp,v 2.15 2025/01/25 04:57:27 greg Exp $";
 #endif
 /*
  *  RpictSimulManager.cpp
@@ -418,20 +418,16 @@ RpictSimulManager::RenderRect(const int x0, const int y0)
 			doneSamples |= doneMap;
 		}			// compute required ray samples
 		for (x = y = 0; sampMap.Find(&x, &y); x++)
-			if (!ComputePixel(x, y))
+			if (!ComputePixel(x, y)) {
+				sprintf(errmsg, "ComputePixel(%d,%d) failed", x, y);
+				error(WARNING, errmsg);
 				return false;
+			}
 		doneSamples |= sampMap;	// samples now done or at least queued
 		sp2 -= layer++ & 1;	// next denser sampling
 	}
-	if (FlushQueue() < 0)		// make sure we got everyone
+	if (FlushQueue() < 0)		// compute stragglers
 		return false;
-	x = y = 0;
-	if (doneMap.Find(&x, &y, false)) {
-		sprintf(errmsg, "missed %.4f%% of pixels in rectangle\n",
-				100. - 100.*doneMap.SumTotal() /
-					doneMap.Width() / doneMap.Height());
-		error(WARNING, errmsg);
-	}
 	if ((prCB != NULL) & (barPix == NULL))
 		(*prCB)(100.);
 	return true;
@@ -593,7 +589,7 @@ RpictSimulManager::RenderBelow(int ytop, const int vstep, FILE *pfp, const int d
 		error(WARNING, "spectral range incompatible with color output");
 	COLORV **	parr = NULL;		// set up tiny source drawing
 	float **	zarr = NULL;
-	if (!ptvw.type && directvis && dblur <= FTINY) {
+	if (!ptvw.type && directvis && (dblur <= FTINY) & (mblur <= FTINY)) {
 		parr = new COLORV * [THeight()];
 		zarr = new float * [THeight()];
 		for (int n = THeight(); n-- > 0; ) {
@@ -609,7 +605,7 @@ RpictSimulManager::RenderBelow(int ytop, const int vstep, FILE *pfp, const int d
 			(*prCB)(100.*(GetHeight()-ytop)/GetHeight());
 		if (!RenderRect(0, THeight()-ytop))	// render this bar
 			return false;
-		int	nlines = lastOut - ytop + THeight();
+		int	nlines = lastOut - ytop + vstep;
 		if (nlines > ytop)
 			nlines = ytop;
 		else if (parr)			// drawing sources?
@@ -819,7 +815,6 @@ RpictSimulManager::RenderFrame(const char *pfname, RenderDataType dt, const char
 	if (!RenderBelow(GetHeight(), vstep, pdfp[0], dt, pdfp[1])) {
 		fclose(pdfp[0]);
 		if (pdfp[1]) (dfname[0] == '!') ? pclose(pdfp[1]) : fclose(pdfp[1]);
-		Cleanup();
 		return RDTnone;
 	}
 	NewBar();				// clean up and return
@@ -1188,7 +1183,6 @@ RpictSimulManager::ResumeFrame(const char *pfname, const char *dfname)
 	if (!RenderBelow(GetHeight()-doneScans, vstep, pdfp[0], dt, pdfp[1])) {
 		fclose(pdfp[0]);
 		if (pdfp[1]) fclose(pdfp[1]);
-		Cleanup();
 		return RDTnone;
 	}
 	NewBar();				// close up and return success

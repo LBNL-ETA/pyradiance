@@ -1,4 +1,4 @@
-/* RCSid $Id: rmatrix.h,v 2.24 2024/06/06 17:01:05 greg Exp $ */
+/* RCSid $Id: rmatrix.h,v 2.27 2025/04/18 23:59:03 greg Exp $ */
 /*
  * Header file for general matrix routines.
  */
@@ -12,17 +12,23 @@
 extern "C" {
 #endif
 
-/* Preferred BSDF component:
-	none, transmission, reflection front (normal side), reflection back */
-typedef enum {RMPnone=-1, RMPtrans=0, RMPreflF, RMPreflB} RMPref;
-
 /* RMATRIX flags (usually private):
 	need to swap input, we should free memory */
 #define	RMF_SWAPIN	1
 #define RMF_FREEMEM	2
 
-#define	DTrmx_native	DTdouble	/* in-core data type */
+#ifndef MAXCOMP
+#define MAXCOMP		MAXCSAMP	/* #components we support */
+#endif
+					/* Set in-core data type */
+#if !defined(DTrmx_native) || DTrmx_native==DTfloat
+#define	DTrmx_native	DTfloat
+#define rmx_dtype	float
+#define rmx_scanfmt	"%f"
+#elif DTrmx_native==DTdouble
 #define	rmx_dtype	double
+#define rmx_scanfmt	"%lf"
+#endif
 
 /* General [row][col][cmp] component matrix */
 typedef struct {
@@ -71,7 +77,7 @@ extern int	rmx_load_row(rmx_dtype *drp, const RMATRIX *rm, FILE *fp);
 extern int	rmx_load_data(RMATRIX *rm, FILE *fp);
 
 /* Load matrix from supported file type (NULL for stdin, '!' with command) */
-extern RMATRIX	*rmx_load(const char *inspec, RMPref rmp);
+extern RMATRIX	*rmx_load(const char *inspec);
 
 /* Append header information associated with matrix data */
 extern int	rmx_addinfo(RMATRIX *rm, const char *info);
@@ -95,8 +101,8 @@ extern RMATRIX	*rmx_copy(const RMATRIX *rm);
 /* Replace data in first matrix with data from second */
 extern int	rmx_transfer_data(RMATRIX *rdst, RMATRIX *rsrc, int dometa);
 
-/* Allocate and assign transposed matrix */
-extern RMATRIX	*rmx_transpose(const RMATRIX *rm);
+/* Transpose the given matrix */
+extern int	rmx_transpose(RMATRIX *rm);
 
 /* Multiply (concatenate) two matrices and allocate the result */
 extern RMATRIX	*rmx_multiply(const RMATRIX *m1, const RMATRIX *m2);

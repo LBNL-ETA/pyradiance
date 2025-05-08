@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmtxop.c,v 2.35 2024/11/08 17:52:26 greg Exp $";
+static const char RCSid[] = "$Id: rmtxop.c,v 2.42 2025/04/19 03:58:00 greg Exp $";
 #endif
 /*
  * General component matrix operations.
@@ -10,7 +10,9 @@ static const char RCSid[] = "$Id: rmtxop.c,v 2.35 2024/11/08 17:52:26 greg Exp $
 #include "rmatrix.h"
 #include "platform.h"
 
-#define MAXCOMP		MAXCSAMP	/* #components we support */
+/* Preferred BSDF component:
+	none, transmission, reflection front (normal side), reflection back */
+typedef enum {RMPnone=-1, RMPtrans=0, RMPreflF, RMPreflB} RMPref;
 
 /* Unary matrix operation(s) */
 typedef struct {
@@ -37,12 +39,27 @@ int	verbose = 0;			/* verbose reporting? */
 int
 loadmatrix(ROPMAT *rop)
 {
-	if (rop->mtx != NULL)		/* already loaded? */
+	if (rop->mtx)			/* already loaded? */
 		return(0);
+					/* check for BSDF input */
+	if ((rop->inspec[0] != '!') & (rop->rmp != RMPnone)) {
+		const char	*sp = strrchr(rop->inspec, '.');
+		if (sp > rop->inspec && !strcasecmp(sp+1, "XML")) {
+			CMATRIX	*cm = rop->rmp==RMPtrans ? cm_loadBTDF(rop->inspec) :
+					cm_loadBRDF(rop->inspec, rop->rmp==RMPreflB) ;
+			if (!cm)
+				return(-1);
+			rop->mtx = rmx_from_cmatrix(cm);
+			cm_free(cm);
+			if (!rop->mtx)
+				return(-1);
+			rop->mtx->dtype = DTascii;
+			return(1);	/* loaded BSDF XML file */
+		}
+	}				/* else load regular matrix */
+	rop->mtx = rmx_load(rop->inspec);
 
-	rop->mtx = rmx_load(rop->inspec, rop->rmp);
-
-	return(!rop->mtx ? -1 : 1);
+	return(rop->mtx ? 1 : -1);
 }
 
 extern int	checksymbolic(ROPMAT *rop);
@@ -343,8 +360,7 @@ loadop(ROPMAT *rop)
 		}
 	}
 	if (rop->preop.transpose) {		/* transpose matrix? */
-		mres = rmx_transpose(rop->mtx);
-		if (mres == NULL) {
+		if (!rmx_transpose(rop->mtx)) {
 			fputs(rop->inspec, stderr);
 			fputs(": transpose failed\n", stderr);
 			goto failure;
@@ -353,8 +369,6 @@ loadop(ROPMAT *rop)
 			fputs(rop->inspec, stderr);
 			fputs(": transposed rows and columns\n", stderr);
 		}
-		rmx_free(rop->mtx);
-		rop->mtx = mres;
 	}
 	mres = rop->mtx;
 	rop->mtx = NULL;
@@ -681,14 +695,20 @@ main(int argc, char *argv[])
 	mres = loadop(mop+nmats);
 	if (mres == NULL)
 		return(1);
-	if (outfmt == DTfromHeader)	/* check data type */
+	if ((outfmt == DTfromHeader) & (mres->dtype < DTspec))
 		outfmt = mres->dtype;
-	if (outfmt == DTrgbe) {
+	if (outfmt == DTrgbe) {		/* check data type */
 		if (mres->ncomp > 3)
 			outfmt = DTspec;
 		else if (mres->dtype == DTxyze)
 			outfmt = DTxyze;
 	}
+#if DTrmx_native==DTfloat
+	if (outfmt == DTdouble)
+		fprintf(stderr,
+			"%s: warning - writing float result as double\n",
+				argv[0]);
+#endif
 	newheader("RADIANCE", stdout);	/* write result to stdout */
 	printargs(argc, argv, stdout);
 	return(rmx_write(mres, outfmt, stdout) ? 0 : 1);

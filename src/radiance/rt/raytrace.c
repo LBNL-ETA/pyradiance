@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: raytrace.c,v 2.89 2024/07/31 22:29:18 greg Exp $";
+static const char RCSid[] = "$Id: raytrace.c,v 2.96 2025/02/07 16:32:56 greg Exp $";
 #endif
 /*
  *  raytrace.c - routines for tracing and shading rays.
@@ -73,15 +73,16 @@ rayorigin(		/* start new ray from old one */
 			return(-1);		/* illegal continuation */
 		}
 		r->rlvl = ro->rlvl;
+		r->rsrc = ro->rsrc;
 		if (rt & RAYREFL) {
 			r->rlvl++;
-			r->rsrc = -1;
+			if (r->rsrc >= 0)	/* malfunctioning material? */
+				r->rsrc = -1;
 			r->clipset = ro->clipset;
 			r->rmax = 0.0;
 		} else {
-			r->rsrc = ro->rsrc;
 			r->clipset = ro->newcset;
-			r->rmax = ro->rmax <= FTINY ? 0.0 : ro->rmax - ro->rot;
+			r->rmax = (ro->rmax > FTINY)*(ro->rmax - ro->rot);
 		}
 		r->revf = ro->revf;
 		copycolor(r->cext, ro->cext);
@@ -212,8 +213,8 @@ raytirrad(			/* irradiance hack */
 	RAY	*r
 )
 {
-	if (ofun[m->otype].flags & (T_M|T_X) && m->otype != MAT_CLIP) {
-		if (istransp(m->otype) || isBSDFproxy(m)) {
+	if (m->otype != MAT_CLIP && ismaterial(m->otype)) {
+		if (istransp(m) || isBSDFproxy(m)) {
 			raytrans(r);
 			return(1);
 		}
@@ -283,9 +284,9 @@ rayparticipate(			/* compute ray medium participation */
 	/* PMAP: indirect inscattering accounted for by volume photons? */
 	if (!volumePhotonMapping) {
 		setscolor(ca,
-			colval(r->albedo,RED)*colval(ambval,RED)*(1.-colval(ce,RED)),
-			colval(r->albedo,GRN)*colval(ambval,GRN)*(1.-colval(ce,GRN)),
-			colval(r->albedo,BLU)*colval(ambval,BLU)*(1.-colval(ce,BLU)));
+			colval(r->albedo,RED)*colval(ambval,RED)*(1.-scolval(ce,RED)),
+			colval(r->albedo,GRN)*colval(ambval,GRN)*(1.-scolval(ce,GRN)),
+			colval(r->albedo,BLU)*colval(ambval,BLU)*(1.-scolval(ce,BLU)));
 		saddscolor(r->rcol, ca);		/* ambient in scattering */
 	}
 	
@@ -410,20 +411,33 @@ raycontrib(		/* compute (cumulative) ray contribution */
 )
 {
 	static int	warnedPM = 0;
+	double		re, ge, be;
+	SCOLOR		ce;
 
 	setscolor(rc, 1., 1., 1.);
+	re = ge = be = 0.;
 
 	while (r != NULL && r->crtype&flags) {
+					/* include this ray coefficient */
 		smultscolor(rc, r->rcoef);
-					/* check for participating medium */
-		if (!warnedPM && (bright(r->cext) > FTINY) |
-				(bright(r->albedo) > FTINY)) {
+					/* check participating medium */
+		if (!warnedPM && bright(r->albedo) > FTINY) {
 			error(WARNING,
 	"ray contribution calculation does not support participating media");
 			warnedPM++;
 		}
+					/* sum PM extinction */
+		re += r->rot*colval(r->cext,RED);
+		ge += r->rot*colval(r->cext,GRN);
+		be += r->rot*colval(r->cext,BLU);
+					/* descend the tree */
 		r = r->parent;
 	}
+					/* cumulative extinction */
+	setscolor(ce,	re<=FTINY ? 1. : re>92. ? 0. : exp(-re),
+			ge<=FTINY ? 1. : ge>92. ? 0. : exp(-ge),
+			be<=FTINY ? 1. : be>92. ? 0. : exp(-be));
+	smultscolor(rc, ce);
 }
 
 
@@ -454,7 +468,7 @@ raynormal(		/* compute perturbed normal for ray */
 		return(r->rod);
 	}
 	newdot = -DOT(norm, r->rdir);
-	if ((newdot > 0.0) != (r->rod > 0.0)) {		/* fix orientation */
+	if ((newdot > 0.0) ^ (r->rod > 0.0)) {		/* fix orientation */
 		for (i = 0; i < 3; i++)
 			norm[i] += 2.0*newdot*r->rdir[i];
 		newdot = -newdot;
@@ -543,10 +557,10 @@ rayreject(		/* check if candidate hit is worse than current */
 			return(1);	/* old has material, new does not */
 	} else if (mray == NULL) {
 		return(0);		/* new has material, old does not */
-	} else if (istransp(mnew->otype)) {
-		if (!istransp(mray->otype))
+	} else if (istransp(mnew)) {
+		if (!istransp(mray))
 			return(1);	/* new is transparent, old is not */
-	} else if (istransp(mray->otype)) {
+	} else if (istransp(mray)) {
 		return(0);		/* old is transparent, new is not */
 	}
 	if (rod <= 0) {			/* check which side we hit */

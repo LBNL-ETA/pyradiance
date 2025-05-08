@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rmatrix.c,v 2.83 2024/10/08 00:43:57 greg Exp $";
+static const char RCSid[] = "$Id: rmatrix.c,v 2.99 2025/04/22 04:45:25 greg Exp $";
 #endif
 /*
  * General matrix operations.
@@ -194,7 +194,7 @@ rmx_load_ascii(rmx_dtype *drp, const RMATRIX *rm, FILE *fp)
 
 	for (j = 0; j < rm->ncols; j++)
 	        for (k = rm->ncomp; k-- > 0; )
-			if (fscanf(fp, "%lf", drp++) != 1)
+			if (fscanf(fp, rmx_scanfmt, drp++) != 1)
 				return(0);
 	return(1);
 }
@@ -202,10 +202,16 @@ rmx_load_ascii(rmx_dtype *drp, const RMATRIX *rm, FILE *fp)
 static int
 rmx_load_float(rmx_dtype *drp, const RMATRIX *rm, FILE *fp)
 {
+#if DTrmx_native==DTfloat
+	if (getbinary(drp, sizeof(*drp)*rm->ncomp, rm->ncols, fp) != rm->ncols)
+		return(0);
+	if (rm->pflags & RMF_SWAPIN)
+		swap32((char *)drp, rm->ncols*rm->ncomp);
+#else
 	int	j, k;
-	float	val[100];
+	float	val[MAXCOMP];
 
-	if (rm->ncomp > 100) {
+	if (rm->ncomp > MAXCOMP) {
 		fputs("Unsupported # components in rmx_load_float()\n", stderr);
 		exit(1);
 	}
@@ -217,16 +223,35 @@ rmx_load_float(rmx_dtype *drp, const RMATRIX *rm, FILE *fp)
 	        for (k = 0; k < rm->ncomp; k++)
 			*drp++ = val[k];
 	}
+#endif
 	return(1);
 }
 
 static int
 rmx_load_double(rmx_dtype *drp, const RMATRIX *rm, FILE *fp)
 {
+#if DTrmx_native==DTdouble
 	if (getbinary(drp, sizeof(*drp)*rm->ncomp, rm->ncols, fp) != rm->ncols)
 		return(0);
 	if (rm->pflags & RMF_SWAPIN)
 		swap64((char *)drp, rm->ncols*rm->ncomp);
+#else
+	int	j, k;
+	double	val[MAXCOMP];
+
+	if (rm->ncomp > MAXCOMP) {
+		fputs("Unsupported # components in rmx_load_double()\n", stderr);
+		exit(1);
+	}
+	for (j = 0; j < rm->ncols; j++) {
+		if (getbinary(val, sizeof(val[0]), rm->ncomp, fp) != rm->ncomp)
+			return(0);
+		if (rm->pflags & RMF_SWAPIN)
+			swap64((char *)val, rm->ncomp);
+	        for (k = 0; k < rm->ncomp; k++)
+			*drp++ = (float)val[k];
+	}
+#endif
 	return(1);
 }
 
@@ -256,13 +281,13 @@ rmx_load_rgbe(rmx_dtype *drp, const RMATRIX *rm, FILE *fp)
 static int
 rmx_load_spec(rmx_dtype *drp, const RMATRIX *rm, FILE *fp)
 {
-	uby8	*scan;
-	SCOLOR	scol;
+	COLRV	*scan;
+	COLORV	scol[MAXCOMP];
 	int	j, k;
 
-	if ((rm->ncomp < 3) | (rm->ncomp > MAXCSAMP))
+	if ((rm->ncomp < 3) | (rm->ncomp > MAXCOMP))
 		return(0);
-	scan = (uby8 *)tempbuffer((rm->ncomp+1)*rm->ncols);
+	scan = (COLRV *)tempbuffer((rm->ncomp+1)*rm->ncols);
 	if (!scan)
 		return(0);
 	if (freadscolrs(scan, rm->ncomp, rm->ncols, fp) < 0)
@@ -364,7 +389,7 @@ rmx_load_data(RMATRIX *rm, FILE *fp)
 
 /* Load matrix from supported file type */
 RMATRIX *
-rmx_load(const char *inspec, RMPref rmp)
+rmx_load(const char *inspec)
 {
 	FILE		*fp;
 	RMATRIX		*dnew;
@@ -378,25 +403,8 @@ rmx_load(const char *inspec, RMPref rmp)
 		fp = stdin;
 	else if (inspec[0] == '!')
 		fp = popen(inspec+1, "r");
-	else {
-		const char	*sp = inspec;	/* check suffix */
-		while (*sp)
-			++sp;
-		while (sp > inspec && sp[-1] != '.')
-			--sp;
-		if (!strcasecmp(sp, "XML")) {	/* assume it's a BSDF */
-			CMATRIX	*cm = rmp==RMPnone ? (CMATRIX *)NULL :
-					rmp==RMPtrans ? cm_loadBTDF(inspec) :
-					cm_loadBRDF(inspec, rmp==RMPreflB) ;
-			if (!cm)
-				return(NULL);
-			dnew = rmx_from_cmatrix(cm);
-			cm_free(cm);
-			dnew->dtype = DTascii;
-			return(dnew);		/* return here */
-		}				/* else open it ourselves */
+	else
 		fp = fopen(inspec, "r");
-	}
 	if (!fp) {
 		fprintf(stderr, "Cannot open for reading: %s\n", inspec);
 		return(NULL);
@@ -416,7 +424,7 @@ rmx_load(const char *inspec, RMPref rmp)
 
 	if (fp != stdin) {			/* close input stream */
 		if (inspec[0] == '!')
-			pclose(fp);
+			ok &= pclose(fp)==0;
 		else
 			fclose(fp);
 	}
@@ -432,9 +440,9 @@ rmx_load(const char *inspec, RMPref rmp)
 						/* undo exposure? */
 	if ((dnew->cexp[0] != 1.f) |
 			(dnew->cexp[1] != 1.f) | (dnew->cexp[2] != 1.f)) {
-		double	cmlt[MAXCSAMP];
+		double	cmlt[MAXCOMP];
 		int	i;
-		if (dnew->ncomp > MAXCSAMP) {
+		if (dnew->ncomp > MAXCOMP) {
 			fprintf(stderr, "Excess spectral components in: %s\n",
 					inspec);
 			rmx_free(dnew);
@@ -451,6 +459,34 @@ rmx_load(const char *inspec, RMPref rmp)
 	return(dnew);
 }
 
+#if DTrmx_native==DTdouble
+static int
+rmx_write_float(const rmx_dtype *dp, int len, FILE *fp)
+{
+	float	val;
+
+	while (len--) {
+		val = (float)*dp++;
+		if (putbinary(&val, sizeof(val), 1, fp) != 1)
+			return(0);
+	}
+	return(1);
+}
+#else
+static int
+rmx_write_double(const rmx_dtype *dp, int len, FILE *fp)
+{
+	double	val;
+
+	while (len--) {
+		val = *dp++;
+		if (putbinary(&val, sizeof(val), 1, fp) != 1)
+			return(0);
+	}
+	return(1);
+}
+#endif
+
 static int
 rmx_write_ascii(const rmx_dtype *dp, int nc, int len, FILE *fp)
 {
@@ -461,19 +497,6 @@ rmx_write_ascii(const rmx_dtype *dp, int nc, int len, FILE *fp)
 		fputc('\t', fp);
 	}
 	return(fputc('\n', fp) != EOF);
-}
-
-static int
-rmx_write_float(const rmx_dtype *dp, int len, FILE *fp)
-{
-	float	val;
-
-	while (len--) {
-		val = *dp++;
-		if (putbinary(&val, sizeof(float), 1, fp) != 1)
-			return(0);
-	}
-	return(1);
 }
 
 static int
@@ -498,12 +521,12 @@ rmx_write_rgbe(const rmx_dtype *dp, int nc, int len, FILE *fp)
 static int
 rmx_write_spec(const rmx_dtype *dp, int nc, int len, FILE *fp)
 {
-	uby8	*scan;
-	SCOLOR	scol;
+	COLRV	*scan;
+	COLORV	scol[MAXCOMP];
 	int	j, k;
 
-	if (nc < 3) return(0);
-	scan = (uby8 *)tempbuffer((nc+1)*len);
+	if ((nc < 3) | (nc > MAXCOMP)) return(0);
+	scan = (COLRV *)tempbuffer((nc+1)*len);
 	if (!scan) return(0);
 	for (j = 0; j < len; j++, dp += nc) {
 	    	for (k = nc; k--; )
@@ -538,9 +561,13 @@ rmx_write_header(const RMATRIX *rm, int dtype, FILE *fp)
 		return(0);
 	if (rm->info)
 		fputs(rm->info, fp);
-	if (dtype == DTfromHeader)
+	if (dtype == DTfromHeader) {
 		dtype = rm->dtype;
-	else if (dtype == DTrgbe && (rm->dtype == DTxyze ||
+#if DTrmx_native==DTfloat
+		if (dtype == DTdouble)		/* but stored as float? */
+			dtype = DTfloat;
+#endif
+	} else if (dtype == DTrgbe && (rm->dtype == DTxyze ||
 					findCIEprims(rm->info)))
 		dtype = DTxyze;
 	else if ((dtype == DTxyze) & (rm->dtype == DTrgbe))
@@ -587,12 +614,17 @@ int
 rmx_write_data(const rmx_dtype *dp, int nc, int len, int dtype, FILE *fp)
 {
 	switch (dtype) {
-	case DTascii:
-		return(rmx_write_ascii(dp, nc, len, fp));
+#if DTrmx_native==DTdouble
 	case DTfloat:
 		return(rmx_write_float(dp, nc*len, fp));
+#else
+	case DTdouble:
+		return(rmx_write_double(dp, nc*len, fp));
+#endif
 	case DTrmx_native:
 		return(putbinary(dp, sizeof(*dp)*nc, len, fp) == len);
+	case DTascii:
+		return(rmx_write_ascii(dp, nc, len, fp));
 	case DTrgbe:
 	case DTxyze:
 		return(rmx_write_rgbe(dp, nc, len, fp));
@@ -680,18 +712,20 @@ rmx_copy(const RMATRIX *rm)
 int
 rmx_transfer_data(RMATRIX *rdst, RMATRIX *rsrc, int dometa)
 {
-	if (!rdst | !rsrc || (rdst->nrows != rsrc->nrows) |
-			(rdst->ncols != rsrc->ncols) |
-			(rdst->ncomp != rsrc->ncomp))
+	if (!rdst | !rsrc)
 		return(0);
-
 	if (dometa) {		/* transfer everything? */
 		rmx_reset(rdst);
 		*rdst = *rsrc;
 		rsrc->info = NULL; rsrc->mapped = NULL; rsrc->mtx = NULL;
 		return(1);
 	}
-#ifdef MAP_FILE			/* just matrix data -- leave metadata */
+				/* just matrix data -- leave metadata */
+	if ((rdst->nrows != rsrc->nrows) |
+			(rdst->ncols != rsrc->ncols) |
+			(rdst->ncomp != rsrc->ncomp))
+		return(0);
+#ifdef MAP_FILE
 	if (rdst->mapped)
 		munmap(rdst->mapped, rmx_mapped_size(rdst));
 	else
@@ -707,38 +741,81 @@ rmx_transfer_data(RMATRIX *rdst, RMATRIX *rsrc, int dometa)
 	return(1);
 }
 
-/* Allocate and assign transposed matrix */
-RMATRIX *
-rmx_transpose(const RMATRIX *rm)
+/* Transpose the given matrix */
+int
+rmx_transpose(RMATRIX *rm)
 {
-	RMATRIX	*dnew;
-	int	i, j;
+	uby8		*bmap;
+	rmx_dtype	val[MAXCOMP];
+	RMATRIX		dold;
+	int		i, j;
 
-	if (!rm || !rm->mtx)
+	if (!rm || !rm->mtx | (rm->ncomp > MAXCOMP))
 		return(0);
-	if ((rm->nrows == 1) | (rm->ncols == 1)) {
-		dnew = rmx_copy(rm);
-		if (!dnew)
-			return(NULL);
-		dnew->nrows = rm->ncols;
-		dnew->ncols = rm->nrows;
-		return(dnew);
+	if (rm->info)
+		rmx_addinfo(rm, "Transposed rows and columns\n");
+	if ((rm->nrows == 1) | (rm->ncols == 1)) { /* vector? */
+		j = rm->ncols;
+		rm->ncols = rm->nrows;
+		rm->nrows = j;
+		return(1);
 	}
-	dnew = rmx_alloc(rm->ncols, rm->nrows, rm->ncomp);
-	if (!dnew)
-		return(NULL);
-	if (rm->info) {
-		rmx_addinfo(dnew, rm->info);
-		rmx_addinfo(dnew, "Transposed rows and columns\n");
+	if (rm->nrows == rm->ncols) {	/* square matrix case */
+	     for (i = rm->nrows; i--; )
+	     	for (j = rm->ncols; j--; ) {
+		    if (i == j) continue;
+		    memcpy(val, rmx_val(rm,i,j),
+				sizeof(rmx_dtype)*rm->ncomp);
+		    memcpy(rmx_lval(rm,i,j), rmx_val(rm,j,i),
+				sizeof(rmx_dtype)*rm->ncomp);
+		    memcpy(rmx_val(rm,j,i), val,
+				sizeof(rmx_dtype)*rm->ncomp);
+		}
+		return(1);
 	}
-	dnew->dtype = rm->dtype;
-	copycolor(dnew->cexp, rm->cexp);
-	memcpy(dnew->wlpart, rm->wlpart, sizeof(dnew->wlpart));
-	for (j = dnew->ncols; j--; )
-	    for (i = dnew->nrows; i--; )
-	    	memcpy(rmx_lval(dnew,i,j), rmx_val(rm,j,i),
-	    			sizeof(rmx_dtype)*dnew->ncomp);
-	return(dnew);
+#define	bmbyte(r,c)	bmap[((r)*rm->ncols+(c))>>3]
+#define	bmbit(r,c)	(1 << ((r)*rm->ncols+(c) & 7))
+#define	bmop(r,c, op)	(bmbyte(r,c) op bmbit(r,c))
+#define	bmtest(r,c)	bmop(r,c,&)
+#define	bmset(r,c)	bmop(r,c,|=)
+					/* loop completion bitmap */
+	bmap = (uby8 *)calloc(((size_t)rm->nrows*rm->ncols+7)>>3, 1);
+	if (!bmap)
+		return(0);
+	dold = *rm;
+	rm->ncols = dold.nrows; rm->nrows = dold.ncols;
+	for (i = rm->nrows; i--; )	/* try every starting point */
+	    for (j = rm->ncols; j--; ) {
+	    	int	i0, j0;
+	    	int	i1 = i;
+	    	size_t	j1 = j;
+		if (bmtest(i, j))
+			continue;	/* traversed loop earlier */
+		memcpy(val, rmx_val(rm,i,j),
+			sizeof(rmx_dtype)*rm->ncomp);
+		for ( ; ; ) {		/* new transpose loop */
+		    const rmx_dtype	*ds;
+		    i0 = i1; j0 = j1;
+		    ds = rmx_val(&dold, j0, i0);
+		    j1 = (ds - dold.mtx)/dold.ncomp;
+		    i1 = j1 / rm->ncols;
+		    j1 -= (size_t)i1*rm->ncols;
+		    bmset(i1, j1);	/* mark as done */
+		    if ((i1 == i) & (j1 == j))
+		    	break;		/* back at start */
+		    memcpy(rmx_lval(rm,i0,j0), ds,
+				sizeof(rmx_dtype)*rm->ncomp);
+		}			/* complete the loop */
+		memcpy(rmx_lval(rm,i0,j0), val,
+			sizeof(rmx_dtype)*rm->ncomp);
+	    }
+	free(bmap);			/* all done! */
+	return(1);
+#undef	bmbyte
+#undef	bmbit
+#undef	bmop
+#undef	bmtest
+#undef	bmset
 }
 
 /* Multiply (concatenate) two matrices and allocate the result */
@@ -762,10 +839,11 @@ rmx_multiply(const RMATRIX *m1, const RMATRIX *m2)
 	for (i = mres->nrows; i--; )
 	    for (j = mres->ncols; j--; )
 	        for (k = mres->ncomp; k--; ) {
-		    rmx_dtype	d = 0;
+		    double	d = 0;
 		    for (h = m1->ncols; h--; )
-			d += rmx_val(m1,i,h)[k] * rmx_val(m2,h,j)[k];
-		    rmx_lval(mres,i,j)[k] = d;
+			d += (double)rmx_val(m1,i,h)[k] *
+					rmx_val(m2,h,j)[k];
+		    rmx_lval(mres,i,j)[k] = (rmx_dtype)d;
 		}
 	return(mres);
 }
@@ -857,7 +935,7 @@ rmx_sum(RMATRIX *msum, const RMATRIX *madd, const double sf[])
 	    	const rmx_dtype	*da = rmx_val(madd,i,j);
 	    	rmx_dtype	*ds = rmx_lval(msum,i,j);
 		for (k = msum->ncomp; k--; )
-		     ds[k] += sf[k] * da[k];
+		     ds[k] += (rmx_dtype)sf[k] * da[k];
 	    }
 	if (mysf)
 		free(mysf);
@@ -876,7 +954,7 @@ rmx_scale(RMATRIX *rm, const double sf[])
 	    for (j = rm->ncols; j--; ) {
 	    	rmx_dtype	*dp = rmx_lval(rm,i,j);
 		for (k = rm->ncomp; k--; )
-		    dp[k] *= sf[k];
+		    dp[k] *= (rmx_dtype)sf[k];
 	    }
 	if (rm->info)
 		rmx_addinfo(rm, "Applied scalar\n");
@@ -908,70 +986,12 @@ rmx_transform(const RMATRIX *msrc, int n, const double cmat[])
 	    for (j = dnew->ncols; j--; ) {
 		const rmx_dtype	*ds = rmx_val(msrc,i,j);
 	        for (kd = dnew->ncomp; kd--; ) {
-		    rmx_dtype	d = 0;
+		    double	d = 0;
 		    for (ks = msrc->ncomp; ks--; )
 		        d += cmat[kd*msrc->ncomp + ks] * ds[ks];
-		    rmx_lval(dnew,i,j)[kd] = d;
+		    rmx_lval(dnew,i,j)[kd] = (rmx_dtype)d;
 		}
 	    }
 	return(dnew);
 }
 
-/* Convert a color matrix to newly allocated RMATRIX buffer */
-RMATRIX *
-rmx_from_cmatrix(const CMATRIX *cm)
-{
-	int	i, j;
-	RMATRIX	*dnew;
-
-	if (!cm)
-		return(NULL);
-	dnew = rmx_alloc(cm->nrows, cm->ncols, 3);
-	if (!dnew)
-		return(NULL);
-	dnew->dtype = DTfloat;
-	for (i = dnew->nrows; i--; )
-	    for (j = dnew->ncols; j--; ) {
-		const COLORV	*cv = cm_lval(cm,i,j);
-		rmx_dtype	*dp = rmx_lval(dnew,i,j);
-		dp[0] = cv[0];
-		dp[1] = cv[1];
-		dp[2] = cv[2];
-	    }
-	return(dnew);
-}
-
-/* Convert general matrix to newly allocated CMATRIX buffer */
-CMATRIX *
-cm_from_rmatrix(const RMATRIX *rm)
-{
-	int	i, j;
-	CMATRIX	*cnew;
-
-	if (!rm || !rm->mtx | (rm->ncomp == 2))
-		return(NULL);
-	cnew = cm_alloc(rm->nrows, rm->ncols);
-	if (!cnew)
-		return(NULL);
-	for (i = cnew->nrows; i--; )
-	    for (j = cnew->ncols; j--; ) {
-		const rmx_dtype	*dp = rmx_val(rm,i,j);
-		COLORV		*cv = cm_lval(cnew,i,j);
-		switch (rm->ncomp) {
-		case 3:
-	    	    setcolor(cv, dp[0], dp[1], dp[2]);
-	    	    break;
-		case 1:
-		    setcolor(cv, dp[0], dp[0], dp[0]);
-		    break;
-		default: {
-			SCOLOR	scol;
-			int	k;
-			for (k = rm->ncomp; k--; )
-				scol[k] = dp[k];
-			scolor2color(cv, scol, rm->ncomp, rm->wlpart);
-		    } break;
-		}
-	    }
-	return(cnew);
-}

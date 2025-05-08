@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv3.c,v 2.45 2023/11/17 20:02:07 greg Exp $";
+static const char	RCSid[] = "$Id: rv3.c,v 2.47 2024/12/09 00:44:29 greg Exp $";
 #endif
 /*
  *  rv3.c - miscellaneous routines for rview.
@@ -112,7 +112,7 @@ getinterest(		/* get area of interest */
 			error(COMMAND, "not on image");
 			return(-1);
 		}
-		if (!direc || ourview.type == VT_PAR) {
+		if (!direc | (ourview.type == VT_PAR)) {
 			int	weakhit = 0;
 			FVECT	weakpt;
 			rayorigin(&thisray, PRIMARY, NULL, NULL);
@@ -123,11 +123,11 @@ getinterest(		/* get area of interest */
 							    thisray.ro->omod))
 					m = findmaterial(thisray.ro);
 				if ((m != NULL) & !weakhit &&
-						istransp(m->otype) &&
+						istransp(m) &&
 						m->otype != MAT_MIST) {
 					weakhit = 1;
 					VCOPY(weakpt, thisray.rop);
-				} else if (m != NULL && !istransp(m->otype) &&
+				} else if (m != NULL && !istransp(m) &&
 						!isBSDFproxy(m))
 					break;		/* something solid */
 				VCOPY(thisray.rorg, thisray.rop);
@@ -361,7 +361,7 @@ paintrect(				/* paint picture rectangle */
 {
 	int  mx, my;
 
-	if (p->xmax - p->xmin <= 0 || p->ymax - p->ymin <= 0)
+	if ((p->xmax <= p->xmin) | (p->ymax <= p->ymin))
 		return;
 
 	if (p->kid == NULL) {

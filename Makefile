@@ -16,6 +16,9 @@ venv:
 install:
 	pip install .
 
+sync:
+	$(PYTHON) sync.py
+
 docs:
 	pip install mkdocs "mkdocstrings[python]" mkdocs-material
 	mkdocs gh-deploy
@@ -39,4 +42,4 @@ clean:
 deep-clean: clean
 	$(RM) -r .venv
 
-.PHONY: venv install build test clean docs
+.PHONY: venv install build test clean docs sync

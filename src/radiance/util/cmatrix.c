@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: cmatrix.c,v 2.38 2023/11/21 01:30:20 greg Exp $";
+static const char RCSid[] = "$Id: cmatrix.c,v 2.41 2025/04/19 17:12:59 greg Exp $";
 #endif
 /*
  * Color matrix routines.
@@ -14,17 +14,6 @@ static const char RCSid[] = "$Id: cmatrix.c,v 2.38 2023/11/21 01:30:20 greg Exp 
 #include "platform.h"
 #include "paths.h"
 #include "resolu.h"
-
-const char	stdin_name[] = "<stdin>";
-
-const char	*cm_fmt_id[] = {
-			"unknown", COLRFMT, CIEFMT, SPECFMT,
-			"float", "ascii", "double"
-		};
-
-const int	cm_elem_size[] = {
-			0, 4, 4, 0, 3*sizeof(float), 0, 3*sizeof(double)
-		};
 
 /* Allocate a color coefficient matrix */
 CMATRIX *
@@ -96,7 +85,7 @@ get_cminfo(char *s, void *p)
 	char	fmt[MAXFMTLEN];
 	int	i;
 
-	if (!strncmp(s, "NCOMP=", 6) && atoi(s+6) != 3) {
+	if (isncomp(s) && ncompval(s) != 3) {
 		ip->err = "unexpected # components (must be 3)";
 		return(-1);
 	}
@@ -495,6 +484,9 @@ cm_write(const CMATRIX *cm, int dtype, FILE *fp)
 
 	if (!cm)
 		return(0);
+#ifdef getc_unlocked
+	flockfile(fp);
+#endif
 	mp = cm->cmem;
 	switch (dtype) {
 	case DTascii:
@@ -546,5 +538,8 @@ cm_write(const CMATRIX *cm, int dtype, FILE *fp)
 		fputs("Unsupported data type in cm_write()!\n", stderr);
 		return(0);
 	}
+#ifdef getc_unlocked
+	funlockfile(fp);
+#endif
 	return(fflush(fp) == 0);
 }

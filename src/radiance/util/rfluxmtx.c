@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.57 2024/03/19 10:48:05 greg Exp $";
+static const char RCSid[] = "$Id: rfluxmtx.c,v 2.59 2025/04/04 01:08:33 greg Exp $";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -517,10 +517,10 @@ finish_receiver(void)
 		sprintf(sbuf, "RHS=%c1", curparams.sign);
 		params = savqstr(sbuf);
 	}
-	if (!uniform & (curparams.slist->styp == ST_SOURCE)) {
+	if (!uniform) {
 		SURF	*sp;
 		for (sp = curparams.slist; sp != NULL; sp = sp->next)
-			if (fabs(sp->area - PI) > 1e-3) {
+			if (sp->styp == ST_SOURCE && fabs(sp->area - PI) > 1e-3) {
 				fprintf(stderr, "%s: source '%s' must be 180-degrees\n",
 						progname, sp->sname);
 				exit(1);
@@ -1104,12 +1104,6 @@ add_recv_object(FILE *fp)
 	}
 					/* is it a new receiver? */
 	if ((st = surf_type(otype)) != ST_NONE) {
-		if (curparams.slist != NULL && (st == ST_SOURCE) ^
-				(curparams.slist->styp == ST_SOURCE)) {
-			fputs(progname, stderr);
-			fputs(": cannot mix source/non-source receivers!\n", stderr);
-			return(-1);
-		}
 		if (strcmp(thismod, curmod)) {
 			if (curmod[0]) {	/* output last receiver? */
 				finish_receiver();

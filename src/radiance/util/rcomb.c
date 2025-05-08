@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcomb.c,v 2.26 2024/11/08 17:52:26 greg Exp $";
+static const char RCSid[] = "$Id: rcomb.c,v 2.31 2025/04/18 23:59:03 greg Exp $";
 #endif
 /*
  * General component matrix combiner, operating on a row at a time.
@@ -20,8 +20,6 @@ static const char RCSid[] = "$Id: rcomb.c,v 2.26 2024/11/08 17:52:26 greg Exp $"
 #ifndef M_PI
 #define M_PI	3.14159265358979323846
 #endif
-
-#define MAXCOMP		MAXCSAMP	/* #components we support */
 
 /* Unary matrix operation(s) */
 typedef struct {
@@ -673,7 +671,7 @@ parent_loop(void)
 		if (!rmx_load_row(mop[i].imx.mtx, &mop[i].imx, mop[i].infp)) {
 			if (cur_row > in_nrows)	/* unknown #input rows? */
 				break;
-			fprintf(stderr, "%s: parent_loop() load error at row %d\n",
+			fprintf(stderr, "%s: load error at row %d\n",
 					mop[i].inspec, cur_row);
 			return(0);
 		}
@@ -682,7 +680,7 @@ parent_loop(void)
 	    for (i = 0; i < nmats; i++)
 	    	if (writebuf(wfd, mop[i].imx.mtx, rmx_array_size(&mop[i].imx))
 	    				!= rmx_array_size(&mop[i].imx)) {
-			fprintf(stderr, "%s: parent_loop() write error at row %d\n",
+			fprintf(stderr, "%s: write error at row %d\n",
 					mop[i].inspec, cur_row);
 			return(0);
 		}
@@ -691,7 +689,7 @@ parent_loop(void)
 	free(cproc); cproc = NULL; nchildren = 0;
 	if (i < 0) {
 		if (!nowarn)
-			fputs("Warning: lost child in parent_loop()\n", stderr);
+			fputs("Warning: lost child process\n", stderr);
 		return(1);
 	}
 	if (i > 0) {
@@ -737,7 +735,7 @@ combine_input(void)
 		if (!rmx_load_row(mop[i].imx.mtx, &mop[i].imx, mop[i].infp)) {
 			if (cur_row > in_nrows)	/* unknown #input rows? */
 				break;
-			fprintf(stderr, "%s: combine_input() load error at row %d\n",
+			fprintf(stderr, "%s: load error at row %d\n",
 					mop[i].inspec, cur_row);
 			return(0);
 		}
@@ -785,14 +783,14 @@ combine_input(void)
 	    if (!rmx_write_data(res->rmp->mtx, res->rmp->ncomp,
 	    			res->rmp->ncols, res->rmp->dtype, stdout) ||
 	    			 (inchild >= 0 && fflush(stdout) == EOF)) {
-		fprintf(stderr, "Conversion/write error at row %d in combine_input()\n",
+		fprintf(stderr, "Conversion/write error at row %d\n",
 				cur_row);
 	    	return(0);
 	    }
 	}
 	return(inchild >= 0 || fflush(stdout) != EOF);
 multerror:
-	fputs("Unexpected matrix multiply error in combine_input()\n", stderr);
+	fputs("Unexpected matrix multiply error\n", stderr);
 	return(0);
 }
 
@@ -821,12 +819,12 @@ output_loop(void)
 		if (!rv)				/* out of rows? */
 			break;
 		if (rv != row_size) {
-			fputs("Read error in output_loop()\n", stderr);
+			fputs("Read error\n", stderr);
 			return(0);
 		}					/* do final conversion */
 		if (!rmx_write_data(mop[nmats].rmp->mtx, mop[nmats].rmp->ncomp,
 	    			mop[nmats].rmp->ncols, mop[nmats].rmp->dtype, stdout)) {
-			fputs("Conversion/write error in output_loop()\n", stderr);
+			fputs("Conversion/write error\n", stderr);
 			return(0);
 		}
 		cur_child++;
@@ -993,7 +991,7 @@ main(int argc, char *argv[])
 	resize_inparr(nmats+1);		/* extra matrix at end for result */
 	mop[nmats].inspec = "trailing_ops";
 					/* load final concatenation matrix */
-	if (mcat_spec && !(mcat = rmx_load(mcat_spec, RMPnone))) {
+	if (mcat_spec && !(mcat = rmx_load(mcat_spec))) {
 		fprintf(stderr, "%s: error loading concatenation matrix: %s\n",
 				argv[0], mcat_spec);
 		return(1);
@@ -1036,6 +1034,10 @@ main(int argc, char *argv[])
 			return(1);
 		mop[nmats].rmp->ncols = mcat->ncols;
 	}
+#if DTrmx_native==DTfloat
+	if (outfmt == DTdouble)
+		fprintf(stderr, "%s: warning - writing float result as double\n", argv[0]);
+#endif
 	newheader("RADIANCE", stdout);	/* write output header */
 	if (echoheader)
 		output_headinfo(stdout);

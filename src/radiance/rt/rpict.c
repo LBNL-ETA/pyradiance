@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rpict.c,v 2.104 2024/08/14 20:05:23 greg Exp $";
+static const char RCSid[] = "$Id: rpict.c,v 2.107 2025/01/25 04:57:56 greg Exp $";
 #endif
 /*
  *  rpict.c - routines and variables for picture generation.
@@ -118,6 +118,8 @@ time_t  tstart;				/* starting time */
 #define	 pixjitter()	(.5+dstrpix*(.5-frandom()))
 
 int  hres, vres;			/* resolution for this frame */
+
+extern void	sskip_ray(RAY *r, double h, double v);
 
 static VIEW	lastview;		/* the previous view input */
 
@@ -287,6 +289,7 @@ rpict(			/* generate image(s) */
 	do {
 		if (seq && nextview(stdin) == EOF)
 			break;
+		lastview.type *= seq > 1;
 		pctdone = 0.0;
 		if (pout != NULL) {
 			int	myfd;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: mesh.c,v 2.35 2021/06/10 00:27:25 greg Exp $";
+static const char RCSid[] = "$Id: mesh.c,v 2.37 2024/12/12 23:04:31 greg Exp $";
 #endif
 /*
  * Mesh support routines
@@ -72,7 +72,7 @@ cvcmp(const char *vv1, const char *vv2)		/* compare encoded vertices */
 
 
 MESH *
-getmesh(				/* get new mesh data reference */
+getmesh(				/* get mesh data reference */
 	char	*mname,
 	int	flags
 )
@@ -82,27 +82,25 @@ getmesh(				/* get new mesh data reference */
 
 	flags &= IO_LEGAL;
 	for (ms = mlist; ms != NULL; ms = ms->next)
-		if (!strcmp(mname, ms->name)) {
-			ms->nref++;	/* increase reference count */
+		if (!strcmp(mname, ms->name))
 			break;
-		}
-	if (ms == NULL) {		/* load first time */
+	if (ms == NULL) {		/* new mesh entry? */
 		ms = (MESH *)calloc(1, sizeof(MESH));
 		if (ms == NULL)
 			error(SYSTEM, "out of memory in getmesh");
 		ms->name = savestr(mname);
-		ms->nref = 1;
 		ms->mcube.cutree = EMPTY;
 		ms->next = mlist;
 		mlist = ms;
 	}
+	ms->nref++;			/* bump reference count */
+	if (!(flags &= ~ms->ldflags))	/* nothing to load? */
+		return(ms);
 	if ((pathname = getpath(mname, getrlibpath(), R_OK)) == NULL) {
 		sprintf(errmsg, "cannot find mesh file \"%s\"", mname);
 		error(SYSTEM, errmsg);
 	}
-	flags &= ~ms->ldflags;
-	if (flags)
-		readmesh(ms, pathname, flags);
+	readmesh(ms, pathname, flags);
 	return(ms);
 }
 

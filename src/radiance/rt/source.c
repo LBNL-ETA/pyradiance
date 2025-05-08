@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: source.c,v 2.83 2024/11/09 15:21:32 greg Exp $";
+static const char RCSid[] = "$Id: source.c,v 2.86 2025/01/18 03:49:00 greg Exp $";
 #endif
 /*
  *  source.c - routines dealing with illumination sources.
@@ -216,9 +216,9 @@ freesources(void)			/* free all source structures */
 
 
 int
-srcray(				/* send a ray to a source, return domega */
-	RAY  *sr,		/* returned source ray */
-	RAY  *r,			/* ray which hit object */
+srcray(				/* aim a ray at a source, return domega */
+	RAY  *sr,		/* prepared source ray */
+	RAY  *r,			/* originating ray (or NULL) */
 	SRCINDEX  *si			/* source sample index */
 )
 {
@@ -231,7 +231,7 @@ srcray(				/* send a ray to a source, return domega */
 		sr->rmax = 0.0;
 
 	while ((d = nextssamp(sr, si)) != 0.0) {
-		sr->rsrc = si->sn;			/* remember source */
+		sr->rsrc = si->sn;		/* remember source */
 		srcp = source + si->sn;
 		if (srcp->sflags & SDISTANT) {
 			if (srcp->sflags & SSPOT && spotout(sr, srcp->sl.s))
@@ -603,7 +603,8 @@ srcscatter(			/* compute source scattering into ray */
 			sr.rorg[2] = r->rorg[2] + r->rdir[2]*t;
 			
 			if (!volumePhotonMapping) {
-				if (srcskip(r->slights[i], r))
+				sr.parent = r;		/* hack for preemptive test */
+				if (srcskip(r->slights[i], &sr))
 					continue;
 				initsrcindex(&si);	/* sample ray to this source */
 				si.sn = r->slights[i];

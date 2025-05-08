@@ -1,7 +1,7 @@
 #include "color.h"
 #ifndef lint
 static const char RCSid[] =
-    "$Id: genssky.c,v 2.6 2024/10/09 17:22:42 greg Exp $";
+    "$Id: genssky.c,v 2.7 2025/04/10 23:30:58 greg Exp $";
 #endif
 /* Main function for generating spectral sky */
 /* Cloudy sky computed as weight average of clear and cie overcast sky */
@@ -61,6 +61,8 @@ static int make_directory(const char *path) {
   return 0;
 #endif
 }
+
+inline static float deg2rad(float deg) { return deg * (PI / 180.); }
 
 static int cvthour(char *hs, int *tsolar, double *hour) {
   char *cp = hs;
@@ -132,6 +134,25 @@ static void basename(const char *path, char *output, size_t outsize) {
   }
 }
 
+static char *join_paths(const char *path1, const char *path2) {
+  size_t len1 = strlen(path1);
+  size_t len2 = strlen(path2);
+  int need_separator = (path1[len1 - 1] != DIRSEP);
+
+  char *result = malloc(len1 + len2 + (need_separator ? 2 : 1));
+  if (!result)
+    return NULL;
+
+  strcpy(result, path1);
+  if (need_separator) {
+    result[len1] = DIRSEP;
+    len1++;
+  }
+  strcpy(result + len1, path2);
+
+  return result;
+}
+
 static inline double wmean2(const double a, const double b, const double x) {
   return a * (1 - x) + b * x;
 }
@@ -200,6 +221,8 @@ static void write_hsr_header(FILE *fp, RESOLU *res) {
   fputsresolu(res, fp);
 }
 
+static inline float frac(float x) { return x - floor(x); }
+
 int gen_spect_sky(DATARRAY *tau_clear, DATARRAY *scat_clear,
                   DATARRAY *scat1m_clear, DATARRAY *irrad_clear,
                   const double cloud_cover, const FVECT sundir,
@@ -228,20 +251,19 @@ int gen_spect_sky(DATARRAY *tau_clear, DATARRAY *scat_clear,
 
   double dif_ratio = 1;
   if (difhor > 0) {
-    DATARRAY *indirect_irradiance_clear =
-        get_indirect_irradiance(irrad_clear, radius, sun_ct);
+    DATARRAY *indirect_irradiance_clear = get_indirect_irradiance(irrad_clear, radius, sun_ct);
     double overcast_ghi = overcast_zenithbr * 7.0 * PI / 9.0;
     double diffuse_irradiance = 0;
     int l;
     for (l = 0; l < NSSAMP; ++l) {
-      diffuse_irradiance +=
-          indirect_irradiance_clear->arr.d[l] * 20; /* 20nm interval */
+      diffuse_irradiance += indirect_irradiance_clear->arr.d[l] * 20;  /* 20nm interval */
     }
     free(indirect_irradiance_clear);
     diffuse_irradiance = wmean2(diffuse_irradiance, overcast_ghi, cloud_cover);
-    dif_ratio = difhor / WHTEFFICACY / diffuse_irradiance / 1.15; /* fudge */
+    if (diffuse_irradiance > 0) {
+        dif_ratio = difhor / WHTEFFICACY / diffuse_irradiance / 1.15;       /* fudge */
+    }
   }
-
   int i, j, k;
   for (j = 0; j < yres; ++j) {
     for (i = 0; i < xres; ++i) {
@@ -277,8 +299,7 @@ int gen_spect_sky(DATARRAY *tau_clear, DATARRAY *scat_clear,
         double skybr = get_overcast_brightness(rdir[2], overcast_zenithbr);
         if (rdir[2] < 0) {
           for (k = 0; k < NSSAMP; ++k) {
-            radiance[k] =
-                wmean2(radiance[k], overcast_grndbr * D6415[k], cloud_cover);
+            radiance[k] = wmean2(radiance[k], overcast_grndbr * D6415[k], cloud_cover);
           }
         } else {
           for (k = 0; k < NSSAMP; ++k) {
@@ -445,7 +466,7 @@ int main(int argc, char *argv[]) {
     fprintf(stderr,
             "Usage: %s month day hour -y year -a lat -o lon -m tz -d aod -r "
             "res -n nproc -c ccover -l mie -L dirnorm_illum difhor_illum "
-            "-g grefl -f outpath\n",
+	    "-g grefl -f outpath\n",
             argv[0]);
     return 0;
   }
@@ -461,6 +482,11 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
   got_meridian = cvthour(argv[3], &tsolar, &hour);
+
+  if (!compute_sundir(year, month, day, hour, tsolar, sundir)) {
+    fprintf(stderr, "Cannot compute solar angle\n");
+    exit(1);
+  }
 
   for (i = 4; i < argc; i++) {
     if (argv[i][0] == '-') {
@@ -519,12 +545,6 @@ int main(int argc, char *argv[]) {
       }
     }
   }
-
-  if (!compute_sundir(year, month, day, hour, tsolar, sundir)) {
-    fprintf(stderr, "Cannot compute solar angle\n");
-    exit(1);
-  }
-
   if (year && (year < 1950) | (year > 2050))
     fprintf(stderr, "%s: warning - year should be in range 1950-2050\n",
             progname);

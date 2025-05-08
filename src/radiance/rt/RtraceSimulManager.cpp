@@ -302,9 +302,8 @@ RtraceSimulManager::UpdateMode()
 	if ((trace != RTracer) & (ray_fifo_out != Rfifout)) {
 		ourRTsimMan = NULL;
 	} else if (ourRTsimMan != this) {
-		if (ourRTsimMan) {
+		if (ourRTsimMan)
 			error(WARNING, "Competing top-level simulation managers?");
-		}
 		ourRTsimMan = this;
 	}
 	return true;

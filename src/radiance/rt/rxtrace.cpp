@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxtrace.cpp,v 2.5 2024/05/02 22:10:43 greg Exp $";
+static const char	RCSid[] = "$Id: rxtrace.cpp,v 2.9 2025/01/02 02:59:15 greg Exp $";
 #endif
 /*
  *  C++ module for individual ray tracing.
@@ -68,12 +68,14 @@ static oputf_t  oputo, oputd, oputv, oputV, oputl, oputL, oputc, oputp,
 extern void tranotify(OBJECT obj);
 static void tabin(RAY *r);
 static RayReportCall ourtrace;
-static RayReportCall printvals;
 
-static void  putscolor(COLORV *scol);
+RayReportCall printvals;		/* print selected ray values */
+
+void  putscolor(COLORV *scol, double sf = 1.);		/* convert/print spectral color */
 
 static oputf_t *ray_out[32], *every_out[32];
-static putf_t *putreal;
+
+putf_t *putreal;			/* put out real vector */
 
 void
 quit(			/* quit program */
@@ -83,9 +85,8 @@ quit(			/* quit program */
 	if (ray_pnprocs < 0)
 		_exit(code);		/* avoid flush in child */
 
-	int	ec = myRTmanager.Cleanup();
-
-	if (ec) code = ec;
+	if (ray_pnprocs > 1)
+		myRTmanager.SetThreadCount(1);
 
 	exit(code);
 }
@@ -411,7 +412,7 @@ setrtoutput(const char *outvals)	/* set up output tables, return #comp */
 	return(ncomp);
 }
 
-static int
+int
 printvals(			/* print requested ray values */
 	RAY  *r, void *cd
 )
@@ -509,7 +510,7 @@ oputr(				/* print mirrored contribution */
 	RAY  *r
 )
 {
-	putscolor(r->mcol);
+	putscolor(r->mcol, out_scalefactor);
 }
 
 static void
@@ -530,7 +531,7 @@ oputx(				/* print unmirrored contribution */
 	copyscolor(cdiff, r->rcol);
 	sopscolor(cdiff, -=, r->mcol);
 
-	putscolor(cdiff);
+	putscolor(cdiff, out_scalefactor);
 }
 
 static void
@@ -546,7 +547,7 @@ oputv(				/* print value */
 	RAY  *r
 )
 {
-	putscolor(r->rcol);
+	putscolor(r->rcol, out_scalefactor);
 }
 
 static void
@@ -558,7 +559,7 @@ oputV(				/* print value contribution */
 
 	raycontrib(contr, r, PRIMARY);
 	smultscolor(contr, r->rcol);
-	putscolor(contr);
+	putscolor(contr, out_scalefactor);
 }
 
 static void
@@ -766,21 +767,21 @@ putrgbe(RREAL *v, int n)	/* output RGBE color */
 	putbinary(cout, sizeof(cout), 1, stdout);
 }
 
-static void
-putscolor(COLORV *scol)		/* output (spectral) color */
+void
+putscolor(COLORV *scol, double sf)		/* output (spectral) color */
 {
 	static COLORMAT	xyz2myrgbmat;
 	SCOLOR		my_scol;
 	COLOR		col;
 					/* single channel output? */
 	if (sens_curve != NULL) {
-		RREAL	v = (*sens_curve)(scol) * out_scalefactor;
+		RREAL	v = (*sens_curve)(scol) * sf;
 		(*putreal)(&v, 1);
 		return;
 	}
-	if (out_scalefactor != 1.) {	/* apply scalefactor if any */
+	if (sf != 1.) {			/* apply scalefactor if any */
 		copyscolor(my_scol, scol);
-		scalescolor(my_scol, out_scalefactor);
+		scalescolor(my_scol, sf);
 		scol = my_scol;
 	}
 	if (out_prims == NULL) {	/* full spectral reporting */
