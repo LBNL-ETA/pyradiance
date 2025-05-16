@@ -5,6 +5,9 @@ Radiance generators and scene Manipulators
 import subprocess as sp
 from datetime import datetime
 from pathlib import Path
+import os
+import json
+import tempfile
 from typing import Sequence
 
 from .anci import BINPATH, handle_called_process_error
@@ -259,6 +262,95 @@ def gendaymtx(
         raise TypeError("weather_data must be a string, Path, or bytes")
     out = sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE, stderr=sp.PIPE)
     return out.stdout
+
+
+class GenGlaze:
+    def __init__(
+        self,
+        wavelength_start: int = 380,
+        wavelength_end: int = 780,
+        wavelength_interval: int = 5,
+        prefix: str = "unnamed",
+    ):
+        self.cmd = [str(BINPATH / "genglaze")]
+        self.cmd.extend(
+            ["-s", str(wavelength_start), str(wavelength_end), str(wavelength_interval)]
+        )
+        self.cmd.extend(["-p", prefix])
+
+    def add_monolithic(self, fpath: str, thickness: float):
+        self.cmd.extend(["-m", fpath, thickness])
+        return self
+
+    def add_coated(self, fpath: str):
+        self.cmd.extend(["-c", fpath])
+        return self
+
+    @handle_called_process_error
+    def __call__(self) -> bytes:
+        return sp.run(self.cmd, check=True, stdout=sp.PIPE, stderr=sp.PIPE).stdout
+
+
+@handle_called_process_error
+def genglaze_db(
+    fpaths: Sequence[str],
+    prefix: str = "unnamed",
+    wavelength_start: int = 380,
+    wavelength_end: int = 780,
+    wavelength_interval: int = 5,
+) -> bytes:
+    """Call genglaze from IGSDB glazing records (.json)."""
+    NM_PER_MICRON = 1e3
+    M_PER_MM = 1e-3
+    DEFAULT_THICKNESS_MM = 3
+    MONO = "monolithic"
+    cmd: list[str] = [
+        str(BINPATH / "genglaze"),
+        "-s",
+        str(wavelength_start),
+        str(wavelength_end),
+        str(wavelength_interval),
+        "-p",
+        prefix,
+    ]
+    out: list[str] = []
+    with tempfile.TemporaryDirectory(prefix="pyradiance_genglaze") as tmpdir:
+        for idx, fpath in enumerate(fpaths):
+            with open(fpath, "r") as f:
+                data = json.load(f)
+            if data["type"] != "glazing":
+                raise ValueError(
+                    f"{fpath}: This is not a glazing product (It's a {data['type']})"
+                )
+            name: str = data["name"] or data["product_name"] or "unnamed"
+            glazing_subtype: str = data["subtype"]
+            thickness_mm = data["measured_data"]["thickness"] or DEFAULT_THICKNESS_MM
+            thickness_m = thickness_mm * M_PER_MM
+            out.append(
+                (
+                    f"# Layer {idx + 1}: {name}({thickness_m}m) {glazing_subtype}"
+                ).encode()
+            )
+            spectral_data: list[dict] = data["spectral_data"]["spectral_data"]
+            wavelength_nm: list = [
+                int(d["wavelength"] * NM_PER_MICRON) for d in spectral_data
+            ]
+            results: list[str] = [
+                f"2\n0 2 3\n0 0 {len(wavelength_nm)} {' '.join(map(str, wavelength_nm))}"
+            ]
+            results.extend([d["Rf"] for d in spectral_data])
+            results.extend([d["Rb"] for d in spectral_data])
+            results.extend([d["T"] for d in spectral_data])
+            fpath = os.path.join(tmpdir, f"layer{idx}.dat")
+            with open(fpath, "w") as f:
+                f.write("\n".join(map(str, results)))
+            if glazing_subtype == MONO:
+                cmd.extend(["-m", fpath, str(thickness_m)])
+            else:
+                cmd.extend(["-c", fpath])
+        out.append(b"")
+        out.append(sp.run(cmd, stdout=sp.PIPE, stderr=sp.PIPE, check=True).stdout)
+    return b"\n".join(out)
 
 
 @handle_called_process_error
