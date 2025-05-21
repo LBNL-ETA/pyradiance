@@ -441,7 +441,7 @@ def pabopto2bsdf(
     nproc: int = 1,
     symmetry: None | str = None,
     angle: None | float = None,
-    reverse: bool=False,
+    reverse: bool = False,
 ) -> bytes:
     """Convert BSDF measurements to a scattering interpolant representation.
 

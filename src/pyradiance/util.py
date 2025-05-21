@@ -8,7 +8,7 @@ import re
 import subprocess as sp
 import tempfile
 from pathlib import Path
-from typing import Sequence
+from typing import Sequence, Literal
 
 from .anci import BINPATH, handle_called_process_error
 
@@ -92,7 +92,7 @@ def evalglare(
             cmd.append(str(check_file))
             if source_color is not None:
                 cmd.append("-u")
-                cmd.extend(*map(str, source_color))
+                cmd.extend(map(str, source_color))
         if smooth:
             cmd.append("-s")
         if threshold is not None:
@@ -103,7 +103,7 @@ def evalglare(
                 cmd.append("-T")
             else:
                 cmd.append("-t")
-            cmd.extend(*map(str, task_area))
+            cmd.extend(map(str, task_area))
         if bg_lum_mode:
             cmd.append("-q")
             cmd.append(str(bg_lum_mode))
@@ -230,7 +230,7 @@ def getinfo(
     else:
         if any(isinstance(i, bytes) for i in inputs):
             raise TypeError("All inputs must be str or Path if one is")
-        cmd.extend([str(i) for i in inputs])
+        cmd.extend(map(str, inputs))
     return sp.run(cmd, input=stdin, capture_output=True, check=True).stdout
 
 
@@ -649,7 +649,8 @@ class Rcomb:
         if transform is not None:
             self.cmd.extend(["-c", transform])
         if scale is not None:
-            self.cmd.extend(["-s", *map(str, scale)])
+            self.cmd.append("-s")
+            self.cmd.extend(map(str, scale))
         if isinstance(input, bytes):
             if self.stdin is not None:
                 raise ValueError("Only one bytes input allowed")
@@ -871,7 +872,7 @@ def rmtxop(
     outform: str = "a",
     transpose: bool = False,
     scale: None | float = None,
-    transform: None | Sequence[float] = None,
+    transform: None | str | Sequence[float] = None,
     reflectance: None | str = None,
 ) -> bytes:
     """Run rmtxop command.
@@ -904,6 +905,57 @@ def rmtxop(
         cmd.append(str(inp))
     return sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
 
+
+class Rmtxop:
+    def __init__(self, outform: Literal["a", "f", "d", "c"] = "a", color: None | str = None):
+        self.cmd = [str(BINPATH / "rmtxop")]
+        self.stdin = None
+        self.cmd.append(f"-f{outform}")
+        if color is not None:
+            self.cmd.extend(["-C", color])
+
+    def add_input(
+        self, 
+        input_data: str | Path | bytes, 
+        op: Literal[".", "+", "*", "/"] = ".", 
+        scale: None | float | Sequence[float] = None, 
+        transform: None | str | Sequence[float] = None, 
+        transpose: bool = False, 
+        refl_side: None | str = None, 
+        color:None|str = None
+    ):
+        self.cmd.append(op)
+        if scale is not None:
+            self.cmd.append("-s")
+            if isinstance(scale, (int, float)):
+                self.cmd.append(str(scale))
+            else:
+                self.cmd.extend(map(str, scale))
+        if refl_side is not None:
+            self.cmd.append(f"r{refl_side[0]}")
+        if transpose is not None:
+            self.cmd.append("-t")
+        if transform is not None:
+            self.cmd.append("-c")
+            if isinstance(transform, str):
+                self.cmd.append(transform)
+            else:
+                self.cmd.extend(map(str, transform))
+        elif color is not None:
+            self.cmd.extend(["-C", color])
+        if isinstance(input_data, bytes):
+            if self.stdin is None:
+                self.stdin = input_data
+                self.cmd.append("-")
+            else:
+                raise ValueError("stdin is already taken")
+        else:
+            self.cmd.append(str(input_data))
+        return self
+
+    @handle_called_process_error
+    def __call__(self) -> bytes:
+        return sp.run(self.cmd, check=True, input=self.stdin, stdout=sp.PIPE).stdout
 
 @handle_called_process_error
 def rsensor(

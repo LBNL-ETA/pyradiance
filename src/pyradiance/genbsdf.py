@@ -58,7 +58,7 @@ def generate_blinds_from_cross_section():
 
 
 def generate_blinds(mat: ShadingMaterial, geom: BlindsGeometry) -> bytes:
-    fargs = [
+    mat_fargs = [
         mat.diffuse_reflectance,
         mat.diffuse_reflectance,
         mat.diffuse_reflectance,
@@ -73,7 +73,7 @@ def generate_blinds(mat: ShadingMaterial, geom: BlindsGeometry) -> bytes:
     )
     material_name = f"blinds_material_{mat_random_strings}"
     blinds_name = f"blinds_{name_random_strings}"
-    material = Primitive("void", "plastic", material_name, [], fargs)
+    material = Primitive("void", "plastic", material_name, [], mat_fargs)
     blinds = genblinds(
         material_name,
         blinds_name,
@@ -156,7 +156,7 @@ def get_sender(hemis: str, up: str, dim: SamplingBox, front: bool) -> str:
 
 # TODO: handle colored BSDF out
 def generate_sdf(
-    sender: str, receiver: str, octree_file: str, params: None | list[str] = None
+        sender: str, receiver: str, octree_file: str, params: None | list[str] = None, outspec: str = "Y",
 ) -> SDFResult:
     fd, receiver_file = tempfile.mkstemp(suffix=".rad")
     with os.fdopen(fd, "w") as f:
@@ -171,8 +171,7 @@ def generate_sdf(
         octree=octree_file,
         params=params,
     )
-    visible_coeffs = (0.2651, 0.6701, 0.0648)
-    data = strip_header(rmtxop(result, transpose=True, transform=visible_coeffs))
+    data = strip_header(Rmtxop.add_input(result, transpose=True, transform=outspec)())
     lines = data.splitlines()
     half = int(len(lines) / 2)
     trans = b"\n".join(lines[:half])
@@ -216,8 +215,10 @@ def generate_bsdf(
     pctcull=90,
     nproc=1,
     geout=True,
+    nspec: int=3,
     basis: Literal["kf", "kh", "kq", "u", "r1", "r2", "r4"] = "kf",
     dim: None | SamplingBox = None,
+    front: bool = True,
 ) -> BSDFResult:
     result = BSDFResult(SDFResult(), SDFResult())
     param_args = ["-ab", "5", "-ad", "700", "-lw", "3e-6", "-w-"]
@@ -231,15 +232,16 @@ def generate_bsdf(
     nx = int(math.sqrt(nsamp * (dim.xmax - dim.xmin) / (dim.ymax - dim.ymin)) + 1)
     ny = int(nsamp / nx + 1)
     param_args.extend(["-c", str(nx * ny)])
-    param_args.extend(["-cs", "3"])
+    param_args.extend(["-cs", str(nspec)])
 
     fd, octree_file = tempfile.mkstemp(suffix=".oct")
     with os.fdopen(fd, "wb") as fp:
         fp.write(oconv(stdin=device, warning=False))
 
     param_args.append("-fd")
-    result.front = generate_front_sdf(octree_file, basis, dim, params=param_args)
     result.back = generate_back_sdf(octree_file, basis, dim, params=param_args)
+    if front:
+        result.front = generate_front_sdf(octree_file, basis, dim, params=param_args)
 
     os.remove(octree_file)
     return result
