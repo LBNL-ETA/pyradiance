@@ -21,6 +21,11 @@ from .cal import cnt
 from .rt import rpict, rtrace
 
 
+Ops = Literal["*", "+", ".", "/"]
+FileType = Literal["a", "f", "d", "c"]
+SpectrumTag = Literal["Visible", "Solar"]
+
+
 @handle_called_process_error
 def evalglare(
     inp: str | bytes | Path,
@@ -333,8 +338,8 @@ def rcode_depth(
     outresolution: bool = True,
     xres: None | int = None,
     yres: None | int = None,
-    inform: str = "a",
-    outform: str = "a",
+    inform: FileType = "a",
+    outform: FileType = "a",
     decode: bool = False,
     compute_intersection: bool = False,
     per_point: bool = False,
@@ -502,8 +507,8 @@ def rcode_norm(
     outresolution: bool = True,
     xres: None | int = None,
     yres: None | int = None,
-    inform: str = "a",
-    outform: str = "a",
+    inform: FileType = "a",
+    outform: FileType = "a",
     decode: bool = False,
     per_point: bool = False,
     norm_file: None | str = None,
@@ -592,7 +597,7 @@ class Rcomb:
         source: None | str = None,
         expression: None | str = None,
         concat: None | Sequence[str] = None,
-        outform: None | str = None,
+        outform: None | FileType = None,
         header: bool = True,
         silent: bool = False,
     ):
@@ -869,7 +874,7 @@ def rfluxmtx(
 @handle_called_process_error
 def rmtxop(
     inp: str | Path | bytes,
-    outform: str = "a",
+    outform: FileType = "a",
     transpose: bool = False,
     scale: None | float = None,
     transform: None | str | Sequence[float] = None,
@@ -907,24 +912,26 @@ def rmtxop(
 
 
 class Rmtxop:
-    def __init__(self, outform: Literal["a", "f", "d", "c"] = "a", color: None | str = None):
+    def __init__(self, outform: FileType = "a", color: None | str = None):
         self.cmd = [str(BINPATH / "rmtxop")]
         self.stdin = None
         self.cmd.append(f"-f{outform}")
         if color is not None:
             self.cmd.extend(["-C", color])
+        self.nparts = 0
 
     def add_input(
-        self, 
-        input_data: str | Path | bytes, 
-        op: Literal[".", "+", "*", "/"] = ".", 
-        scale: None | float | Sequence[float] = None, 
-        transform: None | str | Sequence[float] = None, 
-        transpose: bool = False, 
-        refl_side: None | str = None, 
-        color:None|str = None
+        self,
+        input_data: str | Path | bytes,
+        op: Ops = ".",
+        scale: None | float | Sequence[float] = None,
+        transform: None | str | Sequence[float] = None,
+        transpose: bool = False,
+        refl_side: None | str = None,
+        color: None | str = None,
     ):
-        self.cmd.append(op)
+        if self.nparts > 1:
+            self.cmd.append(op)
         if scale is not None:
             self.cmd.append("-s")
             if isinstance(scale, (int, float)):
@@ -951,11 +958,13 @@ class Rmtxop:
                 raise ValueError("stdin is already taken")
         else:
             self.cmd.append(str(input_data))
+        self.nparts += 1
         return self
 
     @handle_called_process_error
     def __call__(self) -> bytes:
         return sp.run(self.cmd, check=True, input=self.stdin, stdout=sp.PIPE).stdout
+
 
 @handle_called_process_error
 def rsensor(
@@ -1017,7 +1026,7 @@ def strip_header(inp: bytes) -> bytes:
 def vwrays(
     pixpos: None | bytes = None,
     unbuf: bool = False,
-    outform: str = "a",
+    outform: FileType = "a",
     ray_count: int = 1,
     pixel_jitter: float = 0,
     pixel_diameter: float = 0,
@@ -1125,7 +1134,7 @@ class WrapBSDF:
 
     def _add_spectrum(
         self,
-        spectrum,
+        spectrum: SpectrumTag,
         tb: None | str = None,
         tf: None | str = None,
         rb: None | str = None,
