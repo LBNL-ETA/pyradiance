@@ -3,13 +3,16 @@ import math
 import os
 import random
 import string
+import shutil
 import tempfile
 from typing import Literal, NamedTuple
 
-from .util import rmtxop, rfluxmtx, strip_header, WrapBSDF, Xform
+from .util import Rmtxop, rfluxmtx, strip_header, WrapBSDF, Xform
 from .ot import oconv, getbbox
 from .gen import genblinds
 from .model import Primitive
+
+BasisType = Literal["kf", "kh", "kq", "u", "r1", "r2", "r4"]
 
 
 class SamplingBox(NamedTuple):
@@ -93,7 +96,7 @@ def generate_blinds_for_bsdf(mat: ShadingMaterial, geom: BlindsGeometry) -> byte
     return Xform(prims).rotatez(-90).rotatex(-90).translate(0, 0, -thickness)()
 
 
-def get_basis_and_up(basis) -> tuple[str, str, str]:
+def get_basis_and_up(basis: BasisType) -> tuple[str, str, str]:
     if basis == "u":
         face_hemis = behind_hemis = f"h={basis}"
         up = ""
@@ -119,15 +122,19 @@ def get_sampling_box(
 
 
 def get_hemisphere_receivers(
-    face_hemis: str, behind_hemis: str, up: str, out: str = ""
+    face_hemis: str,
+    behind_hemis: str,
+    up: str,
+    face_out: str = "",
+    behind_out: str = "",
 ):
     face_receiver = (
-        f"#@rfluxmtx {face_hemis} {up} {out}\n\n"
+        f"#@rfluxmtx {face_hemis} {up} o={face_out}\n\n"
         "void glow receiver_face\n0\n0\n4 1 1 1 0\n\n"
         f"receiver_face source f_receiver\n0\n0\n4 0 0 1 180\n\n"
     )
     behind_receiver = (
-        f"#@rfluxmtx {behind_hemis} {up} {out}\n\n"
+        f"#@rfluxmtx {behind_hemis} {up} o={behind_out}\n\n"
         "void glow receiver_behind\n0\n0\n4 1 1 1 0\n\n"
         f"receiver_behind source b_receiver\n0\n0\n4 0 0 -1 180\n\n"
     )
@@ -156,13 +163,20 @@ def get_sender(hemis: str, up: str, dim: SamplingBox, front: bool) -> str:
 
 # TODO: handle colored BSDF out
 def generate_sdf(
-        sender: str, receiver: str, octree_file: str, params: None | list[str] = None, outspec: str = "Y",
+    sender: str,
+    receiver: str,
+    octree_file: str,
+    tmpdir: str,
+    transdat: str,
+    refldat: str,
+    params: None | list[str] = None,
+    outspec: str = "y",
 ) -> SDFResult:
-    fd, receiver_file = tempfile.mkstemp(suffix=".rad")
-    with os.fdopen(fd, "w") as f:
+    receiver_file = os.path.join(tmpdir, "receiver.rad")
+    with open(receiver_file, "w") as f:
         f.write(receiver)
-    fd, sender_file = tempfile.mkstemp(suffix=".rad")
-    with os.fdopen(fd, "w") as f:
+    sender_file = os.path.join(tmpdir, "sender.rad")
+    with open(sender_file, "w") as f:
         f.write(sender)
 
     result = rfluxmtx(
@@ -171,38 +185,73 @@ def generate_sdf(
         octree=octree_file,
         params=params,
     )
-    data = strip_header(Rmtxop.add_input(result, transpose=True, transform=outspec)())
-    lines = data.splitlines()
-    half = int(len(lines) / 2)
-    trans = b"\n".join(lines[:half])
-    refl = b"\n".join(lines[half:])
-    os.remove(receiver_file)
-    os.remove(sender_file)
+    trans = strip_header(
+        Rmtxop().add_input(transdat, transpose=True, transform=outspec)()
+    )
+    refl = strip_header(
+        Rmtxop().add_input(refldat, transpose=True, transform=outspec)()
+    )
     return SDFResult(transmittance=trans, reflectance=refl)
 
 
 def generate_front_sdf(
-    octree_file: str, basis: str, dim: SamplingBox, params: None | list[str] = None
+    octree_file: str,
+    basis: str,
+    dim: SamplingBox,
+    tmpdir: str,
+    params: None | list[str] = None,
 ):
+    facedat = os.path.join(tmpdir, "face.dat")
+    behinddat = os.path.join(tmpdir, "behind.dat")
     face_hemis, behind_hemis, up = get_basis_and_up(basis)
     face_receiver, behind_receiver = get_hemisphere_receivers(
-        face_hemis=face_hemis, behind_hemis=behind_hemis, up=up
+        face_hemis=face_hemis,
+        behind_hemis=behind_hemis,
+        up=up,
+        face_out=facedat,
+        behind_out=behinddat,
     )
     receiver = face_receiver + behind_receiver
     sender: str = get_sender(face_hemis, up, dim, True)
-    return generate_sdf(sender, receiver, octree_file, params=params)
+    return generate_sdf(
+        sender,
+        receiver,
+        octree_file,
+        tmpdir,
+        transdat=facedat,
+        refldat=behinddat,
+        params=params,
+    )
 
 
 def generate_back_sdf(
-    octree_file: str, basis: str, dim: SamplingBox, params: None | list[str] = None
+    octree_file: str,
+    basis: str,
+    dim: SamplingBox,
+    tmpdir: str,
+    params: None | list[str] = None,
 ):
+    facedat = os.path.join(tmpdir, "face.dat")
+    behinddat = os.path.join(tmpdir, "behind.dat")
     face_hemis, behind_hemis, up = get_basis_and_up(basis)
     face_receiver, behind_receiver = get_hemisphere_receivers(
-        face_hemis=face_hemis, behind_hemis=behind_hemis, up=up
+        face_hemis=face_hemis,
+        behind_hemis=behind_hemis,
+        up=up,
+        face_out=facedat,
+        behind_out=behinddat,
     )
     receiver = behind_receiver + face_receiver
     sender: str = get_sender(behind_hemis, up, dim, False)
-    return generate_sdf(sender, receiver, octree_file, params=params)
+    return generate_sdf(
+        sender,
+        receiver,
+        octree_file,
+        tmpdir,
+        transdat=behinddat,
+        refldat=facedat,
+        params=params,
+    )
 
 
 # TODO: Add tensortree out
@@ -215,8 +264,8 @@ def generate_bsdf(
     pctcull=90,
     nproc=1,
     geout=True,
-    nspec: int=3,
-    basis: Literal["kf", "kh", "kq", "u", "r1", "r2", "r4"] = "kf",
+    nspec: int = 3,
+    basis: BasisType = "kf",
     dim: None | SamplingBox = None,
     front: bool = True,
 ) -> BSDFResult:
@@ -228,22 +277,28 @@ def generate_bsdf(
 
     device = Xform(*inp)()
     dim = get_sampling_box(device=device, dim=dim)
+    with open("device.rad", "wb") as f:
+        f.write(device)
 
     nx = int(math.sqrt(nsamp * (dim.xmax - dim.xmin) / (dim.ymax - dim.ymin)) + 1)
     ny = int(nsamp / nx + 1)
     param_args.extend(["-c", str(nx * ny)])
     param_args.extend(["-cs", str(nspec)])
 
-    fd, octree_file = tempfile.mkstemp(suffix=".oct")
-    with os.fdopen(fd, "wb") as fp:
+    tmpdir = tempfile.mkdtemp(prefix="genBSDF")
+    octree_file = os.path.join(tmpdir, "device.oct")
+    with open(octree_file, "wb") as fp:
         fp.write(oconv(stdin=device, warning=False))
 
     param_args.append("-fd")
-    result.back = generate_back_sdf(octree_file, basis, dim, params=param_args)
+    result.back = generate_back_sdf(octree_file, basis, dim, tmpdir, params=param_args)
     if front:
-        result.front = generate_front_sdf(octree_file, basis, dim, params=param_args)
+        result.front = generate_front_sdf(
+            octree_file, basis, dim, tmpdir, params=param_args
+        )
 
     os.remove(octree_file)
+    shutil.rmtree(tmpdir)
     return result
 
 
