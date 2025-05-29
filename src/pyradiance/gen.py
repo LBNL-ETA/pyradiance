@@ -5,12 +5,35 @@ Radiance generators and scene Manipulators
 import subprocess as sp
 from datetime import datetime
 from pathlib import Path
+from dataclasses import dataclass, field
 import os
 import json
 import tempfile
-from typing import Sequence
+from typing import Sequence, NamedTuple
+from enum import Enum
 
 from .anci import BINPATH, handle_called_process_error
+
+
+class GlazingType(Enum):
+    monolithic = "monolithic"
+    coated = "coated"
+    laminate = "laminate"
+
+
+class SpectralPoint(NamedTuple):
+    wavelength_nm: int
+    rf: float
+    rb: float
+    t: float
+
+
+@dataclass(slots=True)
+class GlazingLayerData:
+    name: str
+    glazing_type: GlazingType
+    thickness_m: float
+    spectral_points: list[SpectralPoint] = field(default_factory=list)
 
 
 @handle_called_process_error
@@ -292,7 +315,7 @@ class GenGlaze:
 
 
 @handle_called_process_error
-def genglaze_db(
+def genglaze_json(
     fpaths: Sequence[str],
     prefix: str = "unnamed",
     wavelength_start: int = 380,
