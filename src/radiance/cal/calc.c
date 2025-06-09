@@ -12,6 +12,7 @@ static const char	RCSid[] = "$Id: calc.c,v 1.10 2023/09/26 18:09:08 greg Exp $";
 #include  <ctype.h>
 
 #include  "rtio.h"
+#include  "paths.h"
 #include  "rterror.h"
 #include  "calcomp.h"
 
