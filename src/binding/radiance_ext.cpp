@@ -549,7 +549,7 @@ NB_MODULE(radiance_ext, m) {
       .def("n_threads", &RpictSimulManager::NThreads);
 
   m.def("initfunc", &initfunc);
-  m.def("loadfunc", &loadfunc);
+  m.def("loadfunc", [](const char *func){ return loadfunc(const_cast<char *>(func)); });
   m.def("eval",
         [](const char *expr) { return eval(const_cast<char *>(expr)); });
   m.def("set_eparams", &set_eparams);

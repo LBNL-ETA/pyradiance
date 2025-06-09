@@ -275,7 +275,7 @@ worldfunc(			/* special function context sans object */
 
 void
 loadfunc(			/* load definition file */
-	const char  *fname
+	char  *fname
 )
 {
 	char  *ffname;

@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.15...3.27)
 
 project(pyradiance LANGUAGES CXX C)
 
+# Set the C standard to C99 with GNU extensions
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS ON)  # This enables GNU extensions (gnu99)
+set(CMAKE_CXX_STANDARD 11)
 if (CMAKE_VERSION VERSION_LESS 3.18)
   set(DEV_MODULE Development)
 else()

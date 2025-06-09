@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: m_mirror.c,v 2.23 2023/11/15 18:02:53 greg Exp $";
+static const char	RCSid[] = "$Id: m_mirror.c,v 2.25 2025/05/31 00:52:54 greg Exp $";
 #endif
 /*
  * Routines for mirror material supporting virtual light sources
@@ -9,6 +9,7 @@ static const char	RCSid[] = "$Id: m_mirror.c,v 2.23 2023/11/15 18:02:53 greg Exp
 
 #include  "ray.h"
 #include  "otypes.h"
+#include  "otspecial.h"
 #include  "rtotypes.h"
 #include  "source.h"
 
@@ -35,23 +36,29 @@ m_mirror(			/* shade mirrored ray */
 	RAY  *r
 )
 {
-	SCOLOR  mcolor;
-	RAY  nr;
-	int  rpure = 1;
-	int  i;
 					/* check arguments */
 	if (m->oargs.nfargs != 3 || m->oargs.nsargs > 1)
 		objerror(m, USER, "bad number of arguments");
 					/* check for substitute material */
 					/* but avoid double-counting */
-	if ( m->oargs.nsargs > 0 &&
-			(r->rsrc < 0 || source[r->rsrc].so != r->ro) &&
-			!(r->crtype & (AMBIENT|SPECULAR) && r->rod > 0.) ) {
-		if (!strcmp(m->oargs.sarg[0], VOIDID)) {
-			raytrans(r);
+	if (m->oargs.nsargs > 0 &&
+			(r->rsrc < 0 || source[r->rsrc].so != r->ro)) {
+		int	passOK = (r->rod < 0.) |
+					!(r->crtype & (AMBIENT|SPECULAR));
+		if (strcmp(m->oargs.sarg[0], VOIDID)) {
+			OBJECT	altmod = lastmod(objndx(m), m->oargs.sarg[0]);
+			OBJREC	*altmat;
+			if (passOK)		/* no double-count hazard? */
+				return(rayshade(r, altmod));
+			if (altmod == OVOID ||	/* else check alternate type */
+					(altmat = findmaterial(objptr(altmod))) == NULL)
+				return(0);
+			if (istransp(altmat))	/* pass "transparent" materials */
+				return(rayshade(r, altmod));
+		} else if (passOK) {
+			raytrans(r);		/* "safe" void passage */
 			return(1);
 		}
-		return(rayshade(r, lastmod(objndx(m), m->oargs.sarg[0])));
 	}
 					/* check for bad source ray */
 	if (r->rsrc >= 0 && source[r->rsrc].so != r->ro)
@@ -62,6 +69,11 @@ m_mirror(			/* shade mirrored ray */
 			raytrans(r);	/* unless back visibility is off */
 		return(1);
 	}
+	{				/* new context for stack memory */
+	SCOLOR  mcolor;
+	RAY  nr;
+	int  rpure = 1;
+	int  i;
 					/* get modifiers */
 	raytexture(r, m->omod);
 					/* assign material color */
@@ -103,6 +115,7 @@ m_mirror(			/* shade mirrored ray */
 	r->rmt = r->rot;
 	if (rpure && r->ro != NULL && isflat(r->ro->otype))
 		r->rmt += raydistance(&nr);
+	}				/* end stack context */
 	return(1);
 }
 
