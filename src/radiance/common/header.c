@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: header.c,v 2.49 2025/06/04 22:34:27 greg Exp $";
+static const char	RCSid[] = "$Id: header.c,v 2.51 2025/06/07 05:09:45 greg Exp $";
 #endif
 /*
  *  header.c - routines for reading and writing information headers.
@@ -12,7 +12,6 @@ static const char	RCSid[] = "$Id: header.c,v 2.49 2025/06/04 22:34:27 greg Exp $
  *  gmtval(t,s)		get GMT as UTC
  *  fputdate(t,fp)	put out the given UTC
  *  fputnow(fp)		put out the current date and time
- *  printargs(ac,av,fp) print an argument list to fp, followed by '\n'
  *  formatval(r,s)	copy the format value in s to r
  *  fputformat(s,fp)	write "FORMAT=%s" to fp
  *  nativebigendian()	are we native on big-endian machine?
@@ -158,20 +157,6 @@ fputnow(			/* write out the current time */
 	time_t	tv;
 	time(&tv);
 	fputdate(tv, fp);
-}
-
-
-void
-printargs(		/* print arguments to a file */
-	int  ac,
-	char  **av,
-	FILE  *fp
-)
-{
-	while (ac-- > 0) {
-		fputword(*av++, fp);
-		fputc(ac ? ' ' : '\n', fp);
-	}
 }
 
 

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensdaymtx.c,v 1.6 2025/04/15 20:15:50 greg Exp $";
+static const char RCSid[] = "$Id: gensdaymtx.c,v 1.8 2025/06/07 05:09:45 greg Exp $";
 #endif
 
 #include <stdlib.h>
@@ -40,7 +40,6 @@ enum {
 	NSUNPATCH = 4	   /* max. # patches to spread sun into */
 };
 
-char	*progname;
 double	altitude;	   /* Solar altitude (radians) */
 double	azimuth;		/* Solar azimuth (radians) */
 int		julian_date;	/* Julian date */
@@ -508,7 +507,7 @@ int main(int argc, char *argv[])
 	int			i, j;
 	FVECT		view_point	= {0, 0, ER};
 
-	progname = argv[0];
+	fixargv0(argv[0]);
 
 	for (i = 1; i < argc && argv[i][0] == '-'; i++) {
 		switch (argv[i][1]) {

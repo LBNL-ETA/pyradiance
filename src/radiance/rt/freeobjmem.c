@@ -30,7 +30,7 @@ free_os(			/* free unneeded memory for object */
 	if (op->os == NULL)
 		return(0);
 	if (hasfunc(op->otype)) {
-		rad_freefunc(op);
+		freefunc(op);
 		return(1);
 	}
 	switch (op->otype) {

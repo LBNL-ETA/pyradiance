@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: genbox.c,v 2.13 2021/04/15 23:51:04 greg Exp $";
+static const char	RCSid[] = "$Id: genbox.c,v 2.15 2025/06/07 05:09:45 greg Exp $";
 #endif
 /*
  *  genbox.c - generate a parallelepiped.
@@ -10,10 +10,7 @@ static const char	RCSid[] = "$Id: genbox.c,v 2.13 2021/04/15 23:51:04 greg Exp $
 #include  "rtio.h"
 #include  "rtmath.h"
 #include  "objutil.h"
-#include  <stdlib.h>
-
-
-char	*progname;
+#include  "paths.h"
 
 int	verbose = 0;
 
@@ -278,8 +275,6 @@ main(int argc, char *argv[])
 	int  nsegs = 1;
 	int  objout = 0;
 	int  i;
-
-	progname = argv[0];
 
 	if (argc < 6)
 		goto userr;

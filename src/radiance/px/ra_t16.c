@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_t16.c,v 2.10 2019/12/28 18:05:14 greg Exp $";
+static const char	RCSid[] = "$Id: ra_t16.c,v 2.12 2025/06/07 05:09:46 greg Exp $";
 #endif
 /*
  *  ra_t16.c - program to convert between RADIANCE and
@@ -9,7 +9,6 @@ static const char	RCSid[] = "$Id: ra_t16.c,v 2.10 2019/12/28 18:05:14 greg Exp $
  */
 
 #include  <math.h>
-
 #include  "platform.h"
 #include  "rtio.h"
 #include  "rtmisc.h"
@@ -31,7 +30,6 @@ static const char	RCSid[] = "$Id: ra_t16.c,v 2.10 2019/12/28 18:05:14 greg Exp $
 
 double	gamcor = 2.2;			/* gamma correction */
 int  bradj = 0;				/* brightness adjustment */
-char  *progname;
 char  msg[128];
 
 static int getint2(FILE *fp);
@@ -53,10 +51,11 @@ main(int  argc, char  *argv[])
 	struct hdStruct  head;
 	int  reverse = 0;
 	int  i;
+	
 	SET_DEFAULT_BINARY();
 	SET_FILE_BINARY(stdin);
 	SET_FILE_BINARY(stdout);
-	progname = argv[0];
+	fixargv0(argv[0]);
 
 	head.dataBits = 16;
 	for (i = 1; i < argc; i++)

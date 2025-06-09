@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: ra_ppm.c,v 2.17 2019/12/28 18:05:14 greg Exp $";
+static const char	RCSid[] = "$Id: ra_ppm.c,v 2.19 2025/06/07 05:09:46 greg Exp $";
 #endif
 /*
  *  program to convert between RADIANCE and Poskanzer Pixmaps
@@ -7,7 +7,6 @@ static const char	RCSid[] = "$Id: ra_ppm.c,v 2.17 2019/12/28 18:05:14 greg Exp $
 
 #include  <math.h>
 #include  <ctype.h>
-
 #include  "platform.h"
 #include  "rtio.h"
 #include  "color.h"
@@ -17,7 +16,6 @@ static const char	RCSid[] = "$Id: ra_ppm.c,v 2.17 2019/12/28 18:05:14 greg Exp $
 int  bradj = 0;				/* brightness adjustment */
 double	gamcor = 2.2;			/* gamma correction value */
 int  maxval = 255;			/* maximum primary value */
-char  *progname;
 int  xmax, ymax;
 
 typedef int colrscanf_t(COLR *scan, int len, FILE *fp);
@@ -52,7 +50,7 @@ main(
 	int  ptype;
 	int  i;
 	
-	progname = argv[0];
+	fixargv0(argv[0]);
 
 	for (i = 1; i < argc; i++)
 		if (argv[i][0] == '-')

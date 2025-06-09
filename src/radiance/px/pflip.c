@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: pflip.c,v 2.12 2019/07/19 17:37:56 greg Exp $";
+static const char	RCSid[] = "$Id: pflip.c,v 2.14 2025/06/07 05:09:46 greg Exp $";
 #endif
 /*
  * flip picture file horizontally and/or vertically
@@ -20,8 +20,6 @@ int	fhoriz=0, fvert=0;		/* flip flags */
 int	correctorder = 0;		/* correcting orientation? */
 
 FILE	*fin;				/* input file */
-
-char	*progname;
 
 
 static void memerr(void);
@@ -54,9 +52,10 @@ main(
 {
 	static char	picfmt[MAXFMTLEN] = PICFMT;
 	int	i, rval;
+	
 	SET_DEFAULT_BINARY();
 	SET_FILE_BINARY(stdout);
-	progname = argv[0];
+	fixargv0(argv[0]);
 
 	for (i = 1; i < argc; i++)
 		if (!strcmp(argv[i], "-h"))
