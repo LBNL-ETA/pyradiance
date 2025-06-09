@@ -81,34 +81,22 @@ if(MSVC)
 else() # GCC/Clang (Linux, macOS, MinGW)
   if(APPLE)
     add_definitions(-DBSD -DNOSTEREO -Dfreebsd)
+	add_compile_options(
+		-Ofast # Maximum optimization
+		-march=native # Optimize for local machine architecture
+		-funroll-loops # Unroll loops
+	  )
   else()
     add_definitions(-Dlinux -D_FILE_OFFSET_BITS=64 -DNOSTEREO)
-  endif()
-  add_compile_options(
-    -O3 # Maximum optimization
-    # -flto # Link-time optimization
-    -march=native # Optimize for local machine architecture
-    # -ffast-math # Fast math operations
-    # -funroll-loops # Unroll loops
-    # -fomit-frame-pointer # Omit frame pointer
-    # -ffunction-sections # Place each function in its own section
-    # -fdata-sections # Place each data item in its own section
-  )
+    add_compile_options(
+	  -O3 # Maximum optimization
+	  -ffast-math
+	  -march=native # Optimize for local machine architecture
+	  -funroll-loops # Unroll loops
+	  -Wno-unused-const-variable
+	)
+endif()
 
-  # if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-  #   add_compile_options(
-  #     -fdevirtualize-at-ltrans # Better devirtualization with LTO
-  #     -fipa-pta # More aggressive function analysis
-  #   )
-  # endif()
-
-  # add_link_options(-flto -Wl,--gc-sections # Remove unused code sections
-  # )
-
-  # if(APPLE)
-  #   add_compile_options(-momit-leaf-frame-pointer)
-  # endif()
-		
   nanobind_add_module(
   radiance_ext
   # Target the stable ABI for Python 3.12+, which reduces the number of binary

@@ -35,5 +35,5 @@ jobs:
       run: |
         git submodule update --init --recursive
         pip install numpy
-        pip install .
+        CC=clang CXX=clang++ pip install .
         python -m unittest discover -s tests
