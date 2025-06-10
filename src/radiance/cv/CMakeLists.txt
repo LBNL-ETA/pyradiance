@@ -49,10 +49,10 @@ add_executable(pabopto2bsdf pabopto2bsdf.c bsdfrep.c bsdfrbf.c bsdfmesh.c bsdftr
 target_include_directories(pabopto2bsdf PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
 target_link_libraries(pabopto2bsdf rtrad ${MATH_LIBRARY})
 
-add_executable(pabopto2rad pabopto2bsdf.c bsdfrep.c bsdfrbf.c bsdfmesh.c bsdftrans.cpp)
-target_include_directories(pabopto2rad PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
-target_link_libraries(pabopto2rad rtrad ${MATH_LIBRARY})
-set_target_properties(pabopto2rad PROPERTIES COMPILE_DEFINITIONS TEST_MAIN)
+# add_executable(pabopto2rad pabopto2bsdf.c bsdfrep.c bsdfrbf.c bsdfmesh.c bsdftrans.cpp)
+# target_include_directories(pabopto2rad PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
+# target_link_libraries(pabopto2rad rtrad ${MATH_LIBRARY})
+# set_target_properties(pabopto2rad PROPERTIES COMPILE_DEFINITIONS TEST_MAIN)
 
 add_executable(bsdf2rad bsdf2rad.c bsdfrep.c bsdfinterp.c)
 target_include_directories(bsdf2rad PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
@@ -99,7 +99,7 @@ install(TARGETS
   robjutil
   tmesh2rad
   pabopto2bsdf 
-  pabopto2rad
+  # pabopto2rad
   DESTINATION ${SKBUILD_PLATLIB_DIR}/pyradiance/bin
 )
 

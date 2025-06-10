@@ -26,7 +26,7 @@ set(STDOBJ
     process.c gethomedir.c getpath.c error.c savestr.c
     savqstr.c badarg.c fgetword.c words.c expandarg.c wordfile.c fgetval.c
     clip.c plocate.c eputs.c wputs.c quit.c lookup.c bmalloc.c
-    tcos.c fputword.c dircode.c paths.c byteswap.c cvtcmd.c dmessage.c chanvalue.c loadvars.c
+    tcos.c fputword.c dircode.c paths.c byteswap.c cvtcmd.c dmessage.c fixargv0.c chanvalue.c loadvars.c
 )
 
 set(SYSOBJ
@@ -56,7 +56,7 @@ if(UNIX)
   endif()
 else()
 	list(APPEND STDOBJ win_process.c win_popen.c win_usleep.c)
-	list(APPEND SYSOBJ strnstr.c strlcpy.c strncasecmp.c timegm.c fixargv0.c)
+	list(APPEND SYSOBJ strnstr.c strlcpy.c strncasecmp.c timegm.c)
 endif()
 
 # Create libraries

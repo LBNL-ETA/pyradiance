@@ -90,8 +90,8 @@ else() # GCC/Clang (Linux, macOS, MinGW)
     add_definitions(-Dlinux -D_FILE_OFFSET_BITS=64 -DNOSTEREO)
     add_compile_options(
 	  -O3 # Maximum optimization
-	  -ffast-math
 	  -march=native # Optimize for local machine architecture
+	  -ffast-math
 	  -funroll-loops # Unroll loops
 	  -Wno-unused-const-variable
 	)
