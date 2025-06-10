@@ -9,7 +9,7 @@ from pathlib import Path
 RADIANCE_REPO_URL = "https://github.com/LBNL-ETA/Radiance.git"
 RADIANCE_TOP_SRC_DIR_IN_REPO = "src"
 PYRADIANCE_TOP_TARGET_DIR_IN_PROJECT = "src/radiance"
-SUBDIRS_TO_SYNC_NAMES = ["common", "px", "rt", "gen", "cv", "util"]
+SUBDIRS_TO_SYNC_NAMES = ["common", "px", "rt", "gen", "cv", "util", "ot"]
 GLOBAL_FILE_PATTERNS = ["*.c", "*.h", "*.cpp"]
 RECURSIVE_SEARCH_IN_SUBDIRS_GLOBALLY = (
     False  # Set True if source subdirs have nested structure to copy
