@@ -32,7 +32,7 @@ def evalglare(
     view: None | list[str] = None,
     detailed: bool = False,
     ev_only: bool = False,
-    ev: None | float = None,
+    ev: None | float | Sequence[float] = None,
     smooth: bool = False,
     threshold: None | float = None,
     task_area: None | tuple = None,
@@ -133,8 +133,6 @@ def evalglare(
         stdin = inp
     elif isinstance(inp, (Path, str)):
         cmd.append(str(inp))
-    else:
-        raise ValueError("input must be a path, string, or bytes")
     return sp.run(cmd, input=stdin, check=True, capture_output=True).stdout
 
 
@@ -167,9 +165,8 @@ def dctimestep(
     _stdout = True
     stdin = None
     cmd = [str(BINPATH / "dctimestep")]
-    if isinstance(mtx[-1], bytes):
-        stdin = mtx[-1]
-        mtx = mtx[:-1]
+    if len(mtx) not in (2, 4):
+        raise ValueError("mtx must be a list of 2 or 4 items")
     if nstep:
         cmd.extend(["-n", str(nstep)])
     if not header:
@@ -185,6 +182,9 @@ def dctimestep(
     if ospec:
         cmd.extend(["-o", ospec])
         _stdout = False
+    if isinstance(mtx[-1], bytes):
+        stdin = mtx[-1]
+        mtx = mtx[:-1]
     cmd.extend(mtx)
     result = sp.run(cmd, check=True, input=stdin, capture_output=True)
     if _stdout:
@@ -1198,13 +1198,12 @@ class WrapBSDF:
         return self._add_spectrum("Solar", tb=tb, tf=tf, rb=rb, rf=rf)
 
     @handle_called_process_error
-    def _execute(self):
+    def _execute(self) -> bytes:
         if not self.has_visible and not self.has_solar:
-            print("Need to specify at least solar or visible data")
-            return
+            raise ValueError("Need to specify at least solar or visible data")
         return sp.run(self.cmd, check=True, stdout=sp.PIPE).stdout
 
-    def __call__(self):
+    def __call__(self) -> bytes:
         return self._execute()
 
 
@@ -1356,7 +1355,7 @@ class Xform:
         if isinstance(self.inp, bytes):
             self.stdin = self.inp
         else:
-            self.args.append(self.inp)
+            self.args.append(str(self.inp))
         return sp.run(self.args, check=True, input=self.stdin, stdout=sp.PIPE).stdout
 
     def __call__(self):
