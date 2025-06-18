@@ -1423,7 +1423,7 @@ def load_material_smd(
     return primitives
 
 
-def parse_primitive(pstr: str) -> list[Primitive]:
+def parse_primitive(pstr: str | bytes) -> list[Primitive]:
     """Parse Radiance primitives inside a file path into a list of dictionary.
 
     Args:
@@ -1432,6 +1432,8 @@ def parse_primitive(pstr: str) -> list[Primitive]:
     Returns:
         list of primitives
     """
+    if isinstance(pstr, bytes):
+        pstr = pstr.decode()
     res = []
     tokens = re.sub(r"#.+?\n", "", pstr).strip().split()
     itokens = iter(tokens)
