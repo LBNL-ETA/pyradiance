@@ -5,20 +5,23 @@
 #include <utility>
 #include <vector>
 
+#include <nanobind/nanobind.h>
+#include <nanobind/ndarray.h>
+#include <nanobind/stl/string.h>
+#include <nanobind/stl/vector.h>
+
 #include "RcontribSimulManager.h"
 #include "RdataShare.h"
 #include "RpictSimulManager.h"
 #include "RtraceSimulManager.h"
 #include "color.h"
+#define freefunc radiance_freefunc
 #include "func.h"
+#undef freefunc
 #include "ray.h"
 #include "resolu.h"
 #include "view.h"
 
-#include <nanobind/nanobind.h>
-#include <nanobind/ndarray.h>
-#include <nanobind/stl/string.h>
-#include <nanobind/stl/vector.h>
 
 namespace nb = nanobind;
 
