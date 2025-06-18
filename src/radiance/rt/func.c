@@ -191,7 +191,7 @@ memerr:
 
 
 void
-rad_freefunc(			/* free memory associated with modifier */
+freefunc(			/* free memory associated with modifier */
 	OBJREC  *m
 )
 {
