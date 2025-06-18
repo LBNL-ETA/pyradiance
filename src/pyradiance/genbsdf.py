@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import math
 import os
 import random
@@ -13,6 +13,7 @@ from .gen import genblinds
 from .model import Primitive
 
 BasisType = Literal["kf", "kh", "kq", "u", "r1", "r2", "r4"]
+OutSpec = Literal["rgb", "xyz", "y", "m", "s"] 
 
 
 class SamplingBox(NamedTuple):
@@ -25,15 +26,15 @@ class SamplingBox(NamedTuple):
 
 
 @dataclass(slots=True)
-class SDFResult:
+class SDFDataBytes:
     transmittance: bytes = b""
     reflectance: bytes = b""
 
 
 @dataclass(slots=True)
-class BSDFResult:
-    front: SDFResult
-    back: SDFResult
+class BSDFDataBytes:
+    front: SDFDataBytes = field(default_factory=lambda: SDFDataBytes())
+    back: SDFDataBytes = field(default_factory=lambda: SDFDataBytes())
 
 
 @dataclass(slots=True)
@@ -108,7 +109,7 @@ def get_basis_and_up(basis: BasisType) -> tuple[str, str, str]:
 
 
 def get_sampling_box(
-    device: None | str | bytes = None, dim: None | SamplingBox = None
+    device: str | bytes, dim: None | SamplingBox = None
 ) -> SamplingBox:
     dim = SamplingBox(*getbbox(device, warning=False)) if dim is None else dim
 
@@ -170,8 +171,8 @@ def generate_sdf(
     transdat: str,
     refldat: str,
     params: None | list[str] = None,
-    outspec: str = "y",
-) -> SDFResult:
+    outspec: OutSpec = "y",
+) -> SDFDataBytes:
     receiver_file = os.path.join(tmpdir, "receiver.rad")
     with open(receiver_file, "w") as f:
         f.write(receiver)
@@ -179,7 +180,7 @@ def generate_sdf(
     with open(sender_file, "w") as f:
         f.write(sender)
 
-    result = rfluxmtx(
+    rfluxmtx(
         surface=sender_file,
         receiver=receiver_file,
         octree=octree_file,
@@ -191,15 +192,16 @@ def generate_sdf(
     refl = strip_header(
         Rmtxop().add_input(refldat, transpose=True, transform=outspec)()
     )
-    return SDFResult(transmittance=trans, reflectance=refl)
+    return SDFDataBytes(transmittance=trans, reflectance=refl)
 
 
 def generate_front_sdf(
     octree_file: str,
-    basis: str,
+    basis: BasisType,
     dim: SamplingBox,
     tmpdir: str,
     params: None | list[str] = None,
+    outspec: OutSpec = "y",
 ):
     facedat = os.path.join(tmpdir, "face.dat")
     behinddat = os.path.join(tmpdir, "behind.dat")
@@ -221,15 +223,17 @@ def generate_front_sdf(
         transdat=facedat,
         refldat=behinddat,
         params=params,
+        outspec=outspec,
     )
 
 
 def generate_back_sdf(
     octree_file: str,
-    basis: str,
+    basis: BasisType,
     dim: SamplingBox,
     tmpdir: str,
     params: None | list[str] = None,
+    outspec: OutSpec = "y",
 ):
     facedat = os.path.join(tmpdir, "face.dat")
     behinddat = os.path.join(tmpdir, "behind.dat")
@@ -251,6 +255,7 @@ def generate_back_sdf(
         transdat=behinddat,
         refldat=facedat,
         params=params,
+        outspec=outspec,
     )
 
 
@@ -265,11 +270,14 @@ def generate_bsdf(
     nproc=1,
     geout=True,
     nspec: int = 3,
+    working_dir: str = "",
     basis: BasisType = "kf",
     dim: None | SamplingBox = None,
     front: bool = True,
-) -> BSDFResult:
-    result = BSDFResult(SDFResult(), SDFResult())
+    outspec: OutSpec = "y",
+    cleanup: bool = True,
+) -> BSDFDataBytes:
+    result = BSDFDataBytes()
     param_args = ["-ab", "5", "-ad", "700", "-lw", "3e-6", "-w-"]
     if params is not None:
         param_args.extend(params)
@@ -277,35 +285,37 @@ def generate_bsdf(
 
     device = Xform(*inp)()
     dim = get_sampling_box(device=device, dim=dim)
-    with open("device.rad", "wb") as f:
-        f.write(device)
 
     nx = int(math.sqrt(nsamp * (dim.xmax - dim.xmin) / (dim.ymax - dim.ymin)) + 1)
     ny = int(nsamp / nx + 1)
     param_args.extend(["-c", str(nx * ny)])
     param_args.extend(["-cs", str(nspec)])
 
-    tmpdir = tempfile.mkdtemp(prefix="genBSDF")
-    octree_file = os.path.join(tmpdir, "device.oct")
+    if working_dir == "":
+        working_dir = tempfile.mkdtemp(prefix="genBSDF")
+
+    working_dir = tempfile.mkdtemp(prefix="genBSDF")
+    octree_file = os.path.join(working_dir, "device.oct")
     with open(octree_file, "wb") as fp:
         fp.write(oconv(stdin=device, warning=False))
 
     param_args.append("-fd")
-    result.back = generate_back_sdf(octree_file, basis, dim, tmpdir, params=param_args)
+    result.back = generate_back_sdf(octree_file, basis, dim, working_dir, params=param_args, outspec=outspec)
     if front:
         result.front = generate_front_sdf(
-            octree_file, basis, dim, tmpdir, params=param_args
+            octree_file, basis, dim, working_dir, params=param_args, outspec=outspec
         )
 
     os.remove(octree_file)
-    shutil.rmtree(tmpdir)
+    if cleanup:
+        shutil.rmtree(working_dir)
     return result
 
 
 def generate_xml(
-    sol_results: None | BSDFResult = None,
-    vis_results: None | BSDFResult = None,
-    ir_results: None | BSDFResult = None,
+    sol_results: None | BSDFDataBytes = None,
+    vis_results: None | BSDFDataBytes = None,
+    ir_results: None | BSDFDataBytes = None,
     basis: str = "kf",
     unit: str = "meter",
     **kwargs,
