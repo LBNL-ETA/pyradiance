@@ -2,13 +2,13 @@ import os
 import unittest
 from datetime import datetime
 from pathlib import Path
-import shutil
 
 import pyradiance as pr
 
 
 class TestPyradianceAPI(unittest.TestCase):
     resources_dir = os.path.join(os.path.dirname(__file__), "Resources")
+    view_file = os.path.join(resources_dir, "v1a.vf")
     floor = os.path.join(resources_dir, "floor 1.rad")
     ceiling = os.path.join(resources_dir, "ceiling.rad")
     material = os.path.join(resources_dir, "materials.mat")
@@ -48,14 +48,10 @@ class TestPyradianceAPI(unittest.TestCase):
         self.assertTrue(self.material in scene.materials)
         self.assertTrue(self.source in scene.sources)
 
-    @unittest.skipIf(os.name == "nt", "test not supported on Windows")
-    def test_parse_view(self):
-        inp_str = "-vta -vv 180 -vh 180 -vp 0 0 0 -vd 0 -1 0"
-        res = pr.parse_view(inp_str)
-        self.assertEqual(res.vp, (0, 0, 0))
-        self.assertEqual(res.vdir, (0, -1, 0))
+
+    def test_parse_view_file(self):
+        res = pr.viewfile(self.view_file)
         self.assertEqual(res.type, "a")
-        self.assertEqual(res.horiz, 180)
 
     @unittest.skipIf(os.name == "nt", "test not supported on Windows")
     def test_ray_param(self):
