@@ -15,6 +15,8 @@
 
 namespace nb = nanobind;
 
+extern char *progname;
+
 std::string viewstr(VIEW &v) {
     char buffer[512];  
     snprintf(buffer, sizeof(buffer),
@@ -32,6 +34,7 @@ std::string viewstr(VIEW &v) {
 }
 
 NB_MODULE(rad_params, m) {
+	progname = "rad_params";
     m.doc() = "Radiance common";
 
     nb::class_<VIEW>(m, "View")
@@ -130,9 +133,11 @@ NB_MODULE(rad_params, m) {
     }, "Parse a view string into a View object");
 
     m.def("viewfile", [](const char *fname) {
-        VIEW vp;
-        RESOLU *rp;
-        viewfile(const_cast<char *>(fname), &vp, rp);
+        VIEW vp = {0};
+        int result = viewfile(const_cast<char *>(fname), &vp, NULL);
+		if (result <= 0) {  // viewfile failed
+        throw std::runtime_error("Failed to read view file: " + std::string(fname ? fname : "stdin"));
+		}
         return vp;
     }, "Read a view file into a View object");
 
