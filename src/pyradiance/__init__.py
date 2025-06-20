@@ -47,7 +47,7 @@ from .genbsdf import (
 )
 
 from .model import Primitive, Scene
-from .ot import oconv
+from .ot import oconv, getbbox
 
 from .px import (
     Pcomb,
@@ -167,6 +167,7 @@ __all__ = [
     "gensdaymtx",
     "gensky",
     "genssky",
+    "getbbox",
     "get_header",
     "get_image_dimensions",
     "getinfo",

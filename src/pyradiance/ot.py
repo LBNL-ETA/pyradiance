@@ -34,6 +34,8 @@ def getbbox(
     stdin: None | bytes = None
     if not header:
         cmd.append("-h")
+    if not warning:
+        cmd.append("-w")
     if len(stdins) > 0:
         stdin = b"\b".join(stdins)
         cmd.append("-")
