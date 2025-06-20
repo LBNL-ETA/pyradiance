@@ -667,8 +667,8 @@ class Rcomb:
         return self
 
     @handle_called_process_error
-    def __call__(self):
-        sp.run(self.cmd, input=self.stdin, check=True, stdout=sp.PIPE).stdout
+    def __call__(self) -> bytes:
+        return sp.run(self.cmd, input=self.stdin, check=True, stdout=sp.PIPE).stdout
 
 
 def render(
