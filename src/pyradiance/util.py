@@ -660,6 +660,7 @@ class Rcomb:
             if self.stdin is not None:
                 raise ValueError("Only one bytes input allowed")
             self.stdin = input
+            self.cmd.append("-")
         elif isinstance(input, (str, Path)):
             self.cmd.append(str(input))
         else:
