@@ -28,6 +28,7 @@ const	double	TROPIC_LAT		= 23.;
 const	int		SUMMER_START	= 4;
 const	int		SUMMER_END		= 9;
 const	double	GNORM			= 0.777778;
+const	double	M_PER_KM	= 1e3;
 
 /* Mean normalized relative daylight spectra where CCT = 6415K for overcast */
 const	double	D6415[NSSAMP]	= {
@@ -647,15 +648,19 @@ int main(int argc, char *argv[])
 		const int	   mo = erec.date.month+1;
 		const int	   da = erec.date.day;
 		const double	hr = erec.date.hour;
-		double aod = erec.optdepth;
+		double aod = erec.optdepth * M_PER_KM;
+		if (aod >= 999.0) {
+			aod = AOD0_CA;
+			fprintf(stderr, "aod is not set, using default value %.3f\n", AOD0_CA);
+		}
 		double cc = erec.skycover;
+		if (cc >= 99.0) {
+			cc = 0.0;
+			fprintf(stderr, "skycover is not set, using default value %.3f\n", 0.0);
+		}
 		double		  sda, sta, st;
 		int			 sun_in_sky;
 
-		if (aod == 0.0) {
-			aod = AOD0_CA;
-			fprintf(stderr, "aod is zero, using default value %.3f\n", AOD0_CA);
-		}
 		/* compute solar position */
 		if ((mo == 2) & (da == 29)) {
 			julian_date = 60;
@@ -770,8 +775,7 @@ int main(int argc, char *argv[])
 		printf("NROWS=%d\n", nskypatch);
 		printf("NCOLS=%d\n", nstored);
 		printf("NCOMP=%d\n", NSSAMP);
-		float wvsplit[4] = {380, 480, 588, 780};
-		fputwlsplit(wvsplit, stdout);
+		fputwlsplit(WLPART, stdout);
 		if ((outfmt == 'f') | (outfmt == 'd'))
 			fputendian(stdout);
 		fputformat((char *)getfmtname(outfmt), stdout);
