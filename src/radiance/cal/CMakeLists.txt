@@ -29,28 +29,26 @@ target_include_directories(rsplit PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
 target_link_libraries(rsplit PRIVATE rtrad ${PLATFORM_MATH_LIB})
 
 add_executable(tabfunc tabfunc.c)
-target_include_directories(tabfunc PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
+target_include_directories(tabfunc
+                           PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
 target_link_libraries(tabfunc PRIVATE rtrad ${PLATFORM_MATH_LIB})
 
 add_executable(total total.c)
 target_include_directories(total PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
 target_link_libraries(total PRIVATE rtrad ${PLATFORM_MATH_LIB})
 
-install(TARGETS
-  cnt
-  ev
-  histo
-  icalc
-  neaten
-  rcalc
-  rlam
-  rsplit
-  tabfunc
-  total
-  DESTINATION ${SKBUILD_PLATLIB_DIR}/pyradiance/bin
-)
+install(
+  TARGETS cnt
+          ev
+          histo
+          icalc
+          neaten
+          rcalc
+          rlam
+          rsplit
+          tabfunc
+          total
+  DESTINATION ${SKBUILD_PLATLIB_DIR}/pyradiance/bin)
 
 file(GLOB_RECURSE cal_files "cal/*.*")
-file(COPY ${cal_files}
-  DESTINATION ${SKBUILD_PLATLIB_DIR}/pyradiance/lib
-)
+file(COPY ${cal_files} DESTINATION ${SKBUILD_PLATLIB_DIR}/pyradiance/lib)

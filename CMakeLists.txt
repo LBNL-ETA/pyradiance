@@ -5,25 +5,33 @@ project(pyradiance LANGUAGES CXX C)
 # Set the C standard to C99 with GNU extensions
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_C_EXTENSIONS ON)  # This enables GNU extensions (gnu99)
+set(CMAKE_C_EXTENSIONS ON) # This enables GNU extensions (gnu99)
 set(CMAKE_CXX_STANDARD 11)
-if (CMAKE_VERSION VERSION_LESS 3.18)
+if(CMAKE_VERSION VERSION_LESS 3.18)
   set(DEV_MODULE Development)
 else()
   set(DEV_MODULE Development.Module)
 endif()
-find_package(Python 3.8 COMPONENTS Interpreter ${DEV_MODULE} REQUIRED)
+find_package(
+  Python 3.8
+  COMPONENTS Interpreter ${DEV_MODULE}
+  REQUIRED)
 
 # Add this section early
 include(FetchContent)
 
 # Configure libtiff build options first
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static libraries" FORCE)
+set(BUILD_SHARED_LIBS
+    OFF
+    CACHE BOOL "Build static libraries" FORCE)
 set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 
-if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_BUILD_TYPE
+      Release
+      CACHE STRING "Choose the type of build." FORCE)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
+                                               "MinSizeRel" "RelWithDebInfo")
 endif()
 
 # Locate the threads package
@@ -39,10 +47,6 @@ endif()
 
 # Avoiding name clashes
 add_compile_definitions(error=rad_error)
-
-# if(NOT APPLE)
-# 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
-# endif()
 
 install(
   DIRECTORY
@@ -80,75 +84,112 @@ if(MSVC)
 else() # GCC/Clang (Linux, macOS, MinGW)
   if(APPLE)
     add_definitions(-DBSD -DNOSTEREO -Dfreebsd)
-	add_compile_options(
-		-Ofast # Maximum optimization
-		# -march=native # Optimize for local machine architecture
-		-funroll-loops # Unroll loops
-	  )
+    add_compile_options(
+      -Ofast # Maximum optimization
+      -funroll-loops # Unroll loops
+    )
   else()
     add_definitions(-Dlinux -D_FILE_OFFSET_BITS=64 -DNOSTEREO)
     add_compile_options(
-	  -O3 # Maximum optimization
-	  # -march=native # Optimize for local machine architecture
-	  -ffast-math
-	  -funroll-loops # Unroll loops
-	  -Wno-unused-const-variable
-	)
-endif()
+      -O3 # Maximum optimization
+      -ffast-math
+      -funroll-loops # Unroll loops
+      -Wno-unused-const-variable)
+  endif()
 
   nanobind_add_module(
-  radiance_ext
-  # Target the stable ABI for Python 3.12+, which reduces the number of binary
-  # wheels that must be built. This does nothing on older Python versions
-  STABLE_ABI
-  # Build libnanobind statically and merge it into the extension (which itself
-  # remains a shared library)
-  #
-  # If your project builds multiple extensions, you can replace this flag by
-  # NB_SHARED to conserve space by reusing a shared libnanobind across libraries
-  NB_STATIC
-  src/radiance/rt/RtraceSimulManager.cpp
-  src/radiance/rt/RpictSimulManager.cpp
-  src/radiance/rt/srcdraw.c
-  src/radiance/rt/RcontribSimulManager.cpp
-  src/radiance/rt/RdataShareMap.cpp
-  src/radiance/rt/RdataShareFile.cpp
-  src/binding/radiance_ext.cpp)
-target_include_directories(
-  radiance_ext PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/radiance/common
-                       ${CMAKE_CURRENT_LIST_DIR}/src/radiance/rt)
-target_link_libraries(radiance_ext PRIVATE raycalls radiance cpprad rtrad m)
-install(TARGETS radiance_ext LIBRARY DESTINATION pyradiance)
+    radiance_ext
+    # Target the stable ABI for Python 3.12+, which reduces the number of binary
+    # wheels that must be built. This does nothing on older Python versions
+    STABLE_ABI
+    # Build libnanobind statically and merge it into the extension (which itself
+    # remains a shared library)
+    #
+    # If your project builds multiple extensions, you can replace this flag by
+    # NB_SHARED to conserve space by reusing a shared libnanobind across
+    # libraries
+    NB_STATIC
+    src/radiance/rt/RtraceSimulManager.cpp
+    src/radiance/rt/RpictSimulManager.cpp
+    src/radiance/rt/srcdraw.c
+    src/radiance/rt/RcontribSimulManager.cpp
+    src/radiance/rt/RdataShareMap.cpp
+    src/radiance/rt/RdataShareFile.cpp
+    src/binding/radiance_ext.cpp)
+  target_include_directories(
+    radiance_ext PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/radiance/common
+                         ${CMAKE_CURRENT_LIST_DIR}/src/radiance/rt)
+  target_link_libraries(radiance_ext PRIVATE raycalls radiance cpprad rtrad m)
+  install(TARGETS radiance_ext LIBRARY DESTINATION pyradiance)
 endif()
 
-set(ZLIB_SUPPORT OFF CACHE BOOL "Enable Zlib usage" FORCE)
-set(JPEG_SUPPORT OFF CACHE BOOL "Enable JPEG compression" FORCE)
-set(OJPEG_SUPPORT OFF CACHE BOOL "Enable old-style JPEG compression" FORCE)
-set(JBIG_SUPPORT OFF CACHE BOOL "Enable JBIG compression" FORCE)
-set(WEBP_SUPPORT OFF CACHE BOOL "Enable WebP compression" FORCE)
-set(ZSTD_SUPPORT OFF CACHE BOOL "Enable ZSTD compression" FORCE)
-set(DEFLATE_SUPPORT OFF CACHE BOOL "Enable DEFLATE compression" FORCE)
+set(ZLIB_SUPPORT
+    OFF
+    CACHE BOOL "Enable Zlib usage" FORCE)
+set(JPEG_SUPPORT
+    OFF
+    CACHE BOOL "Enable JPEG compression" FORCE)
+set(OJPEG_SUPPORT
+    OFF
+    CACHE BOOL "Enable old-style JPEG compression" FORCE)
+set(JBIG_SUPPORT
+    OFF
+    CACHE BOOL "Enable JBIG compression" FORCE)
+set(WEBP_SUPPORT
+    OFF
+    CACHE BOOL "Enable WebP compression" FORCE)
+set(ZSTD_SUPPORT
+    OFF
+    CACHE BOOL "Enable ZSTD compression" FORCE)
+set(DEFLATE_SUPPORT
+    OFF
+    CACHE BOOL "Enable DEFLATE compression" FORCE)
 
 # Declare and make libtiff available early
 FetchContent_Declare(
-    libtiff
-    GIT_REPOSITORY https://gitlab.com/libtiff/libtiff.git
-    GIT_TAG v4.7.0
-)
+  libtiff
+  GIT_REPOSITORY https://gitlab.com/libtiff/libtiff.git
+  GIT_TAG v4.7.0)
 
-set(tiff-tools OFF CACHE BOOL "Build TIFF tools" FORCE)
-set(tiff-tests OFF CACHE BOOL "Build TIFF tests" FORCE)
-set(tiff-docs OFF CACHE BOOL "Build TIFF documentation" FORCE)
-set(tiff-contrib OFF CACHE BOOL "Build TIFF contrib" FORCE)
-set(tiff-install OFF CACHE BOOL "Install TIFF files" FORCE)
-set(zlib OFF CACHE BOOL "" FORCE)
-set(jpeg OFF CACHE BOOL "" FORCE)
-set(pixarlog OFF CACHE BOOL "" FORCE)
-set(libdeflate OFF CACHE BOOL "" FORCE) 
-set(lerc OFF CACHE BOOL "" FORCE)
-set(lzma OFF CACHE BOOL "" FORCE)
-set(webp OFF CACHE BOOL "" FORCE)
-set(zstd OFF CACHE BOOL "" FORCE)
+set(tiff-tools
+    OFF
+    CACHE BOOL "Build TIFF tools" FORCE)
+set(tiff-tests
+    OFF
+    CACHE BOOL "Build TIFF tests" FORCE)
+set(tiff-docs
+    OFF
+    CACHE BOOL "Build TIFF documentation" FORCE)
+set(tiff-contrib
+    OFF
+    CACHE BOOL "Build TIFF contrib" FORCE)
+set(tiff-install
+    OFF
+    CACHE BOOL "Install TIFF files" FORCE)
+set(zlib
+    OFF
+    CACHE BOOL "" FORCE)
+set(jpeg
+    OFF
+    CACHE BOOL "" FORCE)
+set(pixarlog
+    OFF
+    CACHE BOOL "" FORCE)
+set(libdeflate
+    OFF
+    CACHE BOOL "" FORCE)
+set(lerc
+    OFF
+    CACHE BOOL "" FORCE)
+set(lzma
+    OFF
+    CACHE BOOL "" FORCE)
+set(webp
+    OFF
+    CACHE BOOL "" FORCE)
+set(zstd
+    OFF
+    CACHE BOOL "" FORCE)
 
 FetchContent_MakeAvailable(libtiff)
 
@@ -166,21 +207,26 @@ target_include_directories(
   bsdf PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/radiance/common
                ${CMAKE_CURRENT_LIST_DIR}/src/radiance/rt)
 
-target_link_libraries(bsdf PRIVATE rtrad ${PLATFORM_MATH_LIB})  # use -lm instead of libm.a
+target_link_libraries(bsdf PRIVATE rtrad ${PLATFORM_MATH_LIB}) # use -lm instead
+                                                               # of libm.a
 
 if(APPLE)
-    target_compile_options(bsdf PRIVATE -include stdio.h)
+  target_compile_options(bsdf PRIVATE -include stdio.h)
 endif()
 
 # Install directive for scikit-build-core
 install(TARGETS bsdf LIBRARY DESTINATION pyradiance)
 
 nanobind_add_module(rad_params STABLE_ABI NB_STATIC src/binding/params.cpp)
-target_include_directories(rad_params PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/radiance/common ${CMAKE_CURRENT_LIST_DIR}/src/radiance/rt)
-target_link_libraries(rad_params PRIVATE raycalls radiance cpprad rtrad ${PLATFORM_MATH_LIB})  # use -lm instead of libm.a
+target_include_directories(
+  rad_params PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/radiance/common
+                     ${CMAKE_CURRENT_LIST_DIR}/src/radiance/rt)
+target_link_libraries(
+  rad_params PRIVATE raycalls radiance cpprad rtrad ${PLATFORM_MATH_LIB}
+)# use -lm instead of libm.a
 
 if(APPLE)
-    target_compile_options(rad_params PRIVATE -include stdio.h)
+  target_compile_options(rad_params PRIVATE -include stdio.h)
 endif()
 
 # Install directive for scikit-build-core

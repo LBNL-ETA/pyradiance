@@ -1,4 +1,3 @@
-
 set(RAYOBJS
     ambcomp.c
     ambient.c
@@ -121,10 +120,9 @@ add_executable(rcontrib rcmain.c rcontrib.c rc2.c rc3.c)
 target_include_directories(rcontrib
                            PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
 target_link_libraries(rcontrib radiance rtrad ${PLATFORM_MATH_LIB})
-if (WIN32)
-	target_link_libraries(rcontrib ws2_32)
+if(WIN32)
+  target_link_libraries(rcontrib ws2_32)
 endif()
-
 
 add_executable(mkpmap mkpmap.c)
 target_include_directories(mkpmap PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
