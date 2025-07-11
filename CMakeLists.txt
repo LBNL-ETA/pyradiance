@@ -31,6 +31,10 @@ set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
 
+if(UNIX)
+  set(CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES};m")
+endif()
+
 # Avoiding name clashes
 add_compile_definitions(error=rad_error)
 
