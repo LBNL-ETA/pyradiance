@@ -34,7 +34,9 @@ jobs:
         CIBW_ARCHS_LINUX: "x86_64"
         CIBW_ARCHS_MACOS: "x86_64 arm64"
         CIBW_ARCHS_WINDOWS: "AMD64"
-        CIBW_ENVIRONMENT_MACOS: CXXFLAGS="-Ofast -funroll-loops -fno-strict-aliasing"
+        # Set a newer macOS deployment target to support modern C++ features
+        # required by dependencies like nanobind.
+        CIBW_MACOSX_DEPLOYMENT_TARGET: "10.15"
 
     # - name: Set up Python
     #   uses: actions/setup-python@v5
