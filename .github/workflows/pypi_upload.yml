@@ -66,7 +66,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: dist-${{ matrix.os }}-python-${{ matrix.python-version }}
-        path: ./dist/*.whl
+        path: ./wheelhouse/*.whl
         if-no-files-found: warn
         compression-level: 6
         overwrite: false
@@ -89,14 +89,15 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         pattern: dist-*
-        path: downloaded_dist
+        path: dist/
+        merge-multiple: true
 
-    - name: Create dist directory
-      run: mkdir -p dist
-
-    - name: Move wheels to dist directory
-      run: |
-        find downloaded_dist -name "*.whl" -exec mv {} dist/ \;
+    # - name: Create dist directory
+    #   run: mkdir -p dist
+    #
+    # - name: Move wheels to dist directory
+    #   run: |
+    #     find downloaded_dist -name "*.whl" -exec mv {} dist/ \;
 
     - name: Publish package distributions to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
