@@ -83,7 +83,7 @@ else() # GCC/Clang (Linux, macOS, MinGW)
     add_definitions(-DBSD -DNOSTEREO -Dfreebsd)
 	add_compile_options(
 		-Ofast # Maximum optimization
-		-march=native # Optimize for local machine architecture
+		# -march=native # Optimize for local machine architecture
 		-funroll-loops # Unroll loops
 	  )
   else()
