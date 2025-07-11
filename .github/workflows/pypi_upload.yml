@@ -37,7 +37,7 @@ jobs:
         # Set a newer macOS deployment target to support modern C++ features
         # required by dependencies like nanobind.
         CIBW_MACOSX_DEPLOYMENT_TARGET: "10.15"
-        CIBW_TEST_COMMAND: "python {project}/ci_tests.py"
+        CIBW_TEST_COMMAND: "python {project}/ci_test.py"
 
     # - name: Set up Python
     #   uses: actions/setup-python@v5
