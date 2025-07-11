@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        # python-version: ["3.10", "3.11", "3.12", "3.13"]
         os: [windows-latest, macos-latest, ubuntu-latest]
 
     runs-on: ${{ matrix.os }}
@@ -26,7 +26,7 @@ jobs:
     - name: Build wheels
       uses: pypa/cibuildwheel@v2.16.5
       env:
-        CIBW_BUILD: "cp3${{ replace(matrix.python-version, '.', '') }}-*"
+        CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-*"
         CIBW_SKIP: "*-win32 *-manylinux_i686"
         CIBW_ARCHS_LINUX: "x86_64"
         CIBW_ARCHS_MACOS: "x86_64 arm64"
