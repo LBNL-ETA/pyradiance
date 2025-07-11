@@ -1,4 +1,5 @@
 import unittest
+import pathlib
 import sys
 
 # Import nanobind here. If it fails, we'll assume there's nothing to clean up.
