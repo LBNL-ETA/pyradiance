@@ -7,9 +7,14 @@ try:
 except ImportError:
     nanobind = None
 
+project_root = pathlib.Path(__file__).parent.resolve()
+# Define the absolute path to the 'tests' directory
+test_dir = project_root / 'tests'
+
 # Find all files named 'test*.py' in the 'tests' directory.
 loader = unittest.TestLoader()
-suite = loader.discover('tests')
+print(f"--- Discovering tests in: {test_dir} ---")
+suite = loader.discover(str(test_dir))
 
 # Create a TestRunner to execute the tests.
 runner = unittest.TextTestRunner(verbosity=2)
