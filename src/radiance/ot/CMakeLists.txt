@@ -5,7 +5,7 @@ add_executable(getbbox
   readobj2.c
 )
 target_include_directories(getbbox PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
-target_link_libraries(getbbox PRIVATE rtrad ${MATH_LIBRARY})
+target_link_libraries(getbbox PRIVATE rtrad ${PLATFORM_MATH_LIB})
 
 add_executable(obj2mesh
   cvmesh.c
@@ -15,7 +15,7 @@ add_executable(obj2mesh
   writemesh.c
 )
 target_include_directories(obj2mesh PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
-target_link_libraries(obj2mesh PRIVATE rtrad ${MATH_LIBRARY})
+target_link_libraries(obj2mesh PRIVATE rtrad ${PLATFORM_MATH_LIB})
 
 add_executable(oconv
   bbox.c
@@ -28,7 +28,7 @@ add_executable(oconv
   writeoct.c
 )
 target_include_directories(oconv PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
-target_link_libraries(oconv PRIVATE rtrad ${MATH_LIBRARY})
+target_link_libraries(oconv PRIVATE rtrad ${PLATFORM_MATH_LIB})
 
 install(TARGETS getbbox obj2mesh oconv
   DESTINATION ${SKBUILD_PLATLIB_DIR}/pyradiance/bin

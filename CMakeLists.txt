@@ -31,7 +31,9 @@ set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
 
+set(PLATFORM_MATH_LIB)
 if(UNIX)
+  set(PLATFORM_MATH_LIB m)
   set(CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES};m")
 endif()
 
@@ -56,13 +58,6 @@ execute_process(
   OUTPUT_VARIABLE nanobind_ROOT)
 
 find_package(nanobind CONFIG REQUIRED)
-
-
-if(UNIX AND NOT APPLE)
-  find_library(MATH_LIBRARY m)
-else()
-  set(MATH_LIBRARY)
-endif()
 
 # add_compile_options(-Wall -Wextra -Werror)
 add_compile_options(-Wall)
@@ -171,12 +166,7 @@ target_include_directories(
   bsdf PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/radiance/common
                ${CMAKE_CURRENT_LIST_DIR}/src/radiance/rt)
 
-
-if(UNIX)
-    target_link_libraries(bsdf PRIVATE rtrad m)  # use -lm instead of libm.a
-else()
-    target_link_libraries(bsdf PRIVATE rtrad ${MATH_LIBRARY})
-endif()
+target_link_libraries(bsdf PRIVATE rtrad ${PLATFORM_MATH_LIB})  # use -lm instead of libm.a
 
 if(APPLE)
     target_compile_options(bsdf PRIVATE -include stdio.h)
@@ -187,11 +177,7 @@ install(TARGETS bsdf LIBRARY DESTINATION pyradiance)
 
 nanobind_add_module(rad_params STABLE_ABI NB_STATIC src/binding/params.cpp)
 target_include_directories(rad_params PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src/radiance/common ${CMAKE_CURRENT_LIST_DIR}/src/radiance/rt)
-if(UNIX)
-    target_link_libraries(rad_params PRIVATE raycalls radiance cpprad rtrad m)  # use -lm instead of libm.a
-else()
-    target_link_libraries(rad_params PRIVATE raycalls radiance cpprad rtrad raycalls ${MATH_LIBRARY})
-endif()
+target_link_libraries(rad_params PRIVATE raycalls radiance cpprad rtrad ${PLATFORM_MATH_LIB})  # use -lm instead of libm.a
 
 if(APPLE)
     target_compile_options(rad_params PRIVATE -include stdio.h)

@@ -1,20 +1,3 @@
-# function(generate_version_file OUTPUT_FILE VERSION_FILE)
-#
-#   add_custom_command(
-#     OUTPUT ${OUTPUT_FILE}
-#     COMMAND
-#       ${CMAKE_COMMAND} -D VERSION_FILE=${CMAKE_CURRENT_BINARY_DIR}/RADVERSION -D
-#       OUTPUT_FILE=${OUTPUT_FILE} -P
-#       ${CMAKE_CURRENT_SOURCE_DIR}/generate_version.cmake
-#     DEPENDS ${VERSION_FILE} ${CMAKE_CURRENT_SOURCE_DIR}/generate_version.cmake
-#     COMMENT "Generating Version.c"
-#     VERBATIM)
-# endfunction()
-#
-# # generate version.c
-# set(VERSION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/RADVERSION")
-# set(VERSION_C "${CMAKE_CURRENT_SOURCE_DIR}/Version.c")
-# generate_version_file(${VERSION_C} ${VERSION_FILE})
 
 set(RAYOBJS
     ambcomp.c
@@ -123,21 +106,21 @@ target_include_directories(raycalls
 
 add_executable(rtrace rtmain.c rtrace.c duphead.c persist.c)
 target_include_directories(rtrace PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
-target_link_libraries(rtrace raycalls radiance rtrad ${MATH_LIBRARY})
+target_link_libraries(rtrace raycalls radiance rtrad ${PLATFORM_MATH_LIB})
 
 add_executable(rpict rpmain.c rpict.c srcdraw.c duphead.c persist.c)
 target_include_directories(rpict PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
-target_link_libraries(rpict radiance rtrad ${MATH_LIBRARY})
+target_link_libraries(rpict radiance rtrad ${PLATFORM_MATH_LIB})
 
 add_executable(lookamb lookamb.c ambio.c)
 target_include_directories(lookamb
                            PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
-target_link_libraries(lookamb rtrad ${MATH_LIBRARY})
+target_link_libraries(lookamb rtrad ${PLATFORM_MATH_LIB})
 
 add_executable(rcontrib rcmain.c rcontrib.c rc2.c rc3.c)
 target_include_directories(rcontrib
                            PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
-target_link_libraries(rcontrib radiance rtrad ${MATH_LIBRARY})
+target_link_libraries(rcontrib radiance rtrad ${PLATFORM_MATH_LIB})
 if (WIN32)
 	target_link_libraries(rcontrib ws2_32)
 endif()
@@ -145,12 +128,12 @@ endif()
 
 add_executable(mkpmap mkpmap.c)
 target_include_directories(mkpmap PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
-target_link_libraries(mkpmap radiance rtrad ${MATH_LIBRARY})
+target_link_libraries(mkpmap radiance rtrad ${PLATFORM_MATH_LIB})
 
 add_executable(pmapdump pmapdump.c pmaptype.c pmapparm.c)
 target_include_directories(pmapdump
                            PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
-target_link_libraries(pmapdump raycalls radiance rtrad ${MATH_LIBRARY})
+target_link_libraries(pmapdump raycalls radiance rtrad ${PLATFORM_MATH_LIB})
 
 install(TARGETS rtrace rpict lookamb rcontrib mkpmap pmapdump
         DESTINATION ${SKBUILD_PLATLIB_DIR}/pyradiance/bin)
