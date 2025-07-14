@@ -74,7 +74,7 @@ if(MSVC)
     /GL # Whole program optimization
     /Qpar # Auto-parallelizer
     /fp:fast # Fast floating-point model
-    /arch:AVX2 # Use AVX2 instructions (modify based on target CPU)
+    # /arch:AVX2 # Use AVX2 instructions (modify based on target CPU)
     /GT # Fiber-safe optimizations
     /GF # String pooling
   )
