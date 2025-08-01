@@ -477,6 +477,7 @@ def gensdaymtx(
     ground_reflectance: None | list[float] = None,
     rotate: None | float = None,
     outform: None | str = None,
+    out_dir: str = ".",
     onesun: bool = False,
     mfactor: int = 1,
     nthreads: int = 1,
@@ -522,6 +523,7 @@ def gensdaymtx(
         cmd.extend(["-r", str(rotate)])
     if outform is not None:
         cmd.append(f"-o{outform}")
+    cmd.extend(["-p", out_dir])
     if isinstance(weather_data, bytes):
         stdin = weather_data
     elif isinstance(weather_data, (str, Path)):

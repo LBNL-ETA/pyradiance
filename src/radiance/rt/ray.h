@@ -1,4 +1,4 @@
-/* RCSid $Id: ray.h,v 2.58 2025/01/18 03:49:00 greg Exp $ */
+/* RCSid $Id: ray.h,v 2.62 2025/06/20 18:05:30 greg Exp $ */
 /*
  *  ray.h - header file for routines using rays.
  */
@@ -19,7 +19,10 @@ extern "C" {
 #define RNUMBER		size_t		/* ray counter (>= sizeof pointer) */
 #endif
 
-#define  MAXDIM		32	/* maximum number of sampling dimensions */
+#define  MAXDIM		36	/* maximum number of sampling dimensions */
+#define  XTRADIM	3	/* #spare dimensions */
+#define  ndims_inc()	(ndims -= ndims>=MAXDIM-XTRADIM, ndims++)
+#define  dec_ndims()	(ndims -= ndims>0)
 
 				/* ray type flags */
 #define  PRIMARY	01		/* original ray */
@@ -104,7 +107,8 @@ extern void	(*trace)(RAY*);	/* global trace reporting callback */
 
 extern int	dimlist[];	/* dimension list for distribution */
 extern int	ndims;		/* number of dimensions so far */
-extern int	samplendx;	/* index for this sample */
+extern unsigned long
+		samplendx;	/* index for this sample */
 
 extern int	do_irrad;	/* compute irradiance? */
 
@@ -215,6 +219,7 @@ extern void	ray_done(int freall);
 extern void	ray_save(RAYPARAMS *rp);
 extern void	ray_restore(RAYPARAMS *rp);
 extern void	ray_defaults(RAYPARAMS *rp);
+extern void	reset_random(void);
 					/* defined in raypcalls.c */
 extern void	ray_pinit(char *otnm, int nproc);
 extern int	ray_psend(RAY *r);

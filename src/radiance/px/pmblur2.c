@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: pmblur2.c,v 2.8 2025/06/03 21:31:51 greg Exp $";
+static const char RCSid[] = "$Id: pmblur2.c,v 2.10 2025/07/02 16:54:44 greg Exp $";
 #endif
 /*
  *  pmblur2.c - program to computer better motion blur from ranimove frames.
@@ -371,7 +371,7 @@ write_average(FILE *fp)
 	fputs(VIEWSTR, fp);
 	fprintview(&vwsum, fp);
 	fputc('\n', fp);
-	if ((pixaspect < .98) | (pixaspect > 1.02))
+	if ((pixaspect < .995) | (pixaspect > 1.005))
 		fputaspect(pixaspect, fp);
 	fputexpos(exprev, fp);
 	if (strcmp(imfmt, PICFMT))

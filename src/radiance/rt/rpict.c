@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rpict.c,v 2.107 2025/01/25 04:57:56 greg Exp $";
+static const char RCSid[] = "$Id: rpict.c,v 2.110 2025/07/02 16:54:44 greg Exp $";
 #endif
 /*
  *  rpict.c - routines and variables for picture generation.
@@ -52,7 +52,7 @@ extern RGBPRIMP  out_prims;		/* output color primitives (NULL if spectral) */
 
 int  dimlist[MAXDIM];			/* sampling dimensions */
 int  ndims = 0;				/* number of sampling dimensions */
-int  samplendx;				/* sample index number */
+unsigned long  samplendx;		/* sample index number */
 
 void  (*addobjnotify[])() = {ambnotify, NULL};
 
@@ -134,7 +134,7 @@ static int fillsample(COLOR *colline, float *zline, int x, int y,
 		int xlen, int ylen, int b);
 static double pixvalue(COLOR  col, int  x, int  y);
 static int salvage(char  *oldfile);
-static int pixnumber(int  x, int  y, int  xres, int  yres);
+static unsigned long pixnumber(int  x, int  y, int  xres, int  yres);
 
 
 
@@ -342,7 +342,7 @@ rpict(			/* generate image(s) */
 		fputs(VIEWSTR, stdout);
 		fprintview(&ourview, stdout);
 		putchar('\n');
-		if ((pa < .99) | (pa > 1.01))
+		if ((pa < .995) | (pa > 1.005))
 			fputaspect(pa, stdout);
 		fputnow(stdout);
 		if (out_prims == xyzprims) {
@@ -771,7 +771,7 @@ writerr:
 	return -1; /* pro forma return */
 }
 
-static int
+static unsigned long
 pixnumber(		/* compute pixel index (screen door) */
 	int  x,
 	int  y,
@@ -788,5 +788,5 @@ pixnumber(		/* compute pixel index (screen door) */
 		++nbits;
 	}
 	coord[0] = x; coord[1] = y;
-	return ((int)hilbert_c2i(2, nbits, coord));
+	return((unsigned long)hilbert_c2i(2, nbits, coord));
 }

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: genssky.c,v 2.8 2025/06/07 05:09:45 greg Exp $";
+static const char RCSid[] = "$Id: genssky.c,v 2.9 2025/07/11 18:12:25 greg Exp $";
 #endif
 /* Main function for generating spectral sky */
 /* Cloudy sky computed as weight average of clear and cie overcast sky */

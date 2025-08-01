@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.59 2025/06/07 05:09:46 greg Exp $";
+static const char	RCSid[] = "$Id: rtmain.c,v 2.61 2025/06/20 16:34:23 greg Exp $";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -18,9 +18,6 @@ static const char	RCSid[] = "$Id: rtmain.c,v 2.59 2025/06/07 05:09:46 greg Exp $
 #include  "ambient.h"
 #include  "random.h"
 #include  "pmapray.h"
-
-extern char	*progname;		/* global argv[0] */
-
 					/* persistent processes define */
 #ifdef  F_SETLKW
 #define  PERSIST	1		/* normal persist */
@@ -362,13 +359,7 @@ main(int  argc, char  *argv[])
 					/* initialize object types */
 	initotypes();
 					/* initialize urand */
-	if (rand_samp) {
-		srandom((long)time(0));
-		initurand(0);
-	} else {
-		srandom(0L);
-		initurand(2048);
-	}
+	reset_random();
 					/* set up signal handling */
 	sigdie(SIGINT, "Interrupt");
 #ifdef SIGHUP

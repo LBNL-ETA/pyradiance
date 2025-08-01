@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rv2.c,v 2.80 2025/06/07 05:09:46 greg Exp $";
+static const char	RCSid[] = "$Id: rv2.c,v 2.82 2025/07/02 16:54:44 greg Exp $";
 #endif
 /*
  *  rv2.c - command routines used in tracing a view.
@@ -586,8 +586,9 @@ setparam(				/* get/set program parameter */
 	}
 	switch (s[0]) {
 	case 'u':			/* uncorrelated sampling */
-		getparam(s+1, "uncorrelated sampling", 'b',
-				(void *)&rand_samp);
+		if (getparam(s+1, "uncorrelated sampling", 'b',
+				(void *)&rand_samp))
+			reset_random();
 		break;
 	case 'l':			/* limit */
 		switch (s[1]) {
@@ -850,7 +851,7 @@ writepict(				/* write the picture to a file */
 	fputnow(fp);
 	if (exposure != 1.0)
 		fputexpos(exposure, fp);
-	if (dev->pixaspect != 1.0)
+	if ((dev->pixaspect < 0.995) | (dev->pixaspect > 1.005))
 		fputaspect(dev->pixaspect, fp);
 	fputprims(stdprims, fp);
 	fputformat(COLRFMT, fp);
