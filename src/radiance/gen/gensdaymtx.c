@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: gensdaymtx.c,v 1.10 2025/07/11 18:12:25 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 
 #include <stdlib.h>
@@ -458,7 +458,7 @@ add_direct
 	double mean = sum / NSSAMP;
 
 	double intensity = mean * WVLSPAN;
-	if (dirnorm > 0) {
+	if (dirnorm >= 0) {
 		intensity = dirnorm / SOLOMG / WHTEFFICACY;
 	}
 	double dir_ratio = 1.;
@@ -479,7 +479,8 @@ add_direct
 		float *pdest = parr + NSSAMP * near_patch[i];
 		int k;
 		for (k = 0; k < NSSAMP; k++) {
-			*pdest++ = sun_radiance[k] * wta[i] / wtot;
+			*pdest++ += sun_radiance[k] * wta[i] / wtot
+					* SOLOMG / rh_dom[near_patch[i]];
 		}
 	}
 }
@@ -572,7 +573,7 @@ compute_sky
 
 	/* diffuse calibration factor */
 	double dif_ratio = 1;
-	if (difhor > 0) {
+	if (difhor >= 0) {
 		DATARRAY *indirect_irradiance_clear = get_indirect_irradiance(irrad, radius, sun_ct);
 		double overcast_ghi = overcast_zenithbr * 7.0 * PI / 9.0;
 		double diffuse_irradiance = 0;
@@ -616,8 +617,8 @@ main
 	int tstorage = 0;                                           /* number of allocated time steps */
 	int nstored = 0;                                            /* number of time steps in matrix */
 	int last_monthly = 0;                                       /* month of last report */
-	double dni;                                                 /* direct normal illuminance */
-	double dhi;                                                 /* diffuse horizontal illuminance */
+	double dni = -1.0;                                                 /* direct normal illuminance */
+	double dhi = -1.0;                                                 /* diffuse horizontal illuminance */
 
 	float           *mtx_data = NULL;
 	int mtx_offset = 0;
@@ -764,7 +765,7 @@ main
 	DATARRAY *mie_dp = getdata(mie_path);
 	if (mie_dp == NULL) {
 		fprintf(stderr, "Error reading mie data\n");
-		return 0;
+		return 1;
 	}
 
 	if (epw->isWEA == WEAnot) {
@@ -819,8 +820,8 @@ main
 		}
 		sun_ct = fdot(view_point, sundir) / ER;
 
-		dni = erec.dirillum;
-		dhi = erec.diffillum;
+		dni = EPWisset(&erec,dirillum) ? erec.dirillum : -1.;
+		dhi = EPWisset(&erec,diffillum) ? erec.diffillum : -1.;
 
 		mtx_offset = NSSAMP * nskypatch * nstored;
 		nstored += 1;
@@ -861,7 +862,7 @@ main
 			fprintf(stderr, "# Pre-computing...\n");
 			if (!precompute(sorder, clear_paths, &clear_atmos, num_threads)) {
 				fprintf(stderr, "Pre-compute failed\n");
-				return 0;
+				return 1;
 			}
 		}
 
@@ -939,8 +940,8 @@ main
 		case 'f':
 			for (j = 0; j < nstored; j++) {
 				float ment[NSSAMP];
-				for (k = NSSAMP - 1; k >= 0; k--) {
-					ment[k] = mtx_data[mtx_offset + k];
+				for (k = 0; k < NSSAMP; k++) {
+					ment[NSSAMP-1 - k] = mtx_data[mtx_offset + k];
 				}
 				putbinary(ment, sizeof(float), NSSAMP, stdout);
 				mtx_offset += NSSAMP * nskypatch;
@@ -949,8 +950,8 @@ main
 		case 'd':
 			for (j = 0; j < nstored; j++) {
 				double ment[NSSAMP];
-				for (k = NSSAMP - 1; k >= 0; k--) {
-					ment[j] = mtx_data[mtx_offset + k];
+				for (k = 0; k < NSSAMP; k++) {
+					ment[NSSAMP-1 - k] = mtx_data[mtx_offset + k];
 				}
 				putbinary(ment, sizeof(double), NSSAMP, stdout);
 				mtx_offset += NSSAMP * nskypatch;

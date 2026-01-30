@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rcontrib.c,v 2.47 2025/06/20 03:43:17 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  * Accumulate ray contributions for a set of materials
@@ -287,6 +287,15 @@ trace_contrib(RAY *r)
 	mp = (MODCONT *)lu_find(&modconttab,objptr(r->ro->omod)->oname)->data;
 
 	if (mp == NULL)				/* not in our list? */
+		return;
+						/* zero contribution? */
+	if (contrib) {
+		for (i = NCSAMP; i--; )
+			if (r->rcoef[i]*r->rcol[i] > FTINY)
+				break;		/* something non-zero */
+		if (i < 0)
+			return;
+	} else if (sintens(r->rcoef) <= FTINY)
 		return;
 
 	worldfunc(RCCONTEXT, r);		/* else set context */

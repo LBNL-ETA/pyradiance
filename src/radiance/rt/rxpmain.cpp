@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxpmain.cpp,v 2.9 2025/06/05 18:26:46 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  *  rxpmain.cpp - main for rxpict batch rendering program
@@ -54,7 +54,7 @@ static void printdefaults(void);
 		"HessianAmbientCache\nAmbientAveraging\nAmbientValueSharing\n" \
 		"PixelJitter\nPixelSampling\nPixelMotion\nPixelDepthOfField\n" \
 		"SmallSourceDrawing\nViewSequence\nProgressReporting\n" \
-		"AdaptiveShadowTesting\nOutputs=v,l\n" \
+		"AdaptiveShadowTesting\nOutputFormats=f,c\nOutputs=v,l\n" \
 		"OutputCS=RGB,XYZ,prims,spec\n"
 
 void
@@ -86,9 +86,7 @@ main(int  argc, char  *argv[])
 				goto badopt
 #define	 check_bool(olen,var)		switch (argv[i][olen]) { \
 				case '\0': var = !var; break; \
-				case 'y': case 'Y': case 't': case 'T': \
 				case '+': case '1': var = 1; break; \
-				case 'n': case 'N': case 'f': case 'F': \
 				case '-': case '0': var = 0; break; \
 				default: goto badopt; }
 	RGBPRIMS  our_prims;		/* private output color primitives */

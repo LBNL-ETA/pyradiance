@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RcontribSimulManager.cpp,v 2.11 2025/01/02 16:16:49 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  *  RcontribSimulManager.cpp
@@ -52,30 +52,13 @@ struct RowAssignment {
 	uint32			ac;		// accumulation count
 };
 
-// Get format identifier
-const char *
-formstr(int f)
-{
-	switch (f) {
-	case 'a': return("ascii");
-	case 'f': return("float");
-	case 'd': return("double");
-	case 'c': return(NCSAMP==3 ? COLRFMT : SPECFMT);
-	}
-	return("unknown");
-}
+static const char	ROW_DONE[] = "ROW FINISHED\n";
 
-// Our default data share function
-RdataShare *
-defDataShare(const char *name, RCOutputOp op, size_t siz)
-{
-	return new RdataShareMap(name, RSDOflags[op], siz);
-}
-
-// Allocate rcontrib accumulator
-RcontribMod *
+// allocate rcontrib accumulator
+static RcontribMod *
 NewRcMod(const char *prms, const char *binexpr, int ncbins)
 {
+	if (binexpr && !*binexpr) binexpr = NULL;
 	if (!prms) prms = "";
 	if ((ncbins > 1) & !binexpr) {
 		error(USER, "missing bin expression");
@@ -110,7 +93,7 @@ NewRcMod(const char *prms, const char *binexpr, int ncbins)
 	return mp;
 }
 
-// Free an RcontribMod
+// Free an RcontribMod (public for RcontribSimulManager constructor)
 void
 FreeRcMod(void *p)
 {
@@ -118,6 +101,63 @@ FreeRcMod(void *p)
 	EPNODE *	bep = (*(RcontribMod *)p).binv;
 	if (bep) epfree(bep, true);
 	efree(p);
+}
+
+// Get format identifier
+const char *
+formstr(int f)
+{
+	switch (f) {
+	case 'a': return("ascii");
+	case 'f': return("float");
+	case 'd': return("double");
+	case 'c': return(NCSAMP==3 ? COLRFMT : SPECFMT);
+	}
+	return("unknown");
+}
+
+// Standard file data share function
+RdataShare *
+fileDataShare(const char *name, RCOutputOp op, size_t siz)
+{
+	if (op == RCOrecover && access(name, R_OK|W_OK) < 0) {
+		sprintf(errmsg, "cannot recover from '%s'", name);
+		error(SYSTEM, errmsg);
+		return NULL;
+	}
+	RdataShare *	rds = new RdataShareFile(name, RSDOflags[op],
+						 siz*(op != RCOforce));
+						 
+	if (!rds || (op == RCOforce && rds->Resize(siz) < siz)) {
+		delete rds;
+		sprintf(errmsg, "cannot create %lu byte output file '%s'",
+					(unsigned long)siz, name);
+		error(SYSTEM, errmsg);
+		return NULL;
+	}
+	return rds;
+}
+
+// Memory-mapped data share function
+RdataShare *
+mapDataShare(const char *name, RCOutputOp op, size_t siz)
+{
+	if (op == RCOrecover && access(name, R_OK|W_OK) < 0) {
+		sprintf(errmsg, "cannot recover from '%s'", name);
+		error(SYSTEM, errmsg);
+		return NULL;
+	}
+	RdataShare *	rds = new RdataShareMap(name, RSDOflags[op],
+						 siz*(op != RCOforce));
+
+	if (!rds || (op == RCOforce && rds->Resize(siz) < siz)) {
+		delete rds;
+		sprintf(errmsg, "cannot create %lu byte output map '%s'",
+					(unsigned long)siz, name);
+		error(SYSTEM, errmsg);
+		return NULL;
+	}
+	return rds;
 }
 
 // Set output format ('f', 'd', or 'c')
@@ -151,19 +191,30 @@ RcontribSimulManager::SetDataFormat(int ty)
 int
 RcontribSimulManager::RctCall(RAY *r, void *cd)
 {
-	if (!r->ro || r->ro->omod == OVOID)	// hit nothing?
-		return 0;
-						// shadow ray not on source?
-	if (r->rsrc >= 0 && source[r->rsrc].so != r->ro)
-		return 0;
+	int	i;
 
-	const char *		mname = objptr(r->ro->omod)->oname;
+	if (!r->ro || (i = r->ro->omod) == OVOID)
+		return 0;		// hit nothing
+
+	if (r->rsrc >= 0 && source[r->rsrc].so != r->ro)
+		return 0;		// shadow ray not on source
+
+	const char *		mname = objptr(i)->oname;
 	RcontribSimulManager *	rcp = (RcontribSimulManager *)cd;
 	RcontribMod *		mp = (RcontribMod *)lu_find(&rcp->modLUT,mname)->data;
 	if (!mp)
 		return 0;		// not in our modifier list
 
-	int			bi = 0;	// get bin index
+	if (rcp->HasFlag(RCcontrib)) {	// pre-emptive check for zero
+		for (i = NCSAMP; i--; )
+			if (r->rcoef[i]*r->rcol[i] > FTINY)
+				break;
+		if (i < 0)
+			return 0;	// zero contribution
+	} else if (sintens(r->rcoef) <= FTINY)
+		return 0;		// zero coefficient
+
+	int	bi = 0;			// get bin index
 	if (mp->binv) {
 		worldfunc(RCCONTEXT, r);
 		set_eparams(mp->params);
@@ -183,7 +234,7 @@ RcontribSimulManager::RctCall(RAY *r, void *cd)
 	if (rcp->HasFlag(RCcontrib))
 		smultscolor(contr, r->rcol);	// -> value contribution
 
-	for (int i = 0; i < NCSAMP; i++)
+	for (i = 0; i < NCSAMP; i++)
 		*dvp++ += contr[i];		// accumulate color/spectrum
 	return 1;
 }
@@ -213,6 +264,10 @@ RcontribSimulManager::AddModifier(const char *modn, const char *outspec,
 {
 	if (!modn | !outspec || !*modn | !*outspec) {
 		error(WARNING, "ignoring bad call to AddModifier()");
+		return false;
+	}
+	if (*outspec == '!') {
+		error(USER, "command output not supported by RcontribSimulManager");
 		return false;
 	}
 	if (!nChan) {				// initial call?
@@ -373,7 +428,7 @@ RcontribSimulManager::PrepOutput()
 			if (rd < 0)
 				return -1;
 			if (rd >= op->nRows) {
-				if (remWarnings >= 0) {
+				if (remWarnings > 0) {
 					sprintf(errmsg, "recovered output '%s' is complete",
 							op->GetName());
 					error(WARNING, --remWarnings ? errmsg : "etc...");
@@ -390,7 +445,7 @@ RcontribSimulManager::PrepOutput()
 	}
 	rowsDone.NewBitMap(outList->nRows);	// create row completion map
 	rowsDone.ClearBits(0, rInPos, true);
-	return rInPos;
+	return nrDone = rInPos;
 }
 
 // Create header in open write-only channel
@@ -425,7 +480,7 @@ RcontribOutput::NewHeader(const RcontribSimulManager *rcp)
 	sprintf(hdr+begData, "%s%d\n", NCOMPSTR, NCSAMP);
 	begData += strlen(hdr+begData);
 	if (NCSAMP > 3) {
-		sprintf(hdr+begData, "%s %f %f %f %f\n", WLSPLTSTR,
+		sprintf(hdr+begData, "%s %g %g %g %g\n", WLSPLTSTR,
 				WLPART[0], WLPART[1], WLPART[2], WLPART[3]);
 		begData += strlen(hdr+begData);
 	}
@@ -510,10 +565,9 @@ RcontribOutput::CheckHeader(const RcontribSimulManager *rcp)
 		return -1;
 	}
 						// check #columns
-	if (((cp = findArgs(hdr, "NCOLS=", begData)) && atoi(cp)*esiz != rowBytes) ||
-			!rcp->xres | (rowBytes > esiz)) {
-		sprintf(errmsg, "expected NCOLS=%d in '%s'",
-				int(rowBytes/esiz), GetName());
+	if ((cp = findArgs(hdr, "NCOLS=", begData)) ? (atoi(cp)*esiz != rowBytes)
+						    : (!rcp->xres | (rowBytes > esiz))) {
+		sprintf(errmsg, "expected NCOLS=%d in '%s'", int(rowBytes/esiz), GetName());
 		error(USER, errmsg);
 		return -1;
 	}
@@ -555,7 +609,7 @@ RcontribSimulManager::ResetRow(int r)
 			return false;
 
 	rowsDone.ClearBits(r, rInPos-r, false);
-	rInPos = r;
+	nrDone = rInPos = r;
 	return true;
 }
 
@@ -602,7 +656,7 @@ putModContrib(const LUENT *lp, void *p)
 		}
 		} break;
 	default:
-		error(CONSISTENCY, "unsupported output type in sendModContrib()");
+		error(CONSISTENCY, "unsupported output type in putModContrib()");
 		return -1;
 	}
 						// clear for next tally
@@ -621,8 +675,8 @@ RcontribSimulManager::ComputeRecord(const FVECT orig_direc[])
 		return 0;
 	}
 	if (nkids > 0) {			// in parent process?
-		int	k = GetChild();		// updates output rows
-		if (k < 0) return -1;		// can't really happen
+		int	k = GetChild(false);	// updates output rows
+		if (k < 0) return -1;		// someone died?
 		RowAssignment	rass;
 		rass.row = kidRow[k] = rInPos++;
 		rass.ac = accum;
@@ -667,35 +721,40 @@ RcontribSimulManager::GetChild(bool forceWait)
 		return -1;
 						// take inventory
 	int	pn, n = 0;
-	fd_set	writeset, errset;
-	FD_ZERO(&writeset); FD_ZERO(&errset);
+	fd_set	readset, errset;
+	FD_ZERO(&readset); FD_ZERO(&errset);
 	for (pn = nkids; pn--; ) {
 		if (kidRow[pn] < 0) {		// child already ready?
 			if (forceWait) continue;
 			return pn;		// good enough
 		}
-		FD_SET(kid[pn].w, &writeset);	// will check on this one
-		FD_SET(kid[pn].w, &errset);
-		if (kid[pn].w >= n)
-			n = kid[pn].w + 1;
+		FD_SET(kid[pn].r, &readset);	// will check on this one
+		FD_SET(kid[pn].r, &errset);
+		if (kid[pn].r >= n)
+			n = kid[pn].r + 1;
 	}
 	if (!n)					// every child is idle?
 		return -1;
 						// wait on "busy" child(ren)
-	while ((n = select(n, NULL, &writeset, &errset, NULL)) <= 0)
+	while ((n = select(n, &readset, NULL, &errset, NULL)) <= 0)
 		if (errno != EINTR) {
 			error(SYSTEM, "select call failed in GetChild()");
 			return -1;
 		}
+	char	buf[sizeof(ROW_DONE)] = "X";
 	pn = -1;				// get flags set by select
 	for (n = nkids; n--; )
 		if (kidRow[n] >= 0 &&
-				FD_ISSET(kid[n].w, &writeset) |
-				FD_ISSET(kid[n].w, &errset)) {
+				FD_ISSET(kid[n].r, &readset) |
+				FD_ISSET(kid[n].r, &errset)) {
+						// check for error
+			if (FD_ISSET(kid[n].r, &errset) ||
+					read(kid[n].r, buf, sizeof(ROW_DONE)) <= 0 ||
+					memcmp(buf, ROW_DONE, sizeof(ROW_DONE)))
+				return -1;
 						// update output row counts
-			if (!FD_ISSET(kid[n].w, &errset))
-				UpdateRowsDone(kidRow[n]);
-			kidRow[n] = -1;		// flag it available
+			UpdateRowsDone(kidRow[n]);
+			kidRow[n] = -1;		// flag child available
 			pn = n;
 		}
 	return pn;
@@ -709,11 +768,11 @@ RcontribSimulManager::UpdateRowsDone(int r)
 		error(WARNING, "redundant call to UpdateRowsDone()");
 		return false;
 	}
-	int	nDone = GetRowFinished();
-	if (nDone <= r)
+	GetRowFinished();
+	if (nrDone <= r)
 		return true;			// nothing to update, yet
 	for (RcontribOutput *op = outList; op; op = op->next)
-		if (!op->SetRowsDone(nDone))
+		if (!op->SetRowsDone(nrDone))
 			return false;
 	return true;				// up-to-date
 }
@@ -733,9 +792,10 @@ RcontribSimulManager::RunChild()
 			error(CONSISTENCY, "bad accumulator count in child");
 			exit(1);
 		}
-		if (rass.ac > accum)
-			vecList = (FVECT *)erealloc(vecList,
-						sizeof(FVECT)*2*rass.ac);
+		if (rass.ac > accum) {
+			efree(vecList);
+			vecList = (FVECT *)emalloc(sizeof(FVECT)*2*rass.ac);
+		}
 		accum = rass.ac;
 		rInPos = rass.row;
 
@@ -744,6 +804,9 @@ RcontribSimulManager::RunChild()
 			break;
 
 		if (ComputeRecord(vecList) <= 0)
+			exit(1);
+						// signal this row is done
+		if (write(1, ROW_DONE, sizeof(ROW_DONE)) != sizeof(ROW_DONE))
 			exit(1);
 	}
 	if (nr) {
@@ -770,12 +833,12 @@ RcontribSimulManager::StartKids(int n2go)
 	fflush(stdout);				// shouldn't use, anyway
 	while (nkids < n2go) {
 		kid[nkids] = sp_inactive;
-		kid[nkids].w = dup(1);
-		kid[nkids].flags |= PF_FILT_OUT;
 		int	rv = open_process(&kid[nkids], NULL);
 		if (!rv) {			// in child process?
-			while (nkids-- > 0)
+			while (nkids-- > 0) {
+				close(kid[nkids].r);
 				close(kid[nkids].w);
+			}
 			free(kid); free(kidRow);
 			kid = NULL; kidRow = NULL;
 			RunChild();		// should never return

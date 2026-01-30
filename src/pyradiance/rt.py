@@ -180,8 +180,7 @@ class Rcontrib:
         self.cmd = [str(BINPATH / "rcontrib")]
         self.octree = octree
         self.inp = inp
-        if nproc > 1 and sys.platform != "win32":
-            self.cmd.extend(["-n", str(nproc)])
+        self.cmd.extend(["-n", str(nproc)])
         if params is not None:
             self.cmd.extend(params)
         if None not in (inform, outform):

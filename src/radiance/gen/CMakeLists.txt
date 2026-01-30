@@ -8,7 +8,7 @@ target_link_libraries(genbox wfobj rtrad ${PLATFORM_MATH_LIB})
 add_executable(genmarble genmarble.c ../common/random.h)
 target_include_directories(genmarble
                            PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
-target_link_libraries(genmarble PRIVATE ${PLATFORM_MATH_LIB})
+target_link_libraries(genmarble PRIVATE rtrad ${PLATFORM_MATH_LIB})
 
 add_executable(gensky gensky.c sun.c)
 target_include_directories(gensky PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
@@ -99,7 +99,7 @@ target_link_libraries(genclock PRIVATE ${PLATFORM_MATH_LIB})
 add_executable(genbranch genbranch.c)
 target_include_directories(genbranch
                            PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../common)
-target_link_libraries(genbranch PRIVATE ${PLATFORM_MATH_LIB})
+target_link_libraries(genbranch PRIVATE rtrad ${PLATFORM_MATH_LIB})
 
 install(
   TARGETS genblinds

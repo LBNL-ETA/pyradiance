@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: calexpr.c,v 2.51 2024/09/16 17:31:14 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  *  Compute data values using expression parser
@@ -47,6 +47,7 @@ static double  ebotch(EPNODE *);
 unsigned int  esupport =		/* what to support */
 		E_VARIABLE | E_FUNCTION ;
 
+int  calexpr_errno;			/* used under Windows */
 int  eofc = 0;				/* optional end-of-file character */
 int  nextc;				/* lookahead character */
 
@@ -218,14 +219,15 @@ epflatten(			/* flatten hierarchies for '+', '*' */
 	EPNODE *epar
 )
 {
-    EPNODE	*ep;
+    EPNODE	*ep, *ep1;
+    double	combined;
 
-    if (epar->nkids < 0)	/* can't handle array allocations */
+    if (epar->nkids <= 0)	/* can't handle array allocations */
     	return;
 
     for (ep = epar->v.kid; ep != NULL; ep = ep->sibling)
-    	while (ep->type == epar->type && ep->nkids > 0) {
-	    EPNODE	*ep1 = ep->v.kid;
+    	while ((ep->type == epar->type) & (ep->nkids > 0)) {
+	    ep1 = ep->v.kid;
 	    while (ep1->sibling != NULL)
 	    	ep1 = ep1->sibling;
 	    ep1->sibling = ep->sibling;
@@ -234,6 +236,32 @@ epflatten(			/* flatten hierarchies for '+', '*' */
 	    *ep = *ep1;
 	    efree(ep1);		/* not epfree()! */
 	}
+    if (!(esupport & E_RCONST))
+    	return;
+    ep1 = NULL;			/* combine constants in sum/product */
+    for (ep = epar->v.kid; ep != NULL; ep = ep->sibling)
+	if (ep->type == NUM) {
+	    if (ep1 == NULL) combined = (ep1 = ep)->v.num;
+	    else if (epar->type == '+') combined += ep->v.num;
+	    else /* epar->type=='*' */ combined *= ep->v.num;
+	}
+    if (ep1 == NULL)
+	return;
+    ep1->v.num = combined;	/* assumes commutative property, also */
+    while (ep1->sibling != NULL)
+    	if (ep1->sibling->type == NUM) {
+	    ep = ep1->sibling;
+	    ep1->sibling = ep->sibling;
+	    epar->nkids--;
+	    efree(ep);		/* drop subsumed constant */
+        } else
+	    ep1 = ep1->sibling;
+
+    if (epar->nkids == 1) {	/* late constant expression? */
+    	ep = epar->v.kid;
+    	*epar = *ep;
+    	efree(ep);
+    }
 }
 
 
@@ -657,9 +685,14 @@ getE1(void)			/* E1 -> E1 ADDOP E2 */
 	escan();
 	addekid(ep2, ep1);
 	addekid(ep2, getE2());
-	if (esupport&E_RCONST &&
-			(ep1->type == NUM) & (ep1->sibling->type == NUM))
+	if (esupport&E_RCONST && ep1->sibling->type == NUM) {
+	    if (ep1->type == NUM) {
 		ep2 = rconst(ep2);
+	    } else if (ep2->type == '-') {
+	    	ep1->sibling->v.num *= -1;
+	    	ep2->type = '+';	/* associative&commutative */
+	    }
+	}
 	ep1 = ep2;
     }
     return(ep1);
@@ -680,26 +713,26 @@ getE2(void)			/* E2 -> E2 MULOP E3 */
 	addekid(ep2, ep1);
 	addekid(ep2, getE3());
 	if (esupport&E_RCONST) {
-		EPNODE	*ep3 = ep1->sibling;
-		if ((ep1->type == NUM) & (ep3->type == NUM)) {
-			ep2 = rconst(ep2);
-		} else if (ep3->type == NUM) {
-			if (ep2->type == '/') {
-				if (ep3->v.num == 0)
-					esyntax("divide by zero constant");
-				ep2->type = '*';	/* for speed */
-				ep3->v.num = 1./ep3->v.num;
-			} else if (ep3->v.num == 0) {
-				ep1->sibling = NULL;	/* (E2 * 0) */
-				epfree(ep2,1);
-				ep2 = ep3;
-			}
-		} else if (ep1->type == NUM && ep1->v.num == 0) {
-			epfree(ep3,1);		/* (0 * E3) or (0 / E3) */
-			ep1->sibling = NULL;
-			efree(ep2);
-			ep2 = ep1;
+	    EPNODE	*ep3 = ep1->sibling;
+	    if ((ep1->type == NUM) & (ep3->type == NUM)) {
+		ep2 = rconst(ep2);
+	    } else if (ep3->type == NUM) {
+		if (ep2->type == '/') {
+		    if (ep3->v.num == 0)
+			esyntax("divide by zero constant");
+		    ep2->type = '*';		/* for speed */
+		    ep3->v.num = 1./ep3->v.num;
+		} else if (ep3->v.num == 0) {
+		    ep1->sibling = NULL;	/* (E2 * 0) */
+		    epfree(ep2,1);
+		    ep2 = ep3;
 		}
+	    } else if (ep1->type == NUM && ep1->v.num == 0) {
+		epfree(ep3,1);			/* (0 * E3) or (0 / E3) */
+		ep1->sibling = NULL;
+		efree(ep2);
+		ep2 = ep1;
+	    }
 	}
 	ep1 = ep2;
     }
@@ -722,25 +755,25 @@ getE3(void)			/* E3 -> E4 ^ E3 */
 	addekid(ep2, ep1);
 	addekid(ep2, getE3());
 	if (esupport&E_RCONST) {
-		EPNODE	*ep3 = ep1->sibling;
-		if ((ep1->type == NUM) & (ep3->type == NUM)) {
-			ep2 = rconst(ep2);
-		} else if (ep1->type == NUM && ep1->v.num == 0) {
-			epfree(ep3,1);		/* (0 ^ E3) */
-			ep1->sibling = NULL;
-			efree(ep2);
-			ep2 = ep1;
-		} else if ((ep3->type == NUM && ep3->v.num == 0) |
+	    EPNODE	*ep3 = ep1->sibling;
+	    if ((ep1->type == NUM) & (ep3->type == NUM)) {
+		ep2 = rconst(ep2);
+	    } else if (ep1->type == NUM && ep1->v.num == 0) {
+		epfree(ep3,1);		/* (0 ^ E3) */
+		ep1->sibling = NULL;
+		efree(ep2);
+		ep2 = ep1;
+	    } else if ((ep3->type == NUM && ep3->v.num == 0) |
 				(ep1->type == NUM && ep1->v.num == 1)) {
-			epfree(ep2,0);		/* (E4 ^ 0) or (1 ^ E3) */
-			ep2->type = NUM;
-			ep2->v.num = 1;
-		} else if (ep3->type == NUM && ep3->v.num == 1) {
-			efree(ep3);	/* (E4 ^ 1) */
-			ep1->sibling = NULL;
-			efree(ep2);
-			ep2 = ep1;
-		}
+		epfree(ep2,0);		/* (E4 ^ 0) or (1 ^ E3) */
+		ep2->type = NUM;
+		ep2->v.num = 1;
+	    } else if (ep3->type == NUM && ep3->v.num == 1) {
+		efree(ep3);		/* (E4 ^ 1) */
+		ep1->sibling = NULL;
+		efree(ep2);
+		ep2 = ep1;
+	    }
 	}
 	return(ep2);
 }
@@ -756,8 +789,8 @@ getE4(void)			/* E4 -> ADDOP E5 */
 	escan();
 	ep2 = getE5();
 	if (ep2->type == NUM) {
-		ep2->v.num = -ep2->v.num;
-		return(ep2);
+	    ep2->v.num = -ep2->v.num;
+	    return(ep2);
 	}
 	if (ep2->type == UMINUS) {	/* don't generate -(-E5) */
 	    ep1 = ep2->v.kid;
@@ -788,62 +821,62 @@ getE5(void)			/* E5 -> (E1) */
 	EPNODE  *ep1, *ep2;
 
 	if (nextc == '(') {
-		escan();
-		ep1 = getE1();
-		if (nextc != ')')
-			esyntax("')' expected");
-		escan();
-		return(ep1);
+	    escan();
+	    ep1 = getE1();
+	    if (nextc != ')')
+		esyntax("')' expected");
+	    escan();
+	    return(ep1);
 	}
 	if (esupport&E_INCHAN && nextc == '$') {
-		escan();
-		ep1 = newnode();
-		ep1->type = CHAN;
-		ep1->v.chan = getinum();
-		return(ep1);
+	    escan();
+	    ep1 = newnode();
+	    ep1->type = CHAN;
+	    ep1->v.chan = getinum();
+	    return(ep1);
 	}
 	if (esupport&(E_VARIABLE|E_FUNCTION) &&
 			(isalpha(nextc) | (nextc == CNTXMARK))) {
-		nam = getname();
-		ep1 = NULL;
-		if ((esupport&(E_VARIABLE|E_FUNCTION)) == (E_VARIABLE|E_FUNCTION)
+	    nam = getname();
+	    ep1 = NULL;
+	    if ((esupport&(E_VARIABLE|E_FUNCTION)) == (E_VARIABLE|E_FUNCTION)
 				&& ecurfunc != NULL)
-			for (i = 1, ep2 = ecurfunc->v.kid->sibling;
-					ep2 != NULL; i++, ep2 = ep2->sibling)
-				if (!strcmp(ep2->v.name, nam)) {
-					ep1 = newnode();
-					ep1->type = ARG;
-					ep1->v.chan = i;
-					break;
-				}
-		if (ep1 == NULL) {
+		for (i = 1, ep2 = ecurfunc->v.kid->sibling;
+				ep2 != NULL; i++, ep2 = ep2->sibling)
+		    if (!strcmp(ep2->v.name, nam)) {
 			ep1 = newnode();
-			ep1->type = VAR;
-			ep1->v.ln = varinsert(nam);
-		}
-		if (esupport&E_FUNCTION && nextc == '(') {
-			ep2 = newnode();
-			ep2->type = FUNC;
-			addekid(ep2, ep1);
-			ep1 = ep2;
-			do {
-				escan();
-				addekid(ep1, getE1());
-			} while (nextc == ',');
-			if (nextc != ')')
-				esyntax("')' expected");
-			escan();
-		} else if (!(esupport&E_VARIABLE))
-			esyntax("'(' expected");
-		if (esupport&E_RCONST && isconstvar(ep1))
-			ep1 = rconst(ep1);
-		return(ep1);
+			ep1->type = ARG;
+			ep1->v.chan = i;
+			break;
+		    }
+	    if (ep1 == NULL) {
+		ep1 = newnode();
+		ep1->type = VAR;
+		ep1->v.ln = varinsert(nam);
+	    }
+	    if (esupport&E_FUNCTION && nextc == '(') {
+		ep2 = newnode();
+		ep2->type = FUNC;
+		addekid(ep2, ep1);
+		ep1 = ep2;
+		do {
+		    escan();
+		    addekid(ep1, getE1());
+		} while (nextc == ',');
+		if (nextc != ')')
+		    esyntax("')' expected");
+		escan();
+	    } else if (!(esupport&E_VARIABLE))
+		esyntax("'(' expected");
+	    if (esupport&E_RCONST && isconstvar(ep1))
+		ep1 = rconst(ep1);
+	    return(ep1);
 	}
 	if (isdecimal(nextc)) {
-		ep1 = newnode();
-		ep1->type = NUM;
-		ep1->v.num = getnum();
-		return(ep1);
+	    ep1 = newnode();
+	    ep1->type = NUM;
+	    ep1->v.num = getnum();
+	    return(ep1);
 	}
 	esyntax("unexpected character");
 	return NULL; /* pro forma return */

@@ -1,4 +1,4 @@
-/* RCSid $Id: RcontribSimulManager.h,v 2.10 2025/01/02 16:16:49 greg Exp $ */
+/* RCSid $Id$ */
 /*
  *  RcontribSimulManager.h
  *
@@ -66,7 +66,7 @@ public:
 				}
 				/// Update output row count
 	bool			SetRowsDone(int r) {
-					if (!rData | (0 >= r) | (r > nRows)) return false;
+					if (!rData | (0 > r) | (r > nRows)) return false;
 					char *	rbuf = (char *)rData->GetMemory(rowCountPos, 17, 0);
 					sprintf(rbuf, "%-16d", r);
 					rbuf[16] = '\n';	// replaces nul byte
@@ -108,11 +108,6 @@ public:
 
 typedef double		DCOLORV;	// color accumulator type
 
-/// Modifier channel for recording contributions (no constructor/destructor)
-struct RcontribMod;
-
-/// Allocate rcontrib accumulator
-extern RcontribMod *	NewRcMod(const char *prms = NULL, const char *binexpr = NULL, int ncbins = 1);
 /// Free an RcontribMod
 extern lut_free_t	FreeRcMod;
 
@@ -163,8 +158,12 @@ extern int	RSDOflags[];
 /// Call-back function type to create named data channel (freed using "delete" operator)
 typedef RdataShare *	RcreateDataShareF(const char *name, RCOutputOp op, size_t siz);
 
-/// Our default data share function
-extern RcreateDataShareF	defDataShare;
+/// Provided data share function
+extern RcreateDataShareF	fileDataShare, mapDataShare;
+
+#ifndef defDataShare
+#define defDataShare		mapDataShare	// default data share creator
+#endif
 
 /// Modifiable ray-tracing flags for rcontrib
 #define RCcontrib		(RTmask+1)	// compute contributions? (r.t. coefficients)
@@ -175,6 +174,7 @@ class RcontribSimulManager : protected RtraceSimulManager {
 protected:
 	static RayReportCall	RctCall;	// our callback for traced rays
 	ABitMap			rowsDone;	// bit mask of completed rows
+	mutable uint32		nrDone;		// current contiguous #rows done
 	uint32			rInPos;		// which row (record) is next on input?
 	uby8			nChan;		// NCSAMP setting for this calculation
 	char			dtyp;		// data type ('f', 'd', or 'c')
@@ -196,7 +196,7 @@ public:
 	uint32			accum;		// # rays to accumulate per record
 				RcontribSimulManager(const char *octn = NULL)
 						: RtraceSimulManager(NULL, NULL, octn) {
-					rInPos = 0;
+					nrDone = rInPos = 0;
 					nChan = 0;
 					dtyp = 'f';
 					dsiz = 0;
@@ -310,11 +310,11 @@ public:
 				}
 				/// Get # rows completed
 	int			GetRowFinished() const {
-					if (!nkids) return rInPos;
-					uint32	nDone = rowsDone.Find(0, false);
-					if (nDone == ABMend)
-						return rowsDone.Length();
-					return nDone;
+					if (!nkids) return nrDone = rInPos;
+					nrDone = rowsDone.Find(nrDone, false);
+					if (nrDone == ABMend)
+						nrDone = rowsDone.Length();
+					return nrDone;
 				}
 				/// Add a ray/bundle to compute next record (n=accum)
 	int			ComputeRecord(const FVECT orig_direc[]);
@@ -332,7 +332,7 @@ public:
 					if (rowsDone.Length()) {
 						SetThreadCount(1);
 						rowsDone.NewBitMap(0);
-						rInPos = 0;
+						nrDone = rInPos = 0;
 					}
 					lu_done(&modLUT);
 					delete outList; outList = NULL;

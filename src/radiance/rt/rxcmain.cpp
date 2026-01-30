@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxcmain.cpp,v 2.18 2025/06/05 18:26:46 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  *  rxcmain.c - main for rxcontrib ray contribution tracer
@@ -125,7 +125,7 @@ setformat(const char *fmt)
 	if (!fmt[2])
 		return;
 fmterr:
-	sprintf(errmsg, "Unsupported i/o format: -f%s", fmt);
+	sprintf(errmsg, "unsupported i/o format: -f%s", fmt);
 	error(USER, errmsg);
 }
 
@@ -164,9 +164,7 @@ main(int argc, char *argv[])
 				goto badopt
 #define	 check_bool(olen,var)		switch (argv[i][olen]) { \
 				case '\0': var = !var; break; \
-				case 'y': case 'Y': case 't': case 'T': \
 				case '+': case '1': var = 1; break; \
-				case 'n': case 'N': case 'f': case 'F': \
 				case '-': case '0': var = 0; break; \
 				default: goto badopt; }
 	int	force_open = 0;
@@ -286,11 +284,17 @@ main(int argc, char *argv[])
 			break;
 		case 'm':			/* modifier name */
 			check(2,"s");
-			myRCmanager.AddModifier(argv[++i], curout, prms, binval, bincnt);
+			if (!myRCmanager.AddModifier(argv[++i], curout, prms, binval, bincnt)) {
+				sprintf(errmsg, "bad settings for modifier '%s'", argv[i]);
+				error(USER, errmsg);
+			}
 			break;
 		case 'M':			/* file of modifier names */
 			check(2,"s");
-			myRCmanager.AddModFile(argv[++i], curout, prms, binval, bincnt);
+			if (!myRCmanager.AddModFile(argv[++i], curout, prms, binval, bincnt)) {
+				sprintf(errmsg, "bad settings for modifier file '%s'", argv[i]);
+				error(USER, errmsg);
+			}
 			break;
 		case 't':			/* reporting interval */
 			check(2,"i");
@@ -347,14 +351,16 @@ main(int argc, char *argv[])
 		myRCmanager.outOp = RCOnew;
 					// rval = # rows recovered
 	rval = myRCmanager.PrepOutput();
-					// check if recovered everything
-	if (rval >= myRCmanager.GetRowMax()) {
-		error(WARNING, "nothing left to compute");
-		quit(0);
-	}
-	rxcontrib(rval);		/* trace ray contributions (loop) */
 
-	quit(0);	/* exit clean */
+	if (rval < 0)			// PrepOutput() failure?
+		error(USER, "issue loading or creating output(s)");
+					// in case we recovered everything
+	if (rval >= myRCmanager.GetRowMax())
+		error(WARNING, "nothing left to compute");
+	else
+		rxcontrib(rval);	// trace ray contributions (loop)
+
+	quit(0);	// exit clean
 
 badopt:
 	fprintf(stderr,
@@ -459,11 +465,6 @@ getRayBundle(FVECT *orig_dir = NULL)
 		error(INTERNAL, "unsupported format in getRayBundle()");
 		return false;
 	}
-	n2go = myRCmanager.accum;	// normalize directions
-	while (n2go-- > 0) {
-		orig_dir -= 2;
-		normalize(orig_dir[1]);
-	}
 	return true;
 }
 
@@ -561,7 +562,8 @@ quit(
 	int  code
 )
 {
-	myRCmanager.FlushQueue();	// leave nothing in queue
+	if (!code)
+		myRCmanager.ClearModifiers();
 
 	exit(code);
 }

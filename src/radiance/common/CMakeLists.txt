@@ -119,7 +119,7 @@ if(UNIX)
   endif()
 else()
   list(APPEND STDOBJ win_process.c win_popen.c win_usleep.c)
-  list(APPEND SYSOBJ strnstr.c strlcpy.c strncasecmp.c timegm.c)
+  list(APPEND SYSOBJ strnstr.c strlcpy.c strncasecmp.c timegm.c random.c)
 endif()
 
 # Create libraries

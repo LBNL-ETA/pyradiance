@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: RdataShareMap.cpp,v 2.4 2025/03/20 17:59:10 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  *  RdataShareMap.cpp
@@ -141,7 +141,7 @@ RdataShareMap::Resize(size_t new_siz)
 		new_siz = sbuf.st_size;
 	}
 	if (new_siz > osiz) {		// need to extend & remap
-		int	fd = open(chName, mode&RDSread ? O_RDWR : O_WRONLY);
+		int	fd = open(chName, O_RDWR);
 		if (fd < 0) {
 			sprintf(errmsg, "cannot reopen '%s'", chName);
 			error(SYSTEM, errmsg);
@@ -165,7 +165,7 @@ RdataShareMap::Resize(size_t new_siz)
 			return osiz = 0;
 		}
 	} else if (truncate(chName, new_siz) < 0) {
-		sprintf(errmsg, "cannot truncate '%s'", chName);
+		sprintf(errmsg, "cannot resize '%s'", chName);
 		return 0;
 	}
 	return osiz = new_siz;

@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: genssky.c,v 2.9 2025/07/11 18:12:25 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /* Main function for generating spectral sky */
 /* Cloudy sky computed as weight average of clear and cie overcast sky */
@@ -284,7 +284,7 @@ write_rad
 )
 {
 	if (sundir[2] > 0) {
-		printf("void spectrum sunrad\n0\n0\n22 380 780 ");
+		printf("void spectrum sunrad\n0\n0\n22 390 770 ");
 		int i;
 		for (i = 0; i < NSSAMP; ++i) {
 			printf("%.3f ", sun_radiance[i]);
@@ -686,7 +686,7 @@ main
 			"res -n nproc -c ccover -l mie -L dirnorm_illum difhor_illum "
 			"-g grefl -f outpath\n",
 			argv[0]);
-		return 0;
+		return 1;
 	}
 
 	month = atoi(argv[1]);
@@ -701,10 +701,6 @@ main
 	}
 	got_meridian = cvthour(argv[3], &tsolar, &hour);
 
-	if (!compute_sundir(year, month, day, hour, tsolar, sundir)) {
-		fprintf(stderr, "Cannot compute solar angle\n");
-		exit(1);
-	}
 
 	for (i = 4; i < argc; i++) {
 		if (argv[i][0] == '-') {
@@ -778,6 +774,11 @@ main
 			(s_longitude - s_meridian) * 12 / PI);
 	}
 
+	if (!compute_sundir(year, month, day, hour, tsolar, sundir)) {
+		fprintf(stderr, "Cannot compute solar angle\n");
+		exit(1);
+	}
+
 	Atmosphere clear_atmos = init_atmos(aod, grefl);
 
 	int is_summer = (month >= SUMMER_START && month <= SUMMER_END);
@@ -790,7 +791,7 @@ main
 	DATARRAY *mie_dp = getdata(mie_path);
 	if (mie_dp == NULL) {
 		fprintf(stderr, "Error reading mie data\n");
-		return 0;
+		return 1;
 	}
 	clear_atmos.beta_m = mie_dp;
 
@@ -813,7 +814,7 @@ main
 		printf("# Pre-computing...\n");
 		if (!precompute(sorder, clear_paths, &clear_atmos, num_threads)) {
 			fprintf(stderr, "Pre-compute failed\n");
-			return 0;
+			return 1;
 		}
 	}
 
@@ -847,5 +848,5 @@ main
 	freedata(irrad_clear_dp);
 	freedata(scat1m_clear_dp);
 
-	return 1;
+	return 0;
 }

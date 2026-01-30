@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rcmain.c,v 2.43 2025/06/20 16:34:23 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  *  rcmain.c - main for rtcontrib ray contribution tracer
@@ -24,6 +24,9 @@ char	*sigerr[NSIG];			/* signal error messages */
 
 int	nproc = 1;			/* number of processes requested */
 int	nchild = 0;			/* number of children (-1 in child) */
+
+int	rc_worker = 0;			/* internal worker mode? */
+int	rc_worker_id = -1;		/* internal worker identifier */
 
 int	inpfmt = 'a';			/* input format */
 int	outfmt = 'a';			/* output format */
@@ -52,14 +55,6 @@ void	(*addobjnotify[])() = {ambnotify, NULL};
 
 char	RCCONTEXT[] = "RC.";		/* our special evaluation context */
 
-#if defined(_WIN32) || defined(_WIN64)
-#define RCONTRIB_FEATURES	"Accumulation\nSummation\nRecovery\n" \
-				"ImmediateIrradiance\n" \
-				"ProgressReporting\nDistanceLimiting\n" \
-				"InputFormats=a,f,d\nOutputFormats=a,f,d,c\n" \
-				"Outputs=V,W\n" \
-				"OutputCS=RGB,spec\n"
-#else
 #define RCONTRIB_FEATURES	"Multiprocessing\n" \
 				"Accumulation\nSummation\nRecovery\n" \
 				"ImmediateIrradiance\n" \
@@ -67,7 +62,6 @@ char	RCCONTEXT[] = "RC.";		/* our special evaluation context */
 				"InputFormats=a,f,d\nOutputFormats=a,f,d,c\n" \
 				"Outputs=V,W\n" \
 				"OutputCS=RGB,spec\n"
-#endif
 
 static void
 printdefaults(void)			/* print default values to stdout */
@@ -185,9 +179,7 @@ main(int argc, char *argv[])
 				goto badopt
 #define	 check_bool(olen,var)		switch (argv[i][olen]) { \
 				case '\0': var = !var; break; \
-				case 'y': case 'Y': case 't': case 'T': \
 				case '+': case '1': var = 1; break; \
-				case 'n': case 'N': case 'f': case 'F': \
 				case '-': case '0': var = 0; break; \
 				default: goto badopt; }
 	char	*curout = NULL;
@@ -243,6 +235,13 @@ main(int argc, char *argv[])
 			nproc = atoi(argv[++i]);
 			if (nproc <= 0)
 				error(USER, "bad number of processes");
+			break;
+		case 'W':			/* internal: spawned worker mode */
+			check(2, "i");
+			rc_worker = 1;
+			rc_worker_id = atoi(argv[++i]);
+			if (rc_worker_id < 0)
+				error(USER, "bad worker identifier");
 			break;
 		case 'V':			/* output contributions */
 			check_bool(2,contrib);

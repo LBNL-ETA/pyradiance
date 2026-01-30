@@ -1,5 +1,5 @@
 #ifndef lint
-static const char RCSid[] = "$Id: rfluxmtx.c,v 2.60 2025/06/03 21:31:51 greg Exp $";
+static const char RCSid[] = "$Id$";
 #endif
 /*
  * Calculate flux transfer matrix or matrices using rcontrib
@@ -22,7 +22,10 @@ static const char RCSid[] = "$Id: rfluxmtx.c,v 2.60 2025/06/03 21:31:51 greg Exp
 #define MAXRCARG	10000
 #endif
 
-int		verbose = 0;		/* verbose mode (< 0 no warnings) */
+#define		NOWARN		1
+#define		VERBO		2
+
+int		verbose = 0;		/* verbose/warning mode */
 
 char		*rcarg[MAXRCARG+1] = {"rcontrib", "-fo+"};
 int		nrcargs = 2;
@@ -41,8 +44,9 @@ char		*khalffn = "klems_half.cal";
 char		*kquarterfn = "klems_quarter.cal";
 char		*ciefn = "cieskyscan.cal";
 
+char		*binjitter = NULL;
 					/* string indicating parameters */
-const char	PARAMSTART[] = "@rfluxmtx";
+#define	PARAMSTART	"@rfluxmtx"
 
 				/* surface type IDs */
 #define ST_NONE		0
@@ -96,7 +100,7 @@ SURFSAMP	*orig_in_surf[4] = {
 	};
 
 /* Clear parameter set */
-static void
+void
 clear_params(PARAMS *p, int reset_only)
 {
 	while (p->slist != NULL) {
@@ -107,6 +111,7 @@ clear_params(PARAMS *p, int reset_only)
 		free(sdel);
 	}
 	if (reset_only) {
+		p->slist = NULL;
 		p->nsurfs = 0;
 		memset(p->nrm, 0, sizeof(FVECT));
 		memset(p->vup, 0, sizeof(FVECT));
@@ -117,7 +122,7 @@ clear_params(PARAMS *p, int reset_only)
 }
 
 /* Get surface type from name */
-static int
+int
 surf_type(const char *otype)
 {
 	if (!strcmp(otype, "polygon"))
@@ -130,7 +135,7 @@ surf_type(const char *otype)
 }
 
 /* Add arguments to oconv command */
-static char *
+char *
 oconv_command(int ac, char *av[])
 {
 	static char	oconvbuf[2048] = "!oconv -f ";
@@ -139,7 +144,7 @@ oconv_command(int ac, char *av[])
 	
 	if (ac-- <= 0)
 		return(NULL);
-	if (verbose < 0) {	/* turn off warnings */
+	if (verbose & NOWARN) {	/* warnings off? */
 		strcpy(cp, "-w ");
 		cp += 3;
 	}
@@ -180,7 +185,7 @@ overrun:
 #if defined(_WIN32) || defined(_WIN64)
 
 /* Open a pipe to/from a command given as an argument list */
-static FILE *
+FILE *
 popen_arglist(char *av[], char *mode)
 {
 	char	cmd[10240];
@@ -190,7 +195,7 @@ popen_arglist(char *av[], char *mode)
 		fputs(": command line too long in popen_arglist()\n", stderr);
 		return(NULL);
 	}
-	if (verbose > 0)
+	if (verbose & VERBO)
 		fprintf(stderr, "%s: opening pipe %s: %s\n",
 				progname, (*mode=='w') ? "to" : "from", cmd);
 	return(popen(cmd, mode));
@@ -199,7 +204,7 @@ popen_arglist(char *av[], char *mode)
 #define	pclose_al	pclose
 
 /* Execute system command (Windows version) */
-static int
+int
 my_exec(char *av[])
 {
 	char	cmd[10240];
@@ -209,7 +214,7 @@ my_exec(char *av[])
 		fputs(": command line too long in my_exec()\n", stderr);
 		return(1);
 	}
-	if (verbose > 0)
+	if (verbose & VERBO)
 		fprintf(stderr, "%s: running: %s\n", progname, cmd);
 	return(system(cmd));
 }
@@ -219,7 +224,7 @@ my_exec(char *av[])
 static SUBPROC	rt_proc = SP_INACTIVE;	/* we only support one of these */
 
 /* Open a pipe to a command using an argument list */
-static FILE *
+FILE *
 popen_arglist(char *av[], char *mode)
 {
 	int	fd;
@@ -228,7 +233,7 @@ popen_arglist(char *av[], char *mode)
 		fprintf(stderr, "%s: only one i/o pipe at a time!\n", progname);
 		return(NULL);
 	}
-	if (verbose > 0) {
+	if (verbose & VERBO) {
 		char	cmd[4096];
 		if (!convert_commandline(cmd, sizeof(cmd), av))
 			strcpy(cmd, "COMMAND TOO LONG TO SHOW");
@@ -250,7 +255,7 @@ popen_arglist(char *av[], char *mode)
 }
 
 /* Close command pipe (returns -1 on error to match pclose) */
-static int
+int
 pclose_al(FILE *fp)
 {
 	int	prob = (fclose(fp) == EOF);
@@ -264,7 +269,7 @@ pclose_al(FILE *fp)
 }
 
 /* Execute system command in our stead (Unix version) */
-static int
+int
 my_exec(char *av[])
 {
 	char	*compath;
@@ -273,7 +278,7 @@ my_exec(char *av[])
 		fprintf(stderr, "%s: cannot locate %s\n", progname, av[0]);
 		return(1);
 	}
-	if (verbose > 0) {
+	if (verbose & VERBO) {
 		char	cmd[4096];
 		if (!convert_commandline(cmd, sizeof(cmd), av))
 			strcpy(cmd, "COMMAND TOO LONG TO SHOW");
@@ -287,7 +292,7 @@ my_exec(char *av[])
 #endif
 
 /* Get normalized direction vector from string specification */
-static int
+int
 get_direction(FVECT dv, const char *s)
 {
 	int	sign = 1;
@@ -327,7 +332,7 @@ nextchar:
 }
 
 /* Parse program parameters (directives) */
-static int
+int
 parse_params(PARAMS *p, char *pargs)
 {
 	char	*cp = pargs;
@@ -400,13 +405,25 @@ parse_params(PARAMS *p, char *pargs)
 		}
 		break;
 	}
-	fprintf(stderr, "%s: bad parameter string: %s", progname, pargs);
+	fprintf(stderr, "%s: bad parameter string:%s", progname, pargs);
 	exit(1);
 	return(-1);	/* pro forma return */
 }
 
+/* Append bin jitter to the parameter string */
+int
+addbinjitter(char *s)
+{
+	if (binjitter == NULL)
+		return(0);
+	s += strlen(s);
+	strcpy(s, ",JTR=");
+	strcpy(s+5, binjitter);
+	return(1);
+}
+
 /* Add receiver arguments (directives) corresponding to the current modifier */
-static void
+void
 finish_receiver(void)
 {
 	char	sbuf[256];
@@ -446,9 +463,12 @@ finish_receiver(void)
 	}
 					/* determine sample type/bin */
 	if ((tolower(curparams.hemis[0]) == 'u') | (curparams.hemis[0] == '1')) {
-		sprintf(sbuf, "if(-Dx*%g-Dy*%g-Dz*%g,0,-1)",
-			curparams.nrm[0], curparams.nrm[1], curparams.nrm[2]);
-		binv = savqstr(sbuf);
+		if (curparams.slist->styp != ST_SOURCE) {
+			sprintf(sbuf, "if(-Dx*%g-Dy*%g-Dz*%g,0,-1)",
+				curparams.nrm[0], curparams.nrm[1], curparams.nrm[2]);
+			binv = savqstr(sbuf);
+		} else
+			binv = "0";
 		nbins = "1";		/* uniform sampling -- one bin */
 		uniform = 1;
 	} else if (tolower(curparams.hemis[0]) == 's' &&
@@ -465,6 +485,7 @@ finish_receiver(void)
 			curparams.nrm[0], curparams.nrm[1], curparams.nrm[2],
 			curparams.vup[0], curparams.vup[1], curparams.vup[2],
 			curparams.sign);
+		addbinjitter(sbuf);
 		params = savqstr(sbuf);
 		binv = "scbin";
 		nbins = "SCdim*SCdim";
@@ -476,6 +497,7 @@ finish_receiver(void)
 			curparams.nrm[0], curparams.nrm[1], curparams.nrm[2],
 			curparams.vup[0], curparams.vup[1], curparams.vup[2],
 			curparams.sign);
+		addbinjitter(sbuf);
 		params = savqstr(sbuf);
 		binv = "rbin";
 		nbins = "Nrbins";
@@ -504,6 +526,8 @@ finish_receiver(void)
 			curparams.nrm[0], curparams.nrm[1], curparams.nrm[2],
 			curparams.vup[0], curparams.vup[1], curparams.vup[2],
 			curparams.sign);
+		addbinjitter(sbuf);
+		params = savqstr(sbuf);
 		binv = "cbin";
 		nbins = "Ncbins";
 	} else {
@@ -513,6 +537,7 @@ finish_receiver(void)
 	}
 	if (tolower(curparams.hemis[0]) == 'k') {
 		sprintf(sbuf, "RHS=%c1", curparams.sign);
+		addbinjitter(sbuf);
 		params = savqstr(sbuf);
 	}
 	if (!uniform) {
@@ -557,7 +582,7 @@ finish_receiver(void)
 }
 
 /* Make randomly oriented tangent plane axes for given normal direction */
-static void
+void
 make_axes(FVECT uva[2], const FVECT nrm)
 {
 	int	i;
@@ -571,7 +596,7 @@ make_axes(FVECT uva[2], const FVECT nrm)
 }
 
 /* Illegal sender surfaces end up here */
-static int
+int
 ssamp_bad(FVECT orig, SURF *sp, double x)
 {
 	fprintf(stderr, "%s: illegal sender surface '%s'\n",
@@ -580,7 +605,7 @@ ssamp_bad(FVECT orig, SURF *sp, double x)
 }
 
 /* Generate origin on ring surface from uniform random variable */
-static int
+int
 ssamp_ring(FVECT orig, SURF *sp, double x)
 {
 	FVECT	*uva = (FVECT *)sp->priv;
@@ -609,7 +634,7 @@ ssamp_ring(FVECT orig, SURF *sp, double x)
 }
 
 /* Add triangle to polygon's list (call-back function) */
-static int
+int
 add_triangle(const Vert2_list *tp, int a, int b, int c)
 {
 	POLYTRIS	*ptp = (POLYTRIS *)tp->p;
@@ -622,7 +647,7 @@ add_triangle(const Vert2_list *tp, int a, int b, int c)
 }
 
 /* Generate origin on polygon surface from uniform random variable */
-static int
+int
 ssamp_poly(FVECT orig, SURF *sp, double x)
 {
 	POLYTRIS	*ptp = (POLYTRIS *)sp->priv;
@@ -695,7 +720,7 @@ memerr:
 }
 
 /* Compute sample origin based on projected areas of sender subsurfaces */
-static int
+int
 sample_origin(PARAMS *p, FVECT orig, const FVECT rdir, double x)
 {
 	static double	*projsa;
@@ -742,7 +767,7 @@ sample_origin(PARAMS *p, FVECT orig, const FVECT rdir, double x)
 }
 
 /* Uniform sample generator */
-static int
+int
 sample_uniform(PARAMS *p, int b, FILE *fp)
 {
 	int	n = sampcnt;
@@ -770,7 +795,7 @@ sample_uniform(PARAMS *p, int b, FILE *fp)
 }
 
 /* Shirly-Chiu sample generator */
-static int
+int
 sample_shirchiu(PARAMS *p, int b, FILE *fp)
 {
 	int	n = sampcnt;
@@ -799,7 +824,7 @@ sample_shirchiu(PARAMS *p, int b, FILE *fp)
 }
 
 /* Reinhart/Tregenza sample generator */
-static int
+int
 sample_reinhart(PARAMS *p, int b, FILE *fp)
 {
 #define T_NALT	7
@@ -851,7 +876,7 @@ sample_reinhart(PARAMS *p, int b, FILE *fp)
 }
 
 /* Klems sample generator */
-static int
+int
 sample_klems(PARAMS *p, int b, FILE *fp)
 {
 	static const char	bname[4][20] = {
@@ -900,57 +925,57 @@ sample_klems(PARAMS *p, int b, FILE *fp)
 }
 
 /* Prepare hemisphere basis sampler that will send rays to rcontrib */
-static int
-prepare_sampler(void)
+int
+prepare_sampler(PARAMS *p)
 {
-	if (curparams.slist == NULL) {	/* missing sample surface! */
+	if (p->slist == NULL) {	/* missing sample surface! */
 		fputs(progname, stderr);
 		fputs(": no sender surface!\n", stderr);
 		return(-1);
 	}
 					/* misplaced output file spec. */
-	if ((curparams.outfn != NULL) & (verbose >= 0))
+	if ((p->outfn != NULL) & !(verbose & NOWARN))
 		fprintf(stderr, "%s: warning - ignoring output file in sender ('%s')\n",
-				progname, curparams.outfn);
+				progname, p->outfn);
 					/* check/set basis hemisphere */
-	if (!curparams.hemis[0]) {
+	if (!p->hemis[0]) {
 		fputs(progname, stderr);
 		fputs(": missing sender sampling type!\n", stderr);
 		return(-1);
 	}
-	if (normalize(curparams.nrm) == 0) {
+	if (normalize(p->nrm) == 0) {
 		fputs(progname, stderr);
 		fputs(": undefined normal for sender sampling\n", stderr);
 		return(-1);
 	}
-	if (normalize(curparams.vup) == 0) {
-		if (fabs(curparams.nrm[2]) < .7)
-			curparams.vup[2] = 1;
+	if (normalize(p->vup) == 0) {
+		if (fabs(p->nrm[2]) < .7)
+			p->vup[2] = 1;
 		else
-			curparams.vup[1] = 1;
+			p->vup[1] = 1;
 	}
-	fcross(curparams.udir, curparams.vup, curparams.nrm);
-	if (normalize(curparams.udir) == 0) {
+	fcross(p->udir, p->vup, p->nrm);
+	if (normalize(p->udir) == 0) {
 		fputs(progname, stderr);
 		fputs(": up vector coincides with sender normal\n", stderr);
 		return(-1);
 	}
-	fcross(curparams.vdir, curparams.nrm, curparams.udir);
-	if (curparams.sign == '-') {	/* left-handed coordinate system? */
-		curparams.udir[0] *= -1.;
-		curparams.udir[1] *= -1.;
-		curparams.udir[2] *= -1.;
+	fcross(p->vdir, p->nrm, p->udir);
+	if (p->sign == '-') {	/* left-handed coordinate system? */
+		p->udir[0] *= -1.;
+		p->udir[1] *= -1.;
+		p->udir[2] *= -1.;
 	}
-	if ((tolower(curparams.hemis[0]) == 'u') | (curparams.hemis[0] == '1'))
-		curparams.sample_basis = sample_uniform;
-	else if (tolower(curparams.hemis[0]) == 's' &&
-				tolower(curparams.hemis[1]) == 'c')
-		curparams.sample_basis = sample_shirchiu;
-	else if ((tolower(curparams.hemis[0]) == 'r') |
-			(tolower(curparams.hemis[0]) == 't'))
-		curparams.sample_basis = sample_reinhart;
-	else if (tolower(curparams.hemis[0]) == 'k') {
-		switch (curparams.hemis[1]) {
+	if ((tolower(p->hemis[0]) == 'u') | (p->hemis[0] == '1'))
+		p->sample_basis = sample_uniform;
+	else if (tolower(p->hemis[0]) == 's' &&
+				tolower(p->hemis[1]) == 'c')
+		p->sample_basis = sample_shirchiu;
+	else if ((tolower(p->hemis[0]) == 'r') |
+			(tolower(p->hemis[0]) == 't'))
+		p->sample_basis = sample_reinhart;
+	else if (tolower(p->hemis[0]) == 'k') {
+		switch (p->hemis[1]) {
 		case '1':
 		case '2':
 		case '4':
@@ -958,33 +983,33 @@ prepare_sampler(void)
 		case 'f':
 		case 'F':
 		case '\0':
-			curparams.hemis[1] = '1';
+			p->hemis[1] = '1';
 			break;
 		case 'h':
 		case 'H':
-			curparams.hemis[1] = '2';
+			p->hemis[1] = '2';
 			break;
 		case 'q':
 		case 'Q':
-			curparams.hemis[1] = '4';
+			p->hemis[1] = '4';
 			break;
 		default:
 			goto unrecognized;
 		}
-		curparams.hemis[2] = '\0';
-		curparams.sample_basis = sample_klems;
+		p->hemis[2] = '\0';
+		p->sample_basis = sample_klems;
 	} else
 		goto unrecognized;
 					/* return number of bins */
-	return((*curparams.sample_basis)(&curparams,0,NULL));
+	return((*p->sample_basis)(p,0,NULL));
 unrecognized:
 	fprintf(stderr, "%s: unrecognized sender sampling: h=%s\n",
-			progname, curparams.hemis);
+			progname, p->hemis);
 	return(-1);
 }
 
 /* Compute normal and area for polygon */
-static int
+int
 finish_polygon(SURF *p)
 {
 	const int	nv = p->nfargs / 3;
@@ -1006,7 +1031,7 @@ finish_polygon(SURF *p)
 }
 
 /* Add a surface to our current parameters */
-static void
+void
 add_surface(int st, const char *oname, FILE *fp)
 {
 	SURF	*snew;
@@ -1065,7 +1090,7 @@ add_surface(int st, const char *oname, FILE *fp)
 		snew->area *= PI*snew->area;
 		break;
 	}
-	if ((snew->area <= FTINY*FTINY) & (verbose >= 0)) {
+	if ((snew->area <= FTINY*FTINY) & !(verbose & NOWARN)) {
 		fprintf(stderr, "%s: warning - zero area for surface '%s'\n",
 				progname, oname);
 		free(snew);
@@ -1087,7 +1112,7 @@ badnorm:
 }
 
 /* Parse a receiver object (look for modifiers to add to rcontrib command) */
-static int
+int
 add_recv_object(FILE *fp)
 {
 	int		st;
@@ -1125,7 +1150,7 @@ add_recv_object(FILE *fp)
 }
 
 /* Parse a sender object */
-static int
+int
 add_send_object(FILE *fp)
 {
 	int		st;
@@ -1169,7 +1194,7 @@ add_send_object(FILE *fp)
 }
 
 /* Load a Radiance scene using the given callback function for objects */
-static int
+int
 load_scene(const char *inspec, int (*ocb)(FILE *))
 {
 	int	rv = 0;
@@ -1233,7 +1258,7 @@ main(int argc, char *argv[])
 	char	*xrs=NULL, *yrs=NULL, *ldopt=NULL;
 	char	*iropt = NULL;
 	char	*sendfn;
-	char	sampcntbuf[32], nsbinbuf[32];
+	char	sampcntbuf[32], nsbinbuf[32], binjitbuf[32];
 	FILE	*rcfp;
 	int	nsbins;
 	int	a, i;
@@ -1255,13 +1280,14 @@ main(int argc, char *argv[])
 		na = 1;	
 		switch (argv[a][1]) {	/* !! Keep consistent !! */
 		case 'v':		/* verbose mode */
-			verbose = 1;
+			verbose ^= VERBO;
 			na = 0;
 			continue;
 		case 'f':		/* special case for -fo, -ff, etc. */
 			switch (argv[a][2]) {
 			case '\0':		/* cal file */
-				goto userr;
+				na = 2;
+				break;
 			case 'o':		/* force output */
 				goto userr;
 			case 'a':		/* output format */
@@ -1307,8 +1333,12 @@ main(int argc, char *argv[])
 			na = 0;
 			continue;
 		case 'w':		/* options without arguments */
-			if (!argv[a][2] || strchr("+1tTyY", argv[a][2]) == NULL)
-				verbose = -1;
+			if (!argv[a][2])
+				verbose ^= NOWARN;
+			else if (strchr("+1tTyY", argv[a][2]) != NULL)
+				verbose &= ~NOWARN;
+			else
+				verbose |= NOWARN;
 			break;
 		case 'V':
 		case 'u':
@@ -1319,9 +1349,15 @@ main(int argc, char *argv[])
 		case 's':
 		case 'o':
 		case 't':
+		case 'e':
 			na = 2;
 			break;
 		case 'b':		/* special case */
+			if (argv[a][2] == 'j') {
+				binjitter = argv[++a];
+				na = 0;
+				continue;
+			}
 			if (argv[a][2] != 'v') goto userr;
 			break;
 		case 'l':		/* special case */
@@ -1413,7 +1449,7 @@ main(int argc, char *argv[])
 	curmod[0] = '\0';
 	if (load_scene(sendfn, add_send_object) < 0)
 		return(1);
-	if ((nsbins = prepare_sampler()) <= 0)
+	if ((nsbins = prepare_sampler(&curparams)) <= 0)
 		return(1);
 	CHECKARGC(3);			/* add row count and octree */
 	rcarg[nrcargs++] = "-y";
@@ -1428,7 +1464,7 @@ main(int argc, char *argv[])
 #ifdef getc_unlocked
 	flockfile(rcfp);
 #endif
-	if (verbose > 0) {
+	if (verbose & VERBO) {
 		fprintf(stderr, "%s: sampling %d directions", progname, nsbins);
 		if (curparams.nsurfs > 1)
 			fprintf(stderr, " (%d elements)\n", curparams.nsurfs);
@@ -1441,8 +1477,8 @@ main(int argc, char *argv[])
 	return(pclose_al(rcfp) < 0);	/* all finished! */
 userr:
 	if (a < argc-2)
-		fprintf(stderr, "%s: unsupported option '%s'", progname, argv[a]);
-	fprintf(stderr, "Usage: %s [-v][rcontrib options] sender.rad receiver.rad [-i system.oct] [system.rad ..]\n",
+		fprintf(stderr, "%s: unsupported option '%s'\n", progname, argv[a]);
+	fprintf(stderr, "Usage: %s [-v][-bj frac][rcontrib options] sender.rad receiver.rad [-i system.oct] [system.rad ..]\n",
 				progname);
 	return(1);
 }

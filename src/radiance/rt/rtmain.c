@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rtmain.c,v 2.61 2025/06/20 16:34:23 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  *  rtmain.c - main for rtrace per-ray calculation program
@@ -93,9 +93,7 @@ main(int  argc, char  *argv[])
 				goto badopt
 #define	 check_bool(olen,var)		switch (argv[i][olen]) { \
 				case '\0': var = !var; break; \
-				case 'y': case 'Y': case 't': case 'T': \
 				case '+': case '1': var = 1; break; \
-				case 'n': case 'N': case 'f': case 'F': \
 				case '-': case '0': var = 0; break; \
 				default: goto badopt; }
 	extern char  *octname;
@@ -301,14 +299,20 @@ main(int  argc, char  *argv[])
 			case 'S':			/* scotopic response */
 				if (argv[i][3])
 					goto badopt;
-				sens_curve = scolor_scotopic;
 				out_scalefactor = WHTSCOTOPIC;
+				sens_curve = scolor_scotopic;
 				break;
 			case 'M':			/* melanopic response */
 				if (argv[i][3])
 					goto badopt;
-				sens_curve = scolor_melanopic;
 				out_scalefactor = WHTMELANOPIC;
+				sens_curve = scolor_melanopic;
+				break;
+			case 'A':			/* radiometric average */
+				if (argv[i][3])
+					goto badopt;
+				out_scalefactor = 1;
+				sens_curve = scolor_mean;
 				break;
 			default:
 				goto badopt;
@@ -418,9 +422,10 @@ main(int  argc, char  *argv[])
 		fputnow(stdout);
 		if (rval > 0)		/* saved from setrtoutput() call */
 			fputncomp(rval, stdout);
-		if (NCSAMP > 3)
-			fputwlsplit(WLPART, stdout);
-		if ((out_prims != stdprims) & (out_prims != NULL))
+		if (out_prims == NULL) {
+			if (sens_curve == NULL)
+				fputwlsplit(WLPART, stdout);
+		} else if (out_prims != stdprims)
 			fputprims(out_prims, stdout);
 		if ((outform == 'f') | (outform == 'd'))
 			fputendian(stdout);

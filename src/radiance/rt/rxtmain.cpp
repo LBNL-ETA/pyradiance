@@ -1,5 +1,5 @@
 #ifndef lint
-static const char	RCSid[] = "$Id: rxtmain.cpp,v 2.14 2025/06/05 18:26:46 greg Exp $";
+static const char	RCSid[] = "$Id$";
 #endif
 /*
  *  rxtmain.cpp - main for per-ray calculation program
@@ -54,6 +54,7 @@ static void printdefaults(void);
 #define RXTRACE_FEATURES	"IrradianceCalc\nMultiprocessing\nDistanceLimiting\n" \
 				"HessianAmbientCache\nAmbientAveraging\n" \
 				"AmbientValueSharing\nAdaptiveShadowTesting\n" \
+				"InputFormats=a,f,d\nOutputFormats=a,f,d,c\n" \
 				"Outputs=o,d,v,V,w,W,l,L,c,p,n,N,s,m,M,r,x,R,X,~\n" \
 				"OutputCS=RGB,XYZ,Y,S,M,prims,spec\n"
 
@@ -65,9 +66,7 @@ main(int  argc, char  *argv[])
 				goto badopt
 #define	 check_bool(olen,var)		switch (argv[i][olen]) { \
 				case '\0': var = !var; break; \
-				case 'y': case 'Y': case 't': case 'T': \
 				case '+': case '1': var = 1; break; \
-				case 'n': case 'N': case 'f': case 'F': \
 				case '-': case '0': var = 0; break; \
 				default: goto badopt; }
 	char  **tralp = NULL;
@@ -264,20 +263,26 @@ main(int  argc, char  *argv[])
 			case 'Y':			/* photopic response */
 				if (argv[i][3])
 					goto badopt;
-				sens_curve = scolor_photopic;
 				out_scalefactor = WHTEFFICACY;
+				sens_curve = scolor_photopic;
 				break;
 			case 'S':			/* scotopic response */
 				if (argv[i][3])
 					goto badopt;
-				sens_curve = scolor_scotopic;
 				out_scalefactor = WHTSCOTOPIC;
+				sens_curve = scolor_scotopic;
 				break;
 			case 'M':			/* melanopic response */
 				if (argv[i][3])
 					goto badopt;
-				sens_curve = scolor_melanopic;
 				out_scalefactor = WHTMELANOPIC;
+				sens_curve = scolor_melanopic;
+				break;
+			case 'A':			/* radiometric average */
+				if (argv[i][3])
+					goto badopt;
+				out_scalefactor = 1;
+				sens_curve = scolor_mean;
 				break;
 			default:
 				goto badopt;
@@ -361,9 +366,10 @@ main(int  argc, char  *argv[])
 		fputnow(stdout);
 		if (rval > 0)		/* saved from setrtoutput() call */
 			fputncomp(rval, stdout);
-		if (NCSAMP > 3)
-			fputwlsplit(WLPART, stdout);
-		if ((out_prims != stdprims) & (out_prims != NULL))
+		if (out_prims == NULL) {
+			if (sens_curve == NULL)
+				fputwlsplit(WLPART, stdout);
+		} else if (out_prims != stdprims)
 			fputprims(out_prims, stdout);
 		if ((outform == 'f') | (outform == 'd'))
 			fputendian(stdout);
