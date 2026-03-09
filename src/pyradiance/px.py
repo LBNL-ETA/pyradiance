@@ -550,7 +550,9 @@ def pextrem(
     Args:
         pic: Path or bytes to input picture file.
         original: If True, use original exposure values (before exposure compensation).
-        original_xyze: If True, convert XYZE to luminance before finding extrema.
+        original_xyze: If True, convert XYZE to luminance before finding extrema. 
+        If the input is XYZE, then the second channel is in candelas/meterˆ2, 
+        unless original_xyze is specified, when watts/sr/meterˆ2 are always reported.
     
     Returns:
         Two tuples: ((xmin, ymin, rmin, gmin, bmin), (xmax, ymax, rmax, gmax, bmax))

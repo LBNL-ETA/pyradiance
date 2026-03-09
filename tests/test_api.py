@@ -322,7 +322,7 @@ class TestPyradianceCLI(unittest.TestCase):
         # based on original version, max_pt = (209,272, 742.0,718.0, 646.0)
         self.assertEqual(max_pt, (209, 272, 742.0, 718.0, 646.0))
         
-        # Test with bytes input
+        # Test with bytes input instead of file path
         with open(hdr, 'rb') as f:
             hdr_bytes = f.read()
         min_pt2, max_pt2 = pr.pextrem(hdr_bytes)
