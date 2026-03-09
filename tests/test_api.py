@@ -349,8 +349,6 @@ class TestPyradianceCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(out))
         os.remove(out)
 
-
-
     def test_genbox(self):
         out_bytes = pr.genbox("mat", "name", 1, 2, 3)
         out_str = out_bytes.decode()
