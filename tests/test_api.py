@@ -328,6 +328,47 @@ class TestPyradianceCLI(unittest.TestCase):
         self.assertTrue(os.path.exists(out))
         os.remove(out)
 
+    def test_pextrem(self):
+        """Test the pextrem function."""
+        hdr = os.path.join(self.resources_dir, "test.hdr")
+        min_pt, max_pt = pr.pextrem(hdr)
+        
+        # Verify we get two tuples
+        self.assertIsInstance(min_pt, tuple)
+        self.assertIsInstance(max_pt, tuple)
+        
+        # Both tuples should have 5 elements (x, y, r, g, b)
+        self.assertEqual(len(min_pt), 5)
+        self.assertEqual(len(max_pt), 5)
+        
+        # First two elements should be integers (coordinates)
+        self.assertIsInstance(min_pt[0], int)
+        self.assertIsInstance(min_pt[1], int)
+        self.assertIsInstance(max_pt[0], int)
+        self.assertIsInstance(max_pt[1], int)
+        
+        # Last three elements should be floats (RGB values)
+        for i in range(2, 5):
+            self.assertIsInstance(min_pt[i], float)
+            self.assertIsInstance(max_pt[i], float)
+        
+        # RGB values should be non-negative
+        for i in range(2, 5):
+            self.assertGreaterEqual(min_pt[i], 0)
+            self.assertGreaterEqual(max_pt[i], 0)
+        
+        # Max values should be greater than or equal to min values (for at least one channel)
+        max_brightness = max(max_pt[2], max_pt[3], max_pt[4])
+        min_brightness = max(min_pt[2], min_pt[3], min_pt[4])
+        self.assertGreaterEqual(max_brightness, min_brightness)
+        
+        # Test with bytes input
+        with open(hdr, 'rb') as f:
+            hdr_bytes = f.read()
+        min_pt2, max_pt2 = pr.pextrem(hdr_bytes)
+        self.assertIsInstance(min_pt2, tuple)
+        self.assertIsInstance(max_pt2, tuple)
+
     def test_genbox(self):
         out_bytes = pr.genbox("mat", "name", 1, 2, 3)
         out_str = out_bytes.decode()

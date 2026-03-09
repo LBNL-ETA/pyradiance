@@ -537,6 +537,74 @@ def pvaluer(
 
 
 @handle_called_process_error
+def pextrem(
+    pic: str | Path | bytes,
+    original: bool = False,
+    original_xyze: bool = False,
+) -> tuple[tuple[int, int, float, float, float], tuple[int, int, float, float, float]]:
+    """Find extrema points in a Radiance picture.
+    
+    Finds the minimum and maximum brightness pixels in a Radiance HDR picture
+    (RGBE, XYZE, or HyperSpectral format).
+    
+    Args:
+        pic: Path or bytes to input picture file.
+        original: If True, use original exposure values (before exposure compensation).
+        original_xyze: If True, convert XYZE to luminance before finding extrema.
+    
+    Returns:
+        Two tuples: ((xmin, ymin, rmin, gmin, bmin), (xmax, ymax, rmax, gmax, bmax))
+        where coordinates are integers and RGB values are floats representing the
+        darkest and brightest pixels in the image.
+    
+    Examples:
+        >>> min_pt, max_pt = pextrem("scene.hdr")
+        >>> print(f"Darkest pixel at ({min_pt[0]}, {min_pt[1]}): RGB={min_pt[2:]}")
+        >>> print(f"Brightest pixel at ({max_pt[0]}, {max_pt[1]}): RGB={max_pt[2:]}")
+    """
+    cmd = [str(BINPATH / "pextrem")]
+    stdin = None
+    
+    if original:
+        cmd.append("-o")
+    elif original_xyze:
+        cmd.append("-O")
+    
+    if isinstance(pic, (Path, str)):
+        cmd.append(str(pic))
+    elif isinstance(pic, bytes):
+        stdin = pic
+    else:
+        raise TypeError("pic must be a Path, str, or bytes")
+    
+    result = sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE)
+    output = result.stdout.decode('latin1').strip()
+    
+    # Parse the output: two lines with format "x y  R G B"
+    lines = output.split('\n')
+    if len(lines) != 2:
+        raise ValueError(f"Unexpected pextrem output format: expected 2 lines, got {len(lines)}")
+    
+    # Parse minimum values (first line)
+    min_parts = lines[0].split()
+    xmin = int(min_parts[0])
+    ymin = int(min_parts[1])
+    rmin = float(min_parts[2])
+    gmin = float(min_parts[3])
+    bmin = float(min_parts[4])
+    
+    # Parse maximum values (second line)
+    max_parts = lines[1].split()
+    xmax = int(max_parts[0])
+    ymax = int(max_parts[1])
+    rmax = float(max_parts[2])
+    gmax = float(max_parts[3])
+    bmax = float(max_parts[4])
+    
+    return ((xmin, ymin, rmin, gmin, bmin), (xmax, ymax, rmax, gmax, bmax))
+
+
+@handle_called_process_error
 def ra_tiff(
     inp: str | Path | bytes,
     out: None | str = None,
