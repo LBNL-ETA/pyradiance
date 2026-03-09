@@ -329,6 +329,12 @@ class TestPyradianceCLI(unittest.TestCase):
         self.assertIsInstance(min_pt2, tuple)
         self.assertIsInstance(max_pt2, tuple)
 
+        # Test -original flag
+        min_pt3, max_pt3 = pr.pextrem(hdr, original=True)
+        self.assertEqual(min_pt3, (535, 2, 0.00832, 0.00396, 0.00401))
+        # based on original version, max_pt = (209,272, 742.0,718.0, 646.0)
+        self.assertEqual(max_pt3, (209, 272, 583.0, 564.0, 508.0))
+
     def test_rfluxmtx(self):
         """Test the rfluxmtx function."""
         receiver = os.path.join(self.resources_dir, "skyr4.rad")
