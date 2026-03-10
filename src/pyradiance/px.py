@@ -4,9 +4,18 @@ Radiance picture processing utilities.
 
 import subprocess as sp
 from pathlib import Path
-from typing import Sequence
+from typing import NamedTuple, Sequence
 
 from .anci import BINPATH, handle_called_process_error
+
+
+class xyRGB(NamedTuple):
+    """Represents an extrema point from pextrem with pixel coordinates and RGB values."""
+    x: int
+    y: int
+    R: float
+    G: float
+    B: float
 
 
 class Pcomb:
@@ -541,7 +550,7 @@ def pextrem(
     pic: str | Path | bytes,
     original: bool = False,
     original_xyze: bool = False,
-) -> tuple[tuple[int, int, float, float, float], tuple[int, int, float, float, float]]:
+) -> tuple[xyRGB, xyRGB]:
     """Find extrema points in a Radiance picture.
     
     Finds the minimum and maximum brightness pixels in a Radiance HDR picture
@@ -555,14 +564,15 @@ def pextrem(
         unless original_xyze is specified, when watts/sr/meterˆ2 are always reported.
     
     Returns:
-        Two tuples: ((xmin, ymin, rmin, gmin, bmin), (xmax, ymax, rmax, gmax, bmax))
-        where coordinates are integers and RGB values are floats representing the
-        darkest and brightest pixels in the image.
+        Two named tuples (min_xyRGB, max_xyRGB) with fields:
+        x, y (int): pixel coordinates
+        R, G, B (float): color channel values
+        Represents the darkest and brightest pixels in the image.
     
     Examples:
         >>> min_pt, max_pt = pextrem("scene.hdr")
-        >>> print(f"Darkest pixel at ({min_pt[0]}, {min_pt[1]}): RGB={min_pt[2:]}")
-        >>> print(f"Brightest pixel at ({max_pt[0]}, {max_pt[1]}): RGB={max_pt[2:]}")
+        >>> print(f"Darkest pixel at ({min_pt.x}, {min_pt.y}): RGB=({min_pt.R}, {min_pt.G}, {min_pt.B})")
+        >>> print(f"Brightest pixel at ({max_pt.x}, {max_pt.y}): RGB=({max_pt.R}, {max_pt.G}, {max_pt.B})")
     """
     cmd = [str(BINPATH / "pextrem")]
     stdin = None
@@ -589,21 +599,25 @@ def pextrem(
     
     # Parse minimum values (first line)
     min_parts = lines[0].split()
-    xmin = int(min_parts[0])
-    ymin = int(min_parts[1])
-    rmin = float(min_parts[2])
-    gmin = float(min_parts[3])
-    bmin = float(min_parts[4])
+    min_point = xyRGB(
+        x=int(min_parts[0]),
+        y=int(min_parts[1]),
+        R=float(min_parts[2]),
+        G=float(min_parts[3]),
+        B=float(min_parts[4])
+    )
     
     # Parse maximum values (second line)
     max_parts = lines[1].split()
-    xmax = int(max_parts[0])
-    ymax = int(max_parts[1])
-    rmax = float(max_parts[2])
-    gmax = float(max_parts[3])
-    bmax = float(max_parts[4])
+    max_point = xyRGB(
+        x=int(max_parts[0]),
+        y=int(max_parts[1]),
+        R=float(max_parts[2]),
+        G=float(max_parts[3]),
+        B=float(max_parts[4])
+    )
     
-    return ((xmin, ymin, rmin, gmin, bmin), (xmax, ymax, rmax, gmax, bmax))
+    return (min_point, max_point)
 
 
 @handle_called_process_error

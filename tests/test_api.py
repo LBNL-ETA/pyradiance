@@ -319,8 +319,21 @@ class TestPyradianceCLI(unittest.TestCase):
 
         # based on original version, min_pt = (535,2,0.0106,0.00504,0.0051)
         self.assertEqual(min_pt, (535, 2, 0.0106, 0.00504, 0.0051))
+        # Verify individual components of min_pt
+        self.assertEqual(min_pt.x, 535)
+        self.assertEqual(min_pt.y, 2)
+        self.assertEqual(min_pt.R, 0.0106)
+        self.assertEqual(min_pt.G, 0.00504)
+        self.assertEqual(min_pt.B, 0.0051)
+        
         # based on original version, max_pt = (209,272, 742.0,718.0, 646.0)
         self.assertEqual(max_pt, (209, 272, 742.0, 718.0, 646.0))
+        # Verify individual components of max_pt
+        self.assertEqual(max_pt.x, 209)
+        self.assertEqual(max_pt.y, 272)
+        self.assertEqual(max_pt.R, 742.0)
+        self.assertEqual(max_pt.G, 718.0)
+        self.assertEqual(max_pt.B, 646.0)
         
         # Test with bytes input instead of file path
         with open(hdr, 'rb') as f:
