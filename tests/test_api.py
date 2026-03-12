@@ -307,6 +307,46 @@ class TestPyradianceCLI(unittest.TestCase):
         os.remove(scene.octree)
         os.remove(scene._moctree)
         os.remove(f"{scene.sid}.amb")
+        
+    def test_pextrem(self):
+        """Test the pextrem function."""
+        hdr = os.path.join(self.resources_dir, "test.hdr")
+        min_pt, max_pt = pr.pextrem(hdr)
+        
+        # Verify we get two tuples
+        self.assertIsInstance(min_pt, tuple)
+        self.assertIsInstance(max_pt, tuple)
+
+        # based on original version, min_pt = (535,2,0.0106,0.00504,0.0051)
+        self.assertEqual(min_pt, (535, 2, 0.0106, 0.00504, 0.0051))
+        # Verify individual components of min_pt
+        self.assertEqual(min_pt.x, 535)
+        self.assertEqual(min_pt.y, 2)
+        self.assertEqual(min_pt.R, 0.0106)
+        self.assertEqual(min_pt.G, 0.00504)
+        self.assertEqual(min_pt.B, 0.0051)
+        
+        # based on original version, max_pt = (209,272, 742.0,718.0, 646.0)
+        self.assertEqual(max_pt, (209, 272, 742.0, 718.0, 646.0))
+        # Verify individual components of max_pt
+        self.assertEqual(max_pt.x, 209)
+        self.assertEqual(max_pt.y, 272)
+        self.assertEqual(max_pt.R, 742.0)
+        self.assertEqual(max_pt.G, 718.0)
+        self.assertEqual(max_pt.B, 646.0)
+        
+        # Test with bytes input instead of file path
+        with open(hdr, 'rb') as f:
+            hdr_bytes = f.read()
+        min_pt2, max_pt2 = pr.pextrem(hdr_bytes)
+        self.assertIsInstance(min_pt2, tuple)
+        self.assertIsInstance(max_pt2, tuple)
+
+        # Test -original flag
+        min_pt3, max_pt3 = pr.pextrem(hdr, original=True)
+        self.assertEqual(min_pt3, (535, 2, 0.00832, 0.00396, 0.00401))
+        # based on original version, max_pt = (209,272, 742.0,718.0, 646.0)
+        self.assertEqual(max_pt3, (209, 272, 583.0, 564.0, 508.0))
 
     def test_rfluxmtx(self):
         """Test the rfluxmtx function."""
