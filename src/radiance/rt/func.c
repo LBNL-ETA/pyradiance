@@ -7,6 +7,7 @@ static const char	RCSid[] = "$Id$";
 
 #include "copyright.h"
 
+#include  "platform.h"
 #include  "ray.h"
 #include  "paths.h"
 #include  "otypes.h"
@@ -33,7 +34,11 @@ static RAY  *fray = NULL;	/* current function ray */
 
 static char  rayinitcal[] = INITFILE;
 
-static double  l_erf(char *), l_erfc(char *), l_arg(char *);
+static double  l_erf(char *), l_erfc(char *), l_arg(char *),
+		l_source_corr(char *), l_source_angle(char *);
+
+static char	source_theta_nm[] = "source_theta";
+static char	source_phi_nm[] = "source_phi";
 
 
 void
@@ -56,6 +61,9 @@ initfunc(void)	/* initialize function evaluation */
 	funset("arg", 1, '=', l_arg);
 	funset("erf", 1, ':', l_erf);
 	funset("erfc", 1, ':', l_erfc);
+	funset("source_corr", 2, '=', l_source_corr);
+	funset(source_theta_nm, 1, '=', l_source_angle);
+	funset(source_phi_nm, 1, '=', l_source_angle);
 	setnoisefuncs();
 	setprismfuncs();
 	loadfunc(rayinitcal);
@@ -138,7 +146,7 @@ getfunc(	/* get function for this modifier */
 		calcontext(f->ctx = "");	/* "." means no file */
 	} else {
 		strcpy(sbuf,arg[ff]);		/* file name is context */
-		if (i > LCALSUF && !strcmp(sbuf+i-LCALSUF, CALSUF))
+		if (i > LCALSUF && !strcasecmp(sbuf+i-LCALSUF, CALSUF))
 			sbuf[i-LCALSUF] = '\0';	/* remove suffix */
 		calcontext(f->ctx = savestr(sbuf));
 		if (!vardefined(REFVNAME)) {	/* file loaded? */
@@ -295,8 +303,7 @@ l_arg(char *nm)			/* return nth real argument */
 	int  n;
 
 	if (fobj == NULL)
-		error(USER,
-			"bad call to arg(n) - illegal constant in .cal file?");
+		error(USER, "bad call to arg(n) - illegal constant in .cal file?");
 
 	n = argument(1) + .5;		/* round to integer */
 
@@ -322,6 +329,113 @@ static double
 l_erfc(char *nm)		/* cumulative error function */
 {
 	return(erfc(argument(1)));
+}
+
+
+static double
+l_source_corr(char *nm)		/* photometry correction */
+{
+#define rarg(i)	(fobj->oargs.farg[(i)-1])
+#define nrargs	(fobj->oargs.nfargs)
+#define Dx	chanvalue(1)	/* XXX make sure these are consistent */
+#define Dy	chanvalue(2)
+#define Dz	chanvalue(3)
+#define Px	chanvalue(7)
+#define Py	chanvalue(8)
+#define Pz	chanvalue(9)
+	double	adj_val = argument(1);
+	double	d, den, Ts;
+
+	if ((fray == NULL) | (fobj == NULL)) {
+		sprintf(errmsg,
+		    "bad call to %s() -- illegal constant in .cal file?", nm);
+		error(USER, errmsg);
+	}
+	if (nrargs > 1)		/* apply scaling adjustment if any */
+		adj_val *= rarg(1);
+	if (adj_val <= 0)	/* check for non-positive value */
+		return(0.0);
+				/* apply geometric correction */
+	switch((int)(argument(2)+.5)) {
+	case 0:			/* no geometric correction */
+		return(adj_val);
+	case 1:			/* flat emitter correction */
+		return( adj_val / fray->rod );
+	case 2:			/* box source correction */
+		if (nrargs < 4)
+			goto notenough;
+		return( adj_val /
+			(fabs(Dx)*rarg(3)*rarg(4) +
+			 fabs(Dy)*rarg(2)*rarg(4) +
+			 fabs(Dz)*rarg(2)*rarg(3)) );
+	case 3:			/* local box source correction */
+		if (nrargs < 4)
+			goto notenough;
+		Ts = chanvalue(25);	/* shadow distance */
+		d = fabs(Px - Dx*Ts) - rarg(2)*.5;
+		den = d*rarg(3)*rarg(4)*(d > 0);
+		d = fabs(Py - Dy*Ts) - rarg(3)*.5;
+		den += d*rarg(2)*rarg(4)*(d > 0);
+		d = fabs(Pz - Dz*Ts) - rarg(4)*.5;
+		den += d*rarg(2)*rarg(3)*(d > 0);
+		return( adj_val * Ts / den );
+	case 4:			/* cylindrical source correction */
+		if (nrargs < 3)
+			goto notenough;
+		d = Dz;
+		if (d >= 1.) d = 1.-FTINY;
+		den = rarg(2)*rarg(3)*sqrt(1. - d*d) +
+				.25*PI*rarg(2)*rarg(2)*fabs(d);
+		return( adj_val / den );
+	}
+	sprintf(errmsg, "illegal second argument to %s()", nm);
+	objerror(fobj, USER, errmsg);
+notenough:
+	objerror(fobj, USER, "missing real argument(s)");
+	return(0.0);	/* pro forma */
+#undef Pz
+#undef Py
+#undef Px
+#undef Dz
+#undef Dy
+#undef Dx
+#undef nrargs
+#undef rarg
+}
+
+
+static double
+l_source_angle(char *nm)	/* photometry angle */
+{
+	double	angle;
+
+	if ((fray == NULL) | (fobj == NULL)) {
+		sprintf(errmsg,
+		    "bad call to %s() -- illegal constant in .cal file?", nm);
+		error(USER, errmsg);
+	}
+	if (nm == source_theta_nm) {
+		double	Dz = chanvalue(3);
+		if (Dz >= 1.) return(0.);
+		if (Dz <= -1.) return(180.);
+		return(180./PI * acos(Dz));
+	}
+				/* else computing azimuth */
+	angle = 180./PI * atan2(-chanvalue(2), -chanvalue(1));
+	angle += 360.*(angle < 0);
+
+	switch ((int)(argument(1) + .5)) {
+	case 90:		/* quad symmetry */
+		angle -= 180.*(angle >= 180.);
+		return(angle < 90. ? angle : 180.-angle);
+	case 180:		/* bilateral symmetry */
+		return(angle < 180. ? angle : 360.-angle);
+	case 360:		/* no symmetry */
+		return(angle);
+	}
+	sprintf(errmsg, "bad argument to %s()", nm);
+	objerror(fobj, USER, errmsg);
+	return(0.0);	/* pro forma */
 }
 
 
