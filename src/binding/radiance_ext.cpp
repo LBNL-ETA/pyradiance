@@ -172,23 +172,6 @@ NB_MODULE(radiance_ext, m) {
       .def("load_octree", &RtraceSimulManager::LoadOctree)
       .def("set_thread_count", &RtraceSimulManager::SetThreadCount,
            nb::arg("nt") = 0)
-      /*.def(*/
-      /*    "enqueue_bundle_list",*/
-      /*    [](RtraceSimulManager &self, const nb::list &orig_direc,*/
-      /*       RNUMBER rID0 = 0) {*/
-      /*      size_t list_count = len(orig_direc);*/
-      /*      size_t nrays = list_count / 2;*/
-      /*      FVECT *output = (FVECT *)emalloc(sizeof(FVECT) * list_count);*/
-      /*      for (size_t i = 0; i < list_count; ++i) {*/
-      /*        output[i][0] = nb::cast<double>(nb::list(orig_direc[i])[0]);*/
-      /*        output[i][1] = nb::cast<double>(nb::list(orig_direc[i])[1]);*/
-      /*        output[i][2] = nb::cast<double>(nb::list(orig_direc[i])[2]);*/
-      /*      }*/
-      /*      int ok = self.EnqueueBundle(output, nrays, rID0);*/
-      /*      free(output);*/
-      /*      return ok;*/
-      /*    },*/
-      /*    nb::arg("orig_direc"), nb::arg("rID0") = 0)*/
       .def(
           "enqueue_bundle",
           [](RtraceSimulManager &self, const OrigDirec &orig_direc,
@@ -223,7 +206,6 @@ NB_MODULE(radiance_ext, m) {
 
              self.SetTraceCall(callback_wrapper, key);
            })
-      .def_rw("rt_flags", &RtraceSimulManager::rtFlags)
       .def("cleanup_callbacks", [](RtraceSimulManager &self) {
         stored_callbacks.clear();
         self.SetCookedCall(nullptr, nullptr);
@@ -473,22 +455,7 @@ NB_MODULE(radiance_ext, m) {
       .def("init", nb::overload_cast<COLRV *, int, short *>(&PixelAccess::Init))
       .def("init",
            nb::overload_cast<COLORV *, int, short *>(&PixelAccess::Init))
-      /*.def("set_color_space",*/
-      /*     [](PixelAccess &self, RenderDataType cs, nb::object pr) {*/
-      /*       if (pr.is_none()) {*/
-      /*         return self.SetColorSpace(cs, NULL);*/
-      /*       }*/
-      /*       RGBPRIMP pr2 = nb::cast<RGBPRIMP>(pr);*/
-      /*       return self.SetColorSpace(cs, pr2);*/
-      /*     })*/
       .def("color_space", &PixelAccess::ColorSpace)
-      /*.def(*/
-      /*    "primaries",*/
-      /*    [](PixelAccess &self) {*/
-      /*      RGBPRIMP result = self.Primaries();*/
-      /*      return nb::ndarray<nb::numpy, float, nb::shape<2>>(result);*/
-      /*    },*/
-      /*    nb::rv_policy::reference_internal)*/
       .def("nc", &PixelAccess::NC)
       .def("depth_type", &PixelAccess::DepthType)
       .def("get_row_stride", &PixelAccess::GetRowStride)
@@ -515,23 +482,32 @@ NB_MODULE(radiance_ext, m) {
                                                  nb::const_),
            nb::arg("key"), nb::arg("inOK") = false)
       .def("ready", &RpictSimulManager::Ready)
-      .def("pre_view", &RpictSimulManager::PreView)
+      .def("pre_view", &RpictSimulManager::PreView,
+           nb::rv_policy::reference_internal)
       .def("get_width", &RpictSimulManager::GetWidth)
       .def("get_height", &RpictSimulManager::GetHeight)
       .def("t_width", &RpictSimulManager::TWidth)
       .def("t_height", &RpictSimulManager::THeight)
       .def("render_tile",
            nb::overload_cast<COLORV *, int, float *, const int *>(
-               &RpictSimulManager::RenderTile))
-      .def("render_tile", nb::overload_cast<COLRV *, int, float *, const int *>(
-                              &RpictSimulManager::RenderTile))
-      .def("render_tile", nb::overload_cast<COLRV *, int, short *, const int *>(
-                              &RpictSimulManager::RenderTile))
+               &RpictSimulManager::RenderTile),
+           nb::arg("rp"), nb::arg("ystride"), nb::arg("zp"), nb::arg("tgrid"))
+      .def("render_tile",
+           nb::overload_cast<COLRV *, int, float *, const int *>(
+               &RpictSimulManager::RenderTile),
+           nb::arg("bp"), nb::arg("ystride"), nb::arg("zp"), nb::arg("tgrid"))
+      .def("render_tile",
+           nb::overload_cast<COLRV *, int, short *, const int *>(
+               &RpictSimulManager::RenderTile),
+           nb::arg("bp"), nb::arg("ystride"), nb::arg("dp"), nb::arg("tgrid"))
       .def("render_tile",
            nb::overload_cast<COLORV *, int, short *, const int *>(
-               &RpictSimulManager::RenderTile))
-      .def("render_frame", &RpictSimulManager::RenderFrame)
-      .def("resume_frame", &RpictSimulManager::RenderFrame)
+               &RpictSimulManager::RenderTile),
+           nb::arg("rp"), nb::arg("ystride"), nb::arg("dp"), nb::arg("tgrid"))
+      .def("render_frame", &RpictSimulManager::RenderFrame,
+           nb::arg("pfname"), nb::arg("dfname") = nullptr)
+      .def("resume_frame", &RpictSimulManager::ResumeFrame,
+           nb::arg("pfname"), nb::arg("dfname") = nullptr)
       .def("set_thread_count", &RpictSimulManager::SetThreadCount,
            nb::arg("nt") = 0)
       .def("set_reference_depth",
@@ -549,7 +525,26 @@ NB_MODULE(radiance_ext, m) {
       .def("new_frame",
            [](RpictSimulManager &self, const VIEW &v, int xydim[2], double *ap,
               const int *tgrid) { return self.NewFrame(v, xydim, ap, tgrid); })
-      .def("n_threads", &RpictSimulManager::NThreads);
+      .def("n_threads", &RpictSimulManager::NThreads)
+      .def("threads_available", &RpictSimulManager::ThreadsAvailable)
+      .def("get_view",
+           [](const RpictSimulManager &self) -> nb::object {
+             const VIEW *v = self.GetView();
+             if (!v) return nb::none();
+             return nb::cast(*v);
+           })
+      .def("cleanup", &RpictSimulManager::Cleanup,
+           nb::arg("everything") = false)
+      .def_rw("frame_no", &RpictSimulManager::frameNo)
+      .def("__enter__", [](RpictSimulManager &self) { return &self; })
+      .def("__exit__",
+           [](RpictSimulManager &self, nb::object type, nb::object value,
+              nb::object tb) -> bool {
+             self.Cleanup(true);
+             return false;
+           },
+           nb::arg("type") = nb::none(), nb::arg("value") = nb::none(),
+           nb::arg("traceback") = nb::none());
 
   m.def("initfunc", &initfunc);
   m.def("loadfunc", [](const char *func){ return loadfunc(const_cast<char *>(func)); });
