@@ -760,12 +760,12 @@ def render(
     scene.build()
     specout = ncssamp > 3
     if specout:
-        param_strs.append("-co+")
+        param_strs.extend(["-co+", "-cs", str(ncssamp)])
     if params is not None:
         param_strs.extend(get_ray_params_args(params))
     vargs = get_view_args(aview)
-    res = vwrays(view=vargs, dimensions=True, xres=xres, yres=yres).decode().split()
-    xres, yres = int(res[1]), int(res[3])
+    res_raw = vwrays(view=vargs, dimensions=True, xres=xres, yres=yres).decode().split()
+    xres, yres = int(res_raw[3]), int(res_raw[1])
     if not specout and nproc == 1:
         return rpict(
             vargs, scene.octree, params=["-ps", "1"] + param_strs, xres=xres, yres=yres
@@ -814,7 +814,7 @@ def render(
     return getinfo(
         rtrace(
             octree=scene.octree,
-            params=param_strs,
+            params=param_strs + res_raw,
             rays=vwrays(
                 view=vargs,
                 outform="f",
@@ -824,8 +824,6 @@ def render(
             inform="f",
             outform="c",
             nproc=nproc,
-            xres=xres,
-            yres=yres,
         ),
         append=f"VIEW={' '.join(vargs)}",
     )
