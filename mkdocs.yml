@@ -54,5 +54,8 @@ nav:
   - tutorials.md
   - How-To Guides:
     - howtos/index.md
+    - Load a WaveFront (.obj) model: howtos/guide1.md
+    - Two-phase matrix daylighting: howtos/guide2.md
+    - Rcontrib contributor analysis: howtos/guide3.md
     - BSDF analysis: howtos/bsdf.md
   - reference.md

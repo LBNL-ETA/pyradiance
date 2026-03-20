@@ -80,6 +80,7 @@ luminance = iar[:, :, 0] * 47.4 + iar[:, :, 1] * 119.9 + iar[:, :, 2] * 11.6
 With the luminance values as another numpy array, we can use the matplotlib library to plot the image.
 ```python
 import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
 
 # using a viridis color map
 cmap = plt.cm.viridis
@@ -89,6 +90,7 @@ norm = LogNorm()
 
 plt.axis("off")
 fimage = cmap(norm(luminance))
+plt.imshow(fimage)
 plt.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap), label=r"$\mathrm{cd/m^2}$")
 ```
 ![image](assets/false.jpg){: style="height:250px;width:300px"}

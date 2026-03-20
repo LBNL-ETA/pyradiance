@@ -19,7 +19,7 @@ separately. If you already have RADIANCE installed
 in your system, pyradiance won't interfere with it either.
 
 ### Requirements
-Python >= 3.8
+Python >= 3.10
 
 ## Quickstart
 
