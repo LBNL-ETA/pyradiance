@@ -59,7 +59,9 @@ from .px import (
     pvalue,
     pvaluer,
     ra_ppm,
+    ra_rgbe,
     ra_tiff,
+    ra_xyze,
 )
 
 if os.name == "posix":
@@ -192,6 +194,8 @@ __all__ = [
     "pfilt",
     "ra_tiff",
     "ra_ppm",
+    "ra_rgbe",
+    "ra_xyze",
     "rcalc",
     "rcode_depth",
     "rcode_ident",

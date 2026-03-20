@@ -747,6 +747,114 @@ def ra_ppm(
 
 
 @handle_called_process_error
+def ra_xyze(
+    inp: str | Path | bytes,
+    out: None | str | Path = None,
+    rgbe: bool = False,
+    exposure: None | str = None,
+    original: bool = False,
+    rle: bool = False,
+    flat: bool = False,
+    primaries: None | Sequence[float] = None,
+) -> None | bytes:
+    """Convert between RADIANCE RGBE and XYZE formats.
+
+    By default, produces a flat XYZE picture from any RADIANCE input.
+
+    Args:
+        inp: Input picture file path or bytes.
+        out: Output file path. If None, output is returned as bytes.
+        rgbe: If True, produce RGBE output instead of XYZE.
+        exposure: Exposure compensation as a decimal multiplier or f-stops
+            (e.g. "2.0" or "+2").
+        original: If True, apply exposure compensation to original units.
+        rle: If True, produce run-length encoded output.
+        flat: If True, produce flat (uncompressed) output.
+        primaries: Override RGB primaries as 8 floats:
+            xr yr xg yg xb yb xw yw (CIE xy chromaticity coordinates).
+
+    Returns:
+        bytes if no output file is specified, otherwise None.
+    """
+    cmd = [str(BINPATH / "ra_xyze")]
+    if rgbe:
+        cmd.append("-r")
+    if exposure is not None:
+        cmd.extend(["-e", str(exposure)])
+    if original:
+        cmd.append("-o")
+    if rle:
+        cmd.append("-c")
+    elif flat:
+        cmd.append("-u")
+    if primaries is not None:
+        cmd.extend(["-p", *[str(p) for p in primaries]])
+    stdin = None
+    if isinstance(inp, (Path, str)):
+        cmd.append(str(inp))
+    elif isinstance(inp, bytes):
+        stdin = inp
+    else:
+        raise TypeError("inp must be a Path, str, or bytes")
+    if out is not None:
+        cmd.append(str(out))
+    result = sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
+    if out is None:
+        return result
+    return None
+
+
+@handle_called_process_error
+def ra_rgbe(
+    inp: str | Path | bytes,
+    outspec: None | str | Path = None,
+    rle: bool = False,
+    exposure: None | int = None,
+    force: bool = False,
+    frameno: None | int = None,
+) -> None | bytes:
+    """Convert between RADIANCE run-length encoded and flat picture formats.
+
+    Also separates concatenated animation frames produced by rpict.
+
+    Args:
+        inp: Input picture file path or bytes (use '-' for stdin).
+        outspec: Output file path or printf-style spec for animation frames.
+            If None, output is returned as bytes.
+        rle: If True, produce run-length encoded output instead of flat.
+        exposure: Exposure compensation in integer f-stops (powers of two).
+        force: If True, overwrite existing output files.
+        frameno: Select a specific animation frame for output.
+
+    Returns:
+        bytes if no output file is specified, otherwise None.
+    """
+    cmd = [str(BINPATH / "ra_rgbe")]
+    if rle:
+        cmd.append("-r")
+    if exposure is not None:
+        cmd.extend(["-e", f"{exposure:+d}"])
+    if force:
+        cmd.append("-f")
+    if frameno is not None:
+        cmd.extend(["-n", str(frameno)])
+    stdin = None
+    if isinstance(inp, (Path, str)):
+        cmd.append(str(inp))
+    elif isinstance(inp, bytes):
+        stdin = inp
+        cmd.append("-")
+    else:
+        raise TypeError("inp must be a Path, str, or bytes")
+    if outspec is not None:
+        cmd.append(str(outspec))
+    result = sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
+    if outspec is None:
+        return result
+    return None
+
+
+@handle_called_process_error
 def falsecolor(
     inp: str | Path | bytes,
     pic_overlay: None | str = None,
