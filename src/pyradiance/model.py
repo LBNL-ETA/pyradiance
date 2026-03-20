@@ -43,7 +43,7 @@ class Primitive:
             out += "0 "
         out += "0 "
         if len(self.fargs) > 0:
-            out += f"{len(self.fargs)} {str(self.fargs)[1:-1].replace(',', '')} "
+            out += f"{len(self.fargs)} {' '.join(str(v) for v in self.fargs)} "
         else:
             out += "0 "
         return out.encode("utf-8")
@@ -54,7 +54,7 @@ class Primitive:
             f"{len(self.sargs)} {' '.join(self.sargs)}\n"
             "0\n"
             f"{len(self.fargs)} "
-            f"{str(self.fargs)[1:-1].replace(',', '')}\n"
+            f"{' '.join(str(v) for v in self.fargs)}\n"
         )
 
 
@@ -78,7 +78,7 @@ class Scene:
         Args:
             sid: scene id
         """
-        if len(sid) < 0:
+        if len(sid) < 1:
             raise ValueError("Scene id must be at least one character long")
         self._sid = sid
         self._octree = f"{sid}.oct"
@@ -136,7 +136,7 @@ class Scene:
         elif isinstance(obj, (str, Path)):
             if not os.path.exists(obj):
                 raise FileNotFoundError("File not found: ", obj)
-            getattr(self, target)[obj] = str(obj)
+            getattr(self, target)[str(obj)] = str(obj)
         else:
             raise TypeError("Unsupported type: ", type(obj))
         self._changed = True
@@ -145,7 +145,7 @@ class Scene:
         if isinstance(obj, Primitive):
             del getattr(self, target)[obj.identifier]
         elif isinstance(obj, (str, Path)):
-            del getattr(self, target)[obj]
+            del getattr(self, target)[str(obj)]
         else:
             raise TypeError("Unsupported type: ", type(obj))
         self._changed = True
@@ -226,6 +226,7 @@ class Scene:
         )
         inp = [path for path in self.surfaces.values() if isinstance(path, str)]
         inp.extend([path for path in self.sources.values() if isinstance(path, str)])
+        stdin = None
         if sstdin:
             stdin = "".join(sstdin).encode()
         with open(self._octree, "wb") as wtr:

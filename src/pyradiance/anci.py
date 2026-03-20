@@ -45,9 +45,8 @@ def write(
         str: path to file
     """
     if not overwrite and os.path.exists(file_path):
-        raise Exception(
-            f"The path {file_path} already exists and "
-            f'"overwrite" has been set to False.'
+        raise FileExistsError(
+            f"The path {file_path} already exists and overwrite=False."
         )
     else:
         with open(file_path, mode=mode) as write_data:

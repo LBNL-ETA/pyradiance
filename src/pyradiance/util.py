@@ -178,7 +178,7 @@ def dctimestep(
     if inform:
         cmd.append(f"-i{inform}")
     if outform:
-        cmd.extend(f"-o{outform}")
+        cmd.append(f"-o{outform}")
     if ospec:
         cmd.extend(["-o", ospec])
         _stdout = False
@@ -272,7 +272,7 @@ def get_header(inp: str | Path | bytes, dimension: bool = False) -> bytes:
         cmd.append(str(inp))
     else:
         raise TypeError("inp must be a string, Path, or bytes")
-    return sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
+    return sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE, stderr=sp.PIPE).stdout
 
 
 @handle_called_process_error
@@ -787,12 +787,12 @@ def render(
                 getinfo(get_header(pix), replace="NCOMP"),
                 append=f"VIEW={' '.join(vargs)}",
             )
-            rlam = b"\n".join(
+            sorted_lines = b"\n".join(
                 o + b"\t" + p
                 for o, p in zip(ord.splitlines(), strip_header(pix).splitlines())
             )
             content = sp.run(
-                ["sort", "-k2rn", "-k1n"], input=rlam, check=True, stdout=sp.PIPE
+                ["sort", "-k2rn", "-k1n"], input=sorted_lines, check=True, stdout=sp.PIPE
             ).stdout
             return pvaluer(header + content, yres=yres, xres=xres)
         # else randomize overture calculation to prime ambient cache
@@ -901,7 +901,7 @@ def rmtxop(
     if transform is not None:
         cmd.extend(["-c", *[str(c) for c in transform]])
     if reflectance is not None:
-        cmd.append(f"r{reflectance[0]}")
+        cmd.append(f"r{reflectance}")
     if isinstance(inp, bytes):
         stdin = inp
         cmd.append("-")
@@ -929,7 +929,7 @@ class Rmtxop:
         refl_side: None | str = None,
         color: None | str = None,
     ):
-        if self.nparts > 1:
+        if self.nparts >= 1:
             self.cmd.append(op)
         if scale is not None:
             self.cmd.append("-s")
@@ -939,7 +939,7 @@ class Rmtxop:
                 self.cmd.extend(map(str, scale))
         if refl_side is not None:
             self.cmd.append(f"r{refl_side[0]}")
-        if transpose is not None:
+        if transpose:
             self.cmd.append("-t")
         if transform is not None:
             self.cmd.append("-c")
@@ -1149,8 +1149,9 @@ class WrapBSDF:
         if rb:
             arglist.extend(["-rb", str(rb)])
         if len(arglist) == 2:
-            print("At least one of tf, tb, rf, rb should be provided for", spectrum)
-            return self
+            raise ValueError(
+                f"At least one of tf, tb, rf, rb must be provided for {spectrum}"
+            )
         self.cmd.extend(arglist)
         return self
 

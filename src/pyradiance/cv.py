@@ -228,7 +228,7 @@ def ies2rad(
     instancing_geometry: bool = False,
     lampdat: None | str = None,
     lamp_type: None | str = None,
-    lamp_color: None | str = None,
+    lamp_color: None | tuple[float, float, float] = None,
     set_default_lamp_color: None | str = None,
     multiply_factor: None | float = None,
 ) -> bytes:
@@ -327,7 +327,7 @@ def bsdf2klems(
         cmd.append("-p")
     elif progress_bar_length is not None:
         cmd.append(f"p{progress_bar_length}")
-    if len(inp) == 1 and not inp[0]:
+    if len(inp) == 1:
         # xml input
         inp0: str = inp[0]
         if inp0.endswith(".xml"):
@@ -466,7 +466,5 @@ def pabopto2bsdf(
         cmd.extend(["-g", str(angle)])
     if reverse:
         cmd.append("-t")
-    if not isinstance(inp, (str, Path)):
-        raise ValueError("input should be a string or a Path.")
     cmd.extend([str(i) for i in inp])
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout

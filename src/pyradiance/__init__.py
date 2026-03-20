@@ -127,7 +127,8 @@ __version__ = version("pyradiance")
 os.environ["RAYPATH"] = (
     "." + os.pathsep + os.path.join(os.path.dirname(__file__), "lib")
 )
-os.environ["PATH"] = str(BINPATH) + os.pathsep + os.environ["PATH"]
+if str(BINPATH) not in os.environ["PATH"].split(os.pathsep):
+    os.environ["PATH"] = str(BINPATH) + os.pathsep + os.environ["PATH"]
 
 __all__ = [
     "set_ray_params",

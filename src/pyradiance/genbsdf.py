@@ -293,8 +293,6 @@ def generate_bsdf(
 
     if working_dir == "":
         working_dir = tempfile.mkdtemp(prefix="genBSDF")
-
-    working_dir = tempfile.mkdtemp(prefix="genBSDF")
     octree_file = os.path.join(working_dir, "device.oct")
     with open(octree_file, "wb") as fp:
         fp.write(oconv(stdin=device, warning=False))
@@ -343,41 +341,24 @@ def generate_xml(
         **kwargs,
     )
 
-    if sol_results is not None:
-        fd, tfs = tempfile.mkstemp(suffix=".dat")
-        with os.fdopen(fd, "wb") as f:
-            f.write(sol_results.front.transmittance)
+    def _write(path: str, data: bytes) -> str:
+        with open(path, "wb") as f:
+            f.write(data)
+        return path
 
-        fd, tbs = tempfile.mkstemp(suffix=".dat")
-        with os.fdopen(fd, "wb") as f:
-            f.write(sol_results.back.transmittance)
+    with tempfile.TemporaryDirectory(prefix="pyradiance_xml_") as tmpdir:
+        if sol_results is not None:
+            tfs = _write(os.path.join(tmpdir, "sol_tf.dat"), sol_results.front.transmittance)
+            tbs = _write(os.path.join(tmpdir, "sol_tb.dat"), sol_results.back.transmittance)
+            rfs = _write(os.path.join(tmpdir, "sol_rf.dat"), sol_results.front.reflectance)
+            rbs = _write(os.path.join(tmpdir, "sol_rb.dat"), sol_results.back.reflectance)
+            wrapper = wrapper.add_solar(tb=tbs, tf=tfs, rb=rbs, rf=rfs)
 
-        fd, rfs = tempfile.mkstemp(suffix=".dat")
-        with os.fdopen(fd, "wb") as f:
-            f.write(sol_results.front.reflectance)
+        if vis_results is not None:
+            tfv = _write(os.path.join(tmpdir, "vis_tf.dat"), vis_results.front.transmittance)
+            tbv = _write(os.path.join(tmpdir, "vis_tb.dat"), vis_results.back.transmittance)
+            rfv = _write(os.path.join(tmpdir, "vis_rf.dat"), vis_results.front.reflectance)
+            rbv = _write(os.path.join(tmpdir, "vis_rb.dat"), vis_results.back.reflectance)
+            wrapper = wrapper.add_visible(tb=tbv, tf=tfv, rb=rbv, rf=rfv)
 
-        fd, rbs = tempfile.mkstemp(suffix=".dat")
-        with os.fdopen(fd, "wb") as f:
-            f.write(sol_results.back.reflectance)
-
-        wrapper = wrapper.add_solar(tb=tbs, tf=tfs, rb=rbs, rf=rfs)
-
-    if vis_results is not None:
-        fd, tfv = tempfile.mkstemp(suffix=".dat")
-        with os.fdopen(fd, "wb") as f:
-            f.write(vis_results.front.transmittance)
-
-        fd, tbv = tempfile.mkstemp(suffix=".dat")
-        with os.fdopen(fd, "wb") as f:
-            f.write(vis_results.back.transmittance)
-
-        fd, rfv = tempfile.mkstemp(suffix=".dat")
-        with os.fdopen(fd, "wb") as f:
-            f.write(vis_results.front.reflectance)
-
-        fd, rbv = tempfile.mkstemp(suffix=".dat")
-        with os.fdopen(fd, "wb") as f:
-            f.write(vis_results.back.reflectance)
-        wrapper = wrapper.add_visible(tb=tbv, tf=tfv, rb=rbv, rf=rfv)
-
-    return wrapper()
+        return wrapper()

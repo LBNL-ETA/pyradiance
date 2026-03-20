@@ -93,7 +93,7 @@ class Pcomb:
     def __call__(self):
         if not self.has_input:
             raise ValueError("No input images, call .add() to add one")
-        return sp.run(self.cmd, input=self.stdin, stdout=sp.PIPE).stdout
+        return sp.run(self.cmd, input=self.stdin, stdout=sp.PIPE, check=True).stdout
 
 
 @handle_called_process_error
@@ -182,7 +182,7 @@ def pcompos(
             else:
                 raise ValueError(f"Unsupported input type: {type(input)}")
             cmd.extend(list(map(str, pos[i])))
-    return sp.run(cmd, input=stdin, stdout=sp.PIPE).stdout
+    return sp.run(cmd, input=stdin, stdout=sp.PIPE, check=True).stdout
 
 
 @handle_called_process_error
@@ -466,7 +466,7 @@ def pvalue(
         cmd.extend(["-s", str(skip)])
     if exposure:
         cmd.extend(["-e", str(exposure)])
-    if gamma:
+    if gamma != 1.0:
         cmd.extend(["-g", str(gamma)])
     if dataonly:
         cmd.append("-d")
@@ -479,7 +479,7 @@ def pvalue(
     if brightness:
         cmd.append("-b")
     if outprimary:
-        cmd.append("-p{outprimary}")
+        cmd.append(f"-p{outprimary}")
     if isinstance(pic, (Path, str)):
         cmd.append(str(pic))
         proc = sp.run(cmd, check=True, input=None, stdout=sp.PIPE)
@@ -663,10 +663,10 @@ def ra_tiff(
         cmd.append("-r")
         if xyze:
             cmd.append("-e")
+        elif exposure:
+            cmd.extend(["-e", str(exposure)])
         if gamma:
             cmd.extend(["-g", str(gamma)])
-        if exposure:
-            cmd.extend(["-e", str(exposure)])
     else:
         if out is None:
             raise ValueError(
@@ -694,7 +694,8 @@ def ra_tiff(
     elif isinstance(inp, bytes):
         stdin = inp
         cmd.append("-")
-    cmd.append(str(out))
+    if out is not None:
+        cmd.append(str(out))
     pout = sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
     if out is None:
         return pout

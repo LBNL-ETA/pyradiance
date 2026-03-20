@@ -148,7 +148,7 @@ def genbox(
         cmd.append("-s")
     if waveout:
         cmd.append("-o")
-    return sp.run(cmd, stdout=sp.PIPE).stdout
+    return sp.run(cmd, stdout=sp.PIPE, check=True).stdout
 
 
 @handle_called_process_error
@@ -336,7 +336,7 @@ class GenGlaze:
     def add_monolithic(self, fpath: str, thickness: float):
         if not fpath.endswith(".dat"):
             raise ValueError(f"Expect a .dat input file, got {fpath}")
-        self.cmd.extend(["-m", fpath, thickness])
+        self.cmd.extend(["-m", fpath, str(thickness)])
         return self
 
     def add_coated(self, fpath: str):
@@ -387,7 +387,7 @@ def genglaze_data(
             with open(dat_fpath, "w") as f:
                 f.write(layer.to_datstr())
 
-            if layer.glazing_type == GlazingType.monolithic.value:
+            if layer.glazing_type == GlazingType.monolithic:
                 cmd.extend(["-m", dat_fpath, str(layer.thickness_m)])
             else:
                 cmd.extend(["-c", dat_fpath])
@@ -419,12 +419,12 @@ def genglaze_json(
                 f"{fpath}: This is not a glazing product (It's a {data['type']})"
             )
         name: str = data["name"] or data["product_name"] or "unnamed"
-        glazing_type: str = data["subtype"]
+        glazing_type: GlazingType = GlazingType(data["subtype"])
         thickness_mm = data["measured_data"]["thickness"] or DEFAULT_THICKNESS_MM
         thickness_m = thickness_mm * M_PER_MM
         spectral_data_points = [
             SpectralPoint(
-                wavelength_nm=sdata["wavelength"] * NM_PER_MICRON,
+                wavelength_nm=int(sdata["wavelength"] * NM_PER_MICRON),
                 rf=sdata["Rf"],
                 rb=sdata["Rb"],
                 t=sdata["T"],
@@ -470,7 +470,7 @@ def genrev(
         cmd.extend(["-f", file])
     if smooth:
         cmd.append("-s")
-    return sp.run(cmd, stdout=sp.PIPE).stdout
+    return sp.run(cmd, stdout=sp.PIPE, check=True).stdout
 
 
 @handle_called_process_error
@@ -695,7 +695,7 @@ def genssky(
     cmd.extend(["-f", out_name])
     if (dir_norm_illum is not None) and (diff_hor_illum is not None):
         cmd.extend(["-L", str(dir_norm_illum), str(diff_hor_illum)])
-    return sp.run(cmd, stderr=sp.PIPE, stdout=sp.PIPE, check=False).stdout
+    return sp.run(cmd, stderr=sp.PIPE, stdout=sp.PIPE, check=True).stdout
 
 
 @handle_called_process_error

@@ -171,7 +171,7 @@ def total(
             raise ValueError("outform must be 'd' or 'f'")
         cmd.append(f"-o{outform}")
     if substep:
-        cmd.extend(f"-{substep}")
+        cmd.append(f"-{substep}")
         if not substep_reset:
             cmd.append("-r")
     if inlimit:
@@ -181,12 +181,14 @@ def total(
     if sep:
         cmd.append(f"-t{sep}")
     stdin = None
-    if isinstance(inp, bytes):
+    if inp is None:
+        pass
+    elif isinstance(inp, bytes):
         stdin = inp
     elif isinstance(inp, (str, Path)):
         cmd.append(str(inp))
     else:
-        raise ValueError("Invalid input type.")
+        raise TypeError(f"inp must be None, str, Path, or bytes, not {type(inp)}")
     return sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
 
 
@@ -211,6 +213,8 @@ def rlam(
         elif isinstance(inp, bytes):
             cmd.append("-")
             stdins.append(inp)
-    if len(stdins) > 0:
-        stdin = b"\x00".join(stdins)
+    if len(stdins) > 1:
+        raise ValueError("Only one bytes input is allowed for rlam")
+    if len(stdins) == 1:
+        stdin = stdins[0]
     return sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout

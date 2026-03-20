@@ -37,7 +37,7 @@ def getbbox(
     if not warning:
         cmd.append("-w")
     if len(stdins) > 0:
-        stdin = b"\b".join(stdins)
+        stdin = b"\n".join(stdins)
         cmd.append("-")
     if len(paths) > 0:
         cmd.extend(paths)
@@ -68,7 +68,7 @@ def oconv(
     cmd = [str(BINPATH / "oconv")]
     if octree is not None:
         cmd.extend(["-i", str(octree)])
-    if warning:
+    if not warning:
         cmd.append("-w")
     if frozen:
         cmd.append("-f")

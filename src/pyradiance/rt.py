@@ -5,7 +5,6 @@ This module contains the main API for pyradiance.
 """
 
 import subprocess as sp
-import sys
 from pathlib import Path
 from typing import Sequence
 
@@ -131,13 +130,11 @@ def mkpmap(
     elif virtual_modfile is not None:
         cmd.extend(["-apS", virtual_modfile])
     if amb_excl_mod is not None:
-        for mod in amb_excl_mod:
-            cmd.extend(["-ae", mod])
+        cmd.extend(["-ae", amb_excl_mod])
     elif amb_excl_modfile is not None:
         cmd.extend(["-aE", amb_excl_modfile])
-    elif amb_incl_mod is not None:
-        for mod in amb_incl_mod:
-            cmd.extend(["-ai", mod])
+    if amb_incl_mod is not None:
+        cmd.extend(["-ai", amb_incl_mod])
     elif amb_incl_modfile is not None:
         cmd.extend(["-aI", amb_incl_modfile])
     if backface_vis:
@@ -231,9 +228,9 @@ class Rcontrib:
 
     @handle_called_process_error
     def __call__(self):
-        self.cmd.append(str(self.octree))
+        cmd = self.cmd + [str(self.octree)]
         return sp.run(
-            self.cmd, check=True, input=self.inp, stderr=sp.PIPE, stdout=sp.PIPE
+            cmd, check=True, input=self.inp, stderr=sp.PIPE, stdout=sp.PIPE
         ).stdout
 
 
@@ -267,9 +264,9 @@ def rpict(
         cmd.extend(["-t", str(report)])
     if report_file:
         cmd.extend(["-e", str(report_file)])
-    if xres:
+    if xres is not None:
         cmd.extend(["-x", str(xres)])
-    if yres:
+    if yres is not None:
         cmd.extend(["-y", str(yres)])
     if params:
         cmd.extend(params)
@@ -352,15 +349,14 @@ def rtrace(
         cmd.append(f"-tI{trace_include_file}")
     if uncorrelated:
         cmd.append("-u+")
-    if xres:
+    if xres is not None:
         cmd.extend(["-x", str(xres)])
-    if yres:
+    if yres is not None:
         cmd.extend(["-y", str(yres)])
     if nproc:
         cmd.extend(["-n", str(nproc)])
-    if report:
-        cmd.extend(["-e", sys.stderr.name])
     if params is not None:
         cmd.extend(params)
     cmd.append(str(octree))
-    return sp.run(cmd, check=True, capture_output=True, input=rays).stdout
+    stderr_dest = None if report else sp.PIPE
+    return sp.run(cmd, check=True, stdout=sp.PIPE, stderr=stderr_dest, input=rays).stdout
