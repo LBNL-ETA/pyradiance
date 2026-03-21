@@ -7,13 +7,15 @@ import shutil
 import tempfile
 from typing import Literal, NamedTuple
 
-from .util import Rmtxop, rfluxmtx, strip_header, WrapBSDF, Xform
+from .cal import cnt, rcalc
+from .util import Rcomb, Rmtxop, rfluxmtx, rttree_reduce, strip_header, WrapBSDF, Xform
 from .ot import oconv, getbbox
 from .gen import genblinds
 from .model import Primitive
 
 BasisType = Literal["kf", "kh", "kq", "u", "r1", "r2", "r4"]
-OutSpec = Literal["rgb", "xyz", "y", "m", "s"] 
+OutSpec = Literal["rgb", "xyz", "y", "m", "s"]
+TensorTreeType = Literal[0, 3, 4]
 
 
 class SamplingBox(NamedTuple):
@@ -162,6 +164,189 @@ def get_sender(hemis: str, up: str, dim: SamplingBox, front: bool) -> str:
     return sender
 
 
+def _get_tensortree_hemis(ns: int) -> tuple[str, str, str]:
+    """Return (face_hemis, behind_hemis, up) strings for tensor tree sampling."""
+    return f"h=-sc{ns}", f"h=+sc{ns}", "u=-Y"
+
+
+def _generate_isotropic_rays(
+    ns: int, nx: int, ny: int, dim: SamplingBox, forw: bool
+) -> bytes:
+    """Generate ray bytes for t3 isotropic tensor tree sampling via cnt|rcalc pipeline.
+
+    Args:
+        ns: tensor tree resolution (2**ttlog2)
+        nx: number of x sample positions
+        ny: number of y sample positions
+        dim: scene bounding box
+        forw: True for front (forward), False for back
+
+    Returns:
+        Ray bytes suitable for rfluxmtx stdin
+    """
+    ns2 = ns // 2
+    zp = dim.zmin if forw else dim.zmax
+    dz_sign = 1 if forw else -1
+    cnt_bytes = cnt(ns2, ny, nx)
+    expr = ";".join([
+        "r1=rand(.8681*recno-.673892)",
+        "r2=rand(-5.37138*recno+67.1737811)",
+        "r3=rand(+3.17603772*recno+83.766771)",
+        "r4=rand(-1.5839226*recno-59.82712)",
+        "odds(n):if(.5*n-floor(.5*n)-.25,-1,1)",
+        f"Dx=1-($1+r1)/{ns2}",
+        f"Dy=min(1/{ns},sqrt(1-Dx*Dx))*odds($1)*r2",
+        "Dz=sqrt(1-Dx*Dx-Dy*Dy)",
+        f"xp=($3+r3)*(({dim.xmax}-{dim.xmin})/{nx})+{dim.xmin}",
+        f"yp=($2+r4)*(({dim.ymax}-{dim.ymin})/{ny})+{dim.ymin}",
+        f"zp={zp}",
+        f"myDz=Dz*{dz_sign}",
+        "$1=xp-Dx;$2=yp-Dy;$3=zp-myDz",
+        "$4=Dx;$5=Dy;$6=myDz",
+    ])
+    outform = None if os.name == "nt" else "f"
+    return rcalc(cnt_bytes, outform=outform, expr=expr)
+
+
+def _ttree_comp(
+    src: str,
+    dest: str,
+    tensortree: int,
+    ttlog2: int,
+    ns: int,
+    pctcull: float,
+    reciprocal: bool,
+    is_trans: bool,
+) -> None:
+    """Post-process rfluxmtx output to tensor tree format.
+
+    Runs Rcomb | strip_header | rcalc | rttree_reduce pipeline and writes
+    the result to dest.
+
+    Args:
+        src: path to rfluxmtx output .dat file (RGB flux)
+        dest: path to write tensor tree output
+        tensortree: 3 (isotropic) or 4 (anisotropic)
+        ttlog2: log2 of tree resolution
+        ns: tree resolution (2**ttlog2)
+        pctcull: culling percentage for rttree_reduce
+        reciprocal: apply reciprocity averaging
+        is_trans: True for transmission component, False for reflection
+    """
+    inform = None if os.name == "nt" else "f"
+    fmt = "a" if os.name == "nt" else "f"
+
+    # Convert RGB flux to XYZ and strip Radiance header
+    xyz_data = Rcomb(outform=fmt, transform="xyz").add_input(src)()
+    stripped = strip_header(xyz_data)
+
+    # Extract Y luminance normalized by solid angle Omega = pi/ns^2
+    expr = f"Xi=$1;Yi=$2;Zi=$3;Omega:PI/({ns}*{ns});$1=Yi/Omega"
+    luminance = rcalc(stripped, inform=inform, incount=3, outform=fmt, expr=expr)
+
+    # Reciprocity: always for t3; for t4 only on reflection components
+    use_recip = reciprocal and (tensortree == 3 or not is_trans)
+    tree_data = rttree_reduce(
+        luminance,
+        ttree=tensortree,
+        log2res=ttlog2,
+        pctcull=pctcull,
+        inform=fmt,
+        reciprocal=use_recip,
+        header=False,
+    )
+
+    with open(dest, "wb") as f:
+        f.write(tree_data)
+
+
+def generate_tensortree_sdf(
+    forw: bool,
+    tensortree: int,
+    ttlog2: int,
+    octree_file: str,
+    dim: SamplingBox,
+    nx: int,
+    ny: int,
+    tmpdir: str,
+    params: list[str],
+    pctcull: float = 90,
+    recip: bool = True,
+) -> SDFDataBytes:
+    """Generate SDF data using tensor tree sampling.
+
+    Args:
+        forw: True for front (forward) side, False for back
+        tensortree: 3 (isotropic) or 4 (anisotropic)
+        ttlog2: log2 of sampling resolution (ns = 2**ttlog2)
+        octree_file: path to compiled scene octree
+        dim: scene bounding box
+        nx: number of x sample positions
+        ny: number of y sample positions
+        tmpdir: working directory for temporary files
+        params: rfluxmtx parameters (must include format flag)
+        pctcull: culling percentage for rttree_reduce (< 100)
+        recip: apply reciprocity averaging in rttree_reduce
+
+    Returns:
+        SDFDataBytes with transmittance and reflectance as tensor tree bytes
+    """
+    ns = 2**ttlog2
+    face_hemis, behind_hemis, up = _get_tensortree_hemis(ns)
+
+    facedat = os.path.join(tmpdir, "face.dat")
+    behinddat = os.path.join(tmpdir, "behind.dat")
+
+    face_receiver, behind_receiver = get_hemisphere_receivers(
+        face_hemis=face_hemis,
+        behind_hemis=behind_hemis,
+        up=up,
+        face_out=facedat,
+        behind_out=behinddat,
+    )
+    receiver_file = os.path.join(tmpdir, "receiver.rad")
+    with open(receiver_file, "w") as f:
+        f.write(face_receiver + behind_receiver)
+
+    if tensortree == 3:
+        # Isotropic: cnt|rcalc pipeline generates rays, passed as rfluxmtx stdin
+        ns2 = ns // 2
+        rays = _generate_isotropic_rays(ns, nx, ny, dim, forw)
+        rfluxmtx(
+            receiver=receiver_file,
+            rays=rays,
+            octree=octree_file,
+            params=params + ["-y", str(ns2)],
+        )
+    else:
+        # Anisotropic (t4): polygon sender with tensor tree hemisphere basis
+        sender_hemis = face_hemis if forw else behind_hemis
+        sender = get_sender(sender_hemis, up, dim, forw)
+        sender_file = os.path.join(tmpdir, "sender.rad")
+        with open(sender_file, "w") as f:
+            f.write(sender)
+        rfluxmtx(
+            receiver=receiver_file,
+            surface=sender_file,
+            octree=octree_file,
+            params=params,
+        )
+
+    transdat, refldat = (facedat, behinddat) if forw else (behinddat, facedat)
+    trans_dest = os.path.join(tmpdir, "trans.dat")
+    refl_dest = os.path.join(tmpdir, "refl.dat")
+
+    _ttree_comp(transdat, trans_dest, tensortree, ttlog2, ns, pctcull, recip, is_trans=True)
+    _ttree_comp(refldat, refl_dest, tensortree, ttlog2, ns, pctcull, recip, is_trans=False)
+
+    with open(trans_dest, "rb") as f:
+        trans = f.read()
+    with open(refl_dest, "rb") as f:
+        refl = f.read()
+
+    return SDFDataBytes(transmittance=trans, reflectance=refl)
+
+
 # TODO: handle colored BSDF out
 def generate_sdf(
     sender: str,
@@ -259,7 +444,6 @@ def generate_back_sdf(
     )
 
 
-# TODO: Add tensortree out
 # TODO: Add color out
 def generate_bsdf(
     *inp,
@@ -272,11 +456,37 @@ def generate_bsdf(
     nspec: int = 3,
     working_dir: str = "",
     basis: BasisType = "kf",
+    tensortree: TensorTreeType = 0,
+    ttlog2: int = 4,
     dim: None | SamplingBox = None,
     front: bool = True,
     outspec: OutSpec = "y",
     cleanup: bool = True,
 ) -> BSDFDataBytes:
+    """Generate BSDF data by simulating flux transfer through a device.
+
+    Args:
+        inp: input scene files or bytes
+        params: additional rfluxmtx parameters
+        recip: apply reciprocity averaging (tensor tree only)
+        nsamp: number of ray samples
+        pctcull: tensor tree culling percentage (< 100)
+        nproc: number of parallel processes
+        geout: include geometry output (unused, kept for API compatibility)
+        nspec: number of spectral channels
+        working_dir: directory for temporary files (auto-created if empty)
+        basis: Klems hemisphere basis type (used when tensortree=0)
+        tensortree: 0 for Klems matrix, 3 for isotropic tensor tree,
+                    4 for anisotropic tensor tree
+        ttlog2: log2 of tensor tree angular resolution (ns = 2**ttlog2)
+        dim: override scene bounding box
+        front: also compute front-side SDF
+        outspec: output spectrum for Klems matrix mode
+        cleanup: remove working directory on completion
+
+    Returns:
+        BSDFDataBytes with front and back SDF data
+    """
     result = BSDFDataBytes()
     param_args = ["-ab", "5", "-ad", "700", "-lw", "3e-6", "-w-"]
     if params is not None:
@@ -297,12 +507,33 @@ def generate_bsdf(
     with open(octree_file, "wb") as fp:
         fp.write(oconv(stdin=device, warning=False))
 
-    param_args.append("-fd")
-    result.back = generate_back_sdf(octree_file, basis, dim, working_dir, params=param_args, outspec=outspec)
-    if front:
-        result.front = generate_front_sdf(
+    if tensortree:
+        fmt = "a" if os.name == "nt" else "f"
+        param_args.append(f"-f{fmt}")
+        tt_kwargs = dict(
+            tensortree=tensortree,
+            ttlog2=ttlog2,
+            octree_file=octree_file,
+            dim=dim,
+            nx=nx,
+            ny=ny,
+            tmpdir=working_dir,
+            params=param_args,
+            pctcull=pctcull,
+            recip=recip,
+        )
+        result.back = generate_tensortree_sdf(forw=False, **tt_kwargs)
+        if front:
+            result.front = generate_tensortree_sdf(forw=True, **tt_kwargs)
+    else:
+        param_args.append("-fd")
+        result.back = generate_back_sdf(
             octree_file, basis, dim, working_dir, params=param_args, outspec=outspec
         )
+        if front:
+            result.front = generate_front_sdf(
+                octree_file, basis, dim, working_dir, params=param_args, outspec=outspec
+            )
 
     os.remove(octree_file)
     if cleanup:
@@ -316,8 +547,12 @@ def generate_xml(
     ir_results: None | BSDFDataBytes = None,
     basis: str = "kf",
     unit: str = "meter",
+    correct_solid_angle: None | bool = None,
     **kwargs,
 ) -> bytes:
+    # Klems matrix requires solid angle correction; tensor tree ("t3"/"t4") does not
+    if correct_solid_angle is None:
+        correct_solid_angle = not basis.startswith("t")
     emissivity_front = emissivity_back = 1.0
     if ir_results is not None:
         emissivity_front = (
@@ -333,7 +568,7 @@ def generate_xml(
 
     wrapper = WrapBSDF(
         basis=basis,
-        correct_solid_angle=True,
+        correct_solid_angle=correct_solid_angle,
         unit=unit,
         unlink=True,
         ef=emissivity_front,

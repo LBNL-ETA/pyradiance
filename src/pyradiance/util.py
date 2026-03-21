@@ -1078,6 +1078,98 @@ def vwright(
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
+@handle_called_process_error
+def rcollate(
+    inp: str | Path | bytes,
+    header: bool = True,
+    warn: bool = True,
+    inform: FileType = "a",
+    ncomp: int = 3,
+    nrows: None | int = None,
+    ncols: None | int = None,
+    orows: None | int = None,
+    ocols: None | int = None,
+    transpose: bool = False,
+) -> bytes:
+    """Resize or re-order matrix data.
+
+    Args:
+        inp: input data (file path or bytes)
+        header: include header in output (False adds -h to suppress both headers)
+        warn: show non-fatal warnings
+        inform: input format ('a', 'f', 'd')
+        ncomp: number of components per input record
+        nrows: number of input rows
+        ncols: number of input columns
+        orows: number of output rows
+        ocols: number of output columns per row
+        transpose: transpose rows and columns
+
+    Returns:
+        bytes: output of rcollate
+    """
+    stdin = None
+    cmd = [str(BINPATH / "rcollate")]
+    if not header:
+        cmd.append("-h")
+    if not warn:
+        cmd.append("-w")
+    fmt_str = f"-f{inform}" if ncomp == 1 else f"-f{inform}{ncomp}"
+    if inform != "a" or ncomp != 3:
+        cmd.append(fmt_str)
+    if transpose:
+        cmd.append("-t")
+    if nrows is not None:
+        cmd.extend(["-ir", str(nrows)])
+    if ncols is not None:
+        cmd.extend(["-ic", str(ncols)])
+    if orows is not None:
+        cmd.extend(["-or", str(orows)])
+    if ocols is not None:
+        cmd.extend(["-oc", str(ocols)])
+    if isinstance(inp, bytes):
+        stdin = inp
+        cmd.append("-")
+    elif isinstance(inp, (str, Path)):
+        cmd.append(str(inp))
+    return sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
+
+
+@handle_called_process_error
+def rttree_reduce(
+    inp: bytes,
+    ttree: int,
+    log2res: int,
+    pctcull: float = 90,
+    inform: FileType = "a",
+    reciprocal: bool = False,
+    header: bool = True,
+) -> bytes:
+    """Reduce flux data to a tensor tree BSDF component.
+
+    Args:
+        inp: input flux data processed by rcalc (luminance / solid angle)
+        ttree: tensor tree rank: 3 (isotropic) or 4 (anisotropic)
+        log2res: log2 of the tree angular grid resolution
+        pctcull: culling percentage for tree reduction, must be < 100
+        inform: input data format ('a', 'f', 'd')
+        reciprocal: apply reciprocity averaging (-a flag)
+        header: include RADIANCE header in output
+
+    Returns:
+        bytes: tensor tree data in ASCII format
+    """
+    cmd = [str(BINPATH / "rttree_reduce")]
+    if not header:
+        cmd.append("-h")
+    if reciprocal:
+        cmd.append("-a")
+    if inform != "a":
+        cmd.append(f"-f{inform}")
+    cmd.extend(["-r", str(ttree), "-g", str(log2res), "-t", str(pctcull)])
+    return sp.run(cmd, input=inp, check=True, stdout=sp.PIPE).stdout
+
+
 class WrapBSDF:
     def __init__(
         self,
