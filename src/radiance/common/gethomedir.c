@@ -11,6 +11,7 @@ static const char RCSid[] = "$Id: gethomedir.c,v 1.5 2025/06/07 05:09:45 greg Ex
 #include <stdlib.h>
 
 #include "paths.h"
+#include "rtio.h"
 
 #if defined(_WIN32) || defined(_WIN64)
 
