@@ -40,6 +40,7 @@ class Pcomb:
             expression: expression or list of expressions
             source: source cal file or list of source cal files
         """
+        self.has_input = False
         self.stdin: None | bytes = None
         self.cmd = [str(BINPATH / "pcomb")]
         if xres is not None:
@@ -64,19 +65,20 @@ class Pcomb:
             else:
                 for src in source:
                     self.cmd.extend(["-f", src])
-        # output dimensions alone are sufficient; no image input required
-        self.has_input = xres is not None and yres is not None
+        # pcomb can synthesize output from expressions alone, provided both
+        # output dimensions are given, in which case no input image is needed.
+        self._has_resolution = xres is not None and yres is not None
 
     def add(
         self,
-        image: "Path | str | bytes | Pcomb",
+        image: Path | str | bytes,
         original: bool = False,
         scaler: float = 1.0,
     ) -> "Pcomb":
         """Add images to command.
 
         Args:
-            image: Input image file, bytes, or another Pcomb instance to pipe from
+            image: Input image file or bytes
             original: keep original exposure
             scaler: Scaling factor
 
@@ -86,12 +88,7 @@ class Pcomb:
         if original:
             self.cmd.append("-o")
         self.cmd.extend(["-s", str(scaler)])
-        if isinstance(image, Pcomb):
-            if self.stdin is not None:
-                raise ValueError("Only one piped/bytes input is allowed with pcomb.")
-            self.stdin = image()
-            self.cmd.append("-")
-        elif isinstance(image, bytes):
+        if isinstance(image, bytes):
             if self.stdin is not None:
                 raise ValueError("Only one bytes input is allowed with pcomb.")
             self.stdin = image
@@ -105,8 +102,11 @@ class Pcomb:
 
     @handle_called_process_error
     def __call__(self):
-        if not self.has_input:
-            raise ValueError("No input images, call .add() to add one")
+        if not (self.has_input or self._has_resolution):
+            raise ValueError(
+                "No input images, call .add() to add one, or set both xres "
+                "and yres to generate output from expressions alone"
+            )
         return sp.run(self.cmd, input=self.stdin, stdout=sp.PIPE, check=True).stdout
 
 
