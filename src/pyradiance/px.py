@@ -19,6 +19,12 @@ class xyRGB(NamedTuple):
 
 
 class Pcomb:
+    """Builder for a pcomb command.
+
+    Pictures are added with :meth:`add_input`, then the command is run by
+    calling the instance.
+    """
+
     def __init__(
         self,
         xres: None | int = None,
@@ -229,10 +235,13 @@ def pcond(
         acuity: Defocus darker region.
         veiling: Add veiling glare.
         sense: Use human contrast sensitivity, simulating eye internal scattering.
+        closs: Mimic human color sensitivity loss at low light levels.
         center_weighted: Use center-weighted average for acuity and veiling.
         linear: Use a linear reponse function instead of the standard dynamic range
             compression. This preseves the extremas.
         fixfrac: Fixation fraction for acuity and veiling.
+        fixpoints: List of fixation points, passed on stdin; required when
+            fixfrac is greater than 0.
         histo: Histogram file for acuity and veiling.
         expval: Exposure value for acuity and veiling.
         ldmax: Maximum luminance for acuity and veiling.
@@ -313,6 +322,8 @@ def pfilt(
         xres: horizontal resolution
         yres: vertical resolution
         pixel_aspect: pixel aspect ratio
+        pa_correct: if True, correct the pixel aspect ratio by adjusting the
+            output resolution rather than the pixel shape.
         exposure: exposure value
         lamp: lamp file
         lampdat: lamp data file
@@ -525,12 +536,16 @@ def pvaluer(
         xres: X resolution.
         yres: Y resolution.
         inform: input data format. Default is "a" for ascii.
+        resstr: Set to False if the input does not contain a resolution
+            string. Default is True.
+        dataonly: Set to True if the input contains data only, without
+            pixel coordinates. Default is False.
         header: Set to True if the picture file has a header. Default is False.
         primaries: list of primaries for XYZ calculation. Default is None.
         pxyz: Set to True to calculate XYZ values. Default is False.
 
     Returns:
-        Bytes of the pvalue output
+        bytes: the pvalue output
     """
     stdin = None
     cmd = [str(BINPATH / "pvalue"), "-r"]
@@ -662,6 +677,7 @@ def ra_tiff(
         sgilog24: Set to True to use SGI log 24 compression. Default is False.
         ieee32: Set to True to use IEEE 32-bit floating point compression.
         primary: Set to True to use 16-bit/primary output. Default is False.
+        exposure: Exposure value for the output image. Default is 0.
         reverse: Set to True to invoke a reverse conversion, from a TIFF
             to a RADIANCE picture. Default is False.
         xyze: Set to True to use XYZE output when invoking a reverse
@@ -731,6 +747,7 @@ def ra_ppm(
     Args:
         inp: Path or bytes to input picture file.
         gamma: Gamma value for the output image. Default is 2.2.
+        greyscale: Set to True to convert to greyscale. Default is False.
         reverse: Set to True to invoke a reverse conversion, from a PPM
             to a RADIANCE picture. Default is False.
         exposure: Exposure value for the output image. Default is 0.

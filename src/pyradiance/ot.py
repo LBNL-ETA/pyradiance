@@ -17,11 +17,13 @@ def getbbox(
     """Get axis-aligned bounding box of a Radiance scene.
 
     Args:
-        path: path to Radiance scene
-        header: include header
+        inputs: paths to Radiance scene files, or scene descriptions as bytes
+            which are piped to stdin.
+        header: if True, include the header in the output
+        warning: if False, warnings will be suppressed
 
     Returns:
-        list: bounding box
+        list[float]: bounding box as [xmin, xmax, ymin, ymax, zmin, zmax]
     """
     cmd = [str(BINPATH / "getbbox")]
     stdins: list[bytes] = []

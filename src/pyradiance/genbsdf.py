@@ -19,6 +19,12 @@ TensorTreeType = Literal[0, 3, 4]
 
 
 class SamplingBox(NamedTuple):
+    """Axis-aligned bounding box of the device being sampled, in meters.
+
+    The device is expected to lie behind the Z==0 plane, with the room on
+    the positive z side.
+    """
+
     xmin: float = 0
     xmax: float = 0
     ymin: float = 0
@@ -29,18 +35,45 @@ class SamplingBox(NamedTuple):
 
 @dataclass(slots=True)
 class SDFDataBytes:
+    """Scattering distribution data for one side of a device.
+
+    Attributes:
+        transmittance: transmission data, as a Radiance matrix.
+        reflectance: reflection data, as a Radiance matrix.
+    """
+
     transmittance: bytes = b""
     reflectance: bytes = b""
 
 
 @dataclass(slots=True)
 class BSDFDataBytes:
+    """Scattering distribution data for both sides of a device.
+
+    Attributes:
+        front: data sampled from the front (room-side) of the device.
+        back: data sampled from the back (exterior-side) of the device.
+    """
+
     front: SDFDataBytes = field(default_factory=lambda: SDFDataBytes())
     back: SDFDataBytes = field(default_factory=lambda: SDFDataBytes())
 
 
 @dataclass(slots=True)
 class BlindsGeometry:
+    """Geometry of a venetian blind system.
+
+    Attributes:
+        depth: slat depth.
+        width: overall width of the blind assembly.
+        height: overall height of the blind assembly.
+        nslats: number of slats.
+        angle: slat tilt angle, in degrees.
+        rcurv: slat radius of curvature; 0 for flat slats, negative to
+            curve the other way.
+        unit: length unit the dimensions are given in.
+    """
+
     depth: float = 0
     width: float = 0
     height: float = 0
@@ -54,16 +87,38 @@ class BlindsGeometry:
 # TODO: support translucent material
 @dataclass(slots=True)
 class ShadingMaterial:
+    """Surface properties of a shading device, as a Radiance plastic.
+
+    Attributes:
+        diffuse_reflectance: diffuse reflectance, 0 to 1, applied to all
+            three color channels.
+        specular_reflectance: specular reflectance, 0 to 1.
+        roughness: surface roughness, 0 for a perfectly smooth surface.
+    """
+
     diffuse_reflectance: float = 0
     specular_reflectance: float = 0
     roughness: float = 0
 
 
-def generate_blinds_from_cross_section():
+def _generate_blinds_from_cross_section():
+    """Generate blinds from a user-supplied slat cross section. Not implemented."""
     pass
 
 
 def generate_blinds(mat: ShadingMaterial, geom: BlindsGeometry) -> bytes:
+    """Generate a Radiance description of a venetian blind system.
+
+    The material and the blind are given randomly generated names so that
+    several systems can be combined in one scene without collisions.
+
+    Args:
+        mat: surface properties of the slats.
+        geom: geometry of the blind system.
+
+    Returns:
+        bytes: the material primitive followed by the blind geometry.
+    """
     mat_fargs = [
         mat.diffuse_reflectance,
         mat.diffuse_reflectance,
@@ -94,12 +149,26 @@ def generate_blinds(mat: ShadingMaterial, geom: BlindsGeometry) -> bytes:
 
 
 def generate_blinds_for_bsdf(mat: ShadingMaterial, geom: BlindsGeometry) -> bytes:
+    """Generate a venetian blind system oriented for BSDF generation.
+
+    The blind produced by :func:`generate_blinds` is rotated and shifted so
+    that it sits just behind the Z==0 plane, which is the orientation
+    :func:`generate_bsdf` expects.
+
+    Args:
+        mat: surface properties of the slats.
+        geom: geometry of the blind system.
+
+    Returns:
+        bytes: the transformed scene description.
+    """
     prims = generate_blinds(mat, geom)
     thickness = geom.depth * math.cos(math.radians(geom.angle))
     return Xform(prims).rotatez(-90).rotatex(-90).translate(0, 0, -thickness)()
 
 
-def get_basis_and_up(basis: BasisType) -> tuple[str, str, str]:
+def _get_basis_and_up(basis: BasisType) -> tuple[str, str, str]:
+    """Return (face_hemis, behind_hemis, up) rfluxmtx strings for a Klems basis."""
     if basis == "u":
         face_hemis = behind_hemis = f"h={basis}"
         up = ""
@@ -110,9 +179,10 @@ def get_basis_and_up(basis: BasisType) -> tuple[str, str, str]:
     return face_hemis, behind_hemis, up
 
 
-def get_sampling_box(
+def _get_sampling_box(
     device: str | bytes, dim: None | SamplingBox = None
 ) -> SamplingBox:
+    """Resolve the device bounding box, warning if it intrudes into the room."""
     dim = SamplingBox(*getbbox(device, warning=False)) if dim is None else dim
 
     if dim.zmin >= 0:
@@ -124,13 +194,14 @@ def get_sampling_box(
     return dim
 
 
-def get_hemisphere_receivers(
+def _get_hemisphere_receivers(
     face_hemis: str,
     behind_hemis: str,
     up: str,
     face_out: str = "",
     behind_out: str = "",
 ):
+    """Build the face and behind rfluxmtx receiver descriptions."""
     face_receiver = (
         f"#@rfluxmtx {face_hemis} {up} o={face_out}\n\n"
         "void glow receiver_face\n0\n0\n4 1 1 1 0\n\n"
@@ -144,7 +215,8 @@ def get_hemisphere_receivers(
     return face_receiver, behind_receiver
 
 
-def get_sender(hemis: str, up: str, dim: SamplingBox, front: bool) -> str:
+def _get_sender(hemis: str, up: str, dim: SamplingBox, front: bool) -> str:
+    """Build the rfluxmtx sender polygon covering one face of the device."""
     FEPS = 1e-6
     sender = f"#@rfluxmtx {hemis} {up}\n\nvoid polygon sender\n0\n0\n12\n"
     if front:
@@ -297,7 +369,7 @@ def generate_tensortree_sdf(
     facedat = os.path.join(tmpdir, "face.dat")
     behinddat = os.path.join(tmpdir, "behind.dat")
 
-    face_receiver, behind_receiver = get_hemisphere_receivers(
+    face_receiver, behind_receiver = _get_hemisphere_receivers(
         face_hemis=face_hemis,
         behind_hemis=behind_hemis,
         up=up,
@@ -321,7 +393,7 @@ def generate_tensortree_sdf(
     else:
         # Anisotropic (t4): polygon sender with tensor tree hemisphere basis
         sender_hemis = face_hemis if forw else behind_hemis
-        sender = get_sender(sender_hemis, up, dim, forw)
+        sender = _get_sender(sender_hemis, up, dim, forw)
         sender_file = os.path.join(tmpdir, "sender.rad")
         with open(sender_file, "w") as f:
             f.write(sender)
@@ -348,7 +420,7 @@ def generate_tensortree_sdf(
 
 
 # TODO: handle colored BSDF out
-def generate_sdf(
+def _generate_sdf(
     sender: str,
     receiver: str,
     octree_file: str,
@@ -358,6 +430,7 @@ def generate_sdf(
     params: None | list[str] = None,
     outspec: OutSpec = "y",
 ) -> SDFDataBytes:
+    """Run rfluxmtx for one sender/receiver pair and collate the result."""
     receiver_file = os.path.join(tmpdir, "receiver.rad")
     with open(receiver_file, "w") as f:
         f.write(receiver)
@@ -380,7 +453,7 @@ def generate_sdf(
     return SDFDataBytes(transmittance=trans, reflectance=refl)
 
 
-def generate_front_sdf(
+def _generate_front_sdf(
     octree_file: str,
     basis: BasisType,
     dim: SamplingBox,
@@ -388,10 +461,11 @@ def generate_front_sdf(
     params: None | list[str] = None,
     outspec: OutSpec = "y",
 ):
+    """Sample the Klems scattering distribution from the front of the device."""
     facedat = os.path.join(tmpdir, "face.dat")
     behinddat = os.path.join(tmpdir, "behind.dat")
-    face_hemis, behind_hemis, up = get_basis_and_up(basis)
-    face_receiver, behind_receiver = get_hemisphere_receivers(
+    face_hemis, behind_hemis, up = _get_basis_and_up(basis)
+    face_receiver, behind_receiver = _get_hemisphere_receivers(
         face_hemis=face_hemis,
         behind_hemis=behind_hemis,
         up=up,
@@ -399,8 +473,8 @@ def generate_front_sdf(
         behind_out=behinddat,
     )
     receiver = face_receiver + behind_receiver
-    sender: str = get_sender(face_hemis, up, dim, True)
-    return generate_sdf(
+    sender: str = _get_sender(face_hemis, up, dim, True)
+    return _generate_sdf(
         sender,
         receiver,
         octree_file,
@@ -412,7 +486,7 @@ def generate_front_sdf(
     )
 
 
-def generate_back_sdf(
+def _generate_back_sdf(
     octree_file: str,
     basis: BasisType,
     dim: SamplingBox,
@@ -420,10 +494,11 @@ def generate_back_sdf(
     params: None | list[str] = None,
     outspec: OutSpec = "y",
 ):
+    """Sample the Klems scattering distribution from the back of the device."""
     facedat = os.path.join(tmpdir, "face.dat")
     behinddat = os.path.join(tmpdir, "behind.dat")
-    face_hemis, behind_hemis, up = get_basis_and_up(basis)
-    face_receiver, behind_receiver = get_hemisphere_receivers(
+    face_hemis, behind_hemis, up = _get_basis_and_up(basis)
+    face_receiver, behind_receiver = _get_hemisphere_receivers(
         face_hemis=face_hemis,
         behind_hemis=behind_hemis,
         up=up,
@@ -431,8 +506,8 @@ def generate_back_sdf(
         behind_out=behinddat,
     )
     receiver = behind_receiver + face_receiver
-    sender: str = get_sender(behind_hemis, up, dim, False)
-    return generate_sdf(
+    sender: str = _get_sender(behind_hemis, up, dim, False)
+    return _generate_sdf(
         sender,
         receiver,
         octree_file,
@@ -494,7 +569,7 @@ def generate_bsdf(
     param_args.extend(["-n", str(nproc)])
 
     device = Xform(*inp)()
-    dim = get_sampling_box(device=device, dim=dim)
+    dim = _get_sampling_box(device=device, dim=dim)
 
     nx = int(math.sqrt(nsamp * (dim.xmax - dim.xmin) / (dim.ymax - dim.ymin)) + 1)
     ny = int(nsamp / nx + 1)
@@ -527,11 +602,11 @@ def generate_bsdf(
             result.front = generate_tensortree_sdf(forw=True, **tt_kwargs)
     else:
         param_args.append("-fd")
-        result.back = generate_back_sdf(
+        result.back = _generate_back_sdf(
             octree_file, basis, dim, working_dir, params=param_args, outspec=outspec
         )
         if front:
-            result.front = generate_front_sdf(
+            result.front = _generate_front_sdf(
                 octree_file, basis, dim, working_dir, params=param_args, outspec=outspec
             )
 
@@ -550,6 +625,23 @@ def generate_xml(
     correct_solid_angle: None | bool = None,
     **kwargs,
 ) -> bytes:
+    """Wrap sampled BSDF data into a LBNL Window XML description.
+
+    Args:
+        sol_results: solar-band scattering data.
+        vis_results: visible-band scattering data.
+        ir_results: infrared scattering data, used only to derive the front
+            and back emissivities.
+        basis: BSDF basis the data was sampled on, e.g. "kf" for Klems full
+            or "t3"/"t4" for tensor tree.
+        unit: length unit of the device geometry.
+        correct_solid_angle: whether to correct the data by solid angle.
+            Defaults to True for Klems bases and False for tensor trees.
+        **kwargs: additional tags passed through to wrapBSDF.
+
+    Returns:
+        bytes: the resulting XML description.
+    """
     # Klems matrix requires solid angle correction; tensor tree ("t3"/"t4") does not
     if correct_solid_angle is None:
         correct_solid_angle = not basis.startswith("t")

@@ -69,9 +69,10 @@ def evalglare(
         search_radius: search radius
         version: print version
         source_color: source color
+        fast: fast calculation mode, appended as the ``-<fast>`` option.
 
     Returns:
-        Evalglare output
+        bytes: Evalglare output
     """
     stdin: None | bytes = None
     cmd = [str(BINPATH / "evalglare")]
@@ -258,6 +259,7 @@ def get_header(inp: str | Path | bytes, dimension: bool = False) -> bytes:
 
     Args:
         inp: input file or bytes
+        dimension: if True, report only the image dimensions (getinfo -d)
 
     Returns:
         bytes: header
@@ -287,12 +289,12 @@ def rad(
     """Render a RADIANCE scene
 
     Args:
-        inp: input file or bytes
+        inp: path to the rad input (control) file
+        view: name or specification of the view to render
         dryrun: print the command instead of running it
         update: update the scene
         silent: suppress output
         varstr: list of variables to set
-        cwd: working directory
 
     Returns:
         bytes: output of rad
@@ -528,6 +530,8 @@ def rcode_norm(
         outform: output format when decoding
         decode: Set to True to decode instead
         per_point: Set to True to compute per point instead of per pixel
+        norm_file: Path to the encoded normal map to query; required when
+            per_point is True.
         flush: Set to True to flush output
 
     Returns:
@@ -590,6 +594,12 @@ def rcode_norm(
 
 
 class Rcomb:
+    """Builder for an rcomb command.
+
+    Inputs are added with :meth:`add_input`, then the command is run by
+    calling the instance.
+    """
+
     def __init__(
         self,
         transform: None | str = None,
@@ -689,11 +699,14 @@ def render(
 
     Args:
         scene: Scene object.
+        view: View to render; defaults to the first view of the scene.
         quality: Quality level.
         variability: Variability level.
         detail: Detail level.
         nproc: Number of processes to use.
         ncssamp: Number of channels to sample
+        resolution: Output image resolution as (xres, yres); defaults to
+            (512, 512).
         ambbounce: Number of ambient bounces.
         ambcache: Use ambient cache.
         params: Sampling parameters.
@@ -887,9 +900,11 @@ def rmtxop(
         transpose: whether to transpose matrix
         scale: scaling factor
         transform: transform factors for each channel
+        reflectance: reflectance suffix appended to the input as ``r<value>``,
+            selecting a reflectance component of the matrix.
 
     Returns:
-        The results of rmtxop in bytes
+        bytes: The results of rmtxop
     """
     cmd = [str(BINPATH / "rmtxop")]
     stdin = None
@@ -911,6 +926,18 @@ def rmtxop(
 
 
 class Rmtxop:
+    """Builder for an rmtxop command.
+
+    Matrices are added in order with :meth:`add_input`, each with its own
+    operator and transforms, then the command is run by calling the
+    instance.
+
+    Args:
+        outform: output format, one of 'a', 'f', 'd', or 'c'.
+        color: color transform applied to the result, as a matrix given in
+            row-major order.
+    """
+
     def __init__(self, outform: FileType = "a", color: None | str = None):
         self.cmd = [str(BINPATH / "rmtxop")]
         self.stdin = None
@@ -929,6 +956,29 @@ class Rmtxop:
         refl_side: None | str = None,
         color: None | str = None,
     ):
+        """Add an input matrix to the command.
+
+        Args:
+            input_data: path to a matrix file, or matrix data as bytes,
+                in which case it is piped on stdin. Only one bytes input
+                is allowed per command.
+            op: operator combining this input with the preceding one; it is
+                ignored for the first input.
+            scale: scalar, or per-component factors, applied to this input.
+            transform: transform coefficients applied to this input, either
+                as a string or a sequence of floats.
+            transpose: if True, transpose this input.
+            refl_side: reflectance side to select, 'f' for front or 'b'
+                for back.
+            color: color transform applied to this input; ignored if
+                ``transform`` is given.
+
+        Returns:
+            Rmtxop: this instance, to allow chaining.
+
+        Raises:
+            ValueError: if a second bytes input is added.
+        """
         if self.nparts >= 1:
             self.cmd.append(op)
         if scale is not None:
@@ -1012,7 +1062,14 @@ def rsensor(
 
 @handle_called_process_error
 def strip_header(inp: bytes) -> bytes:
-    """Use getinfo to strip the header from a Radiance file."""
+    """Use getinfo to strip the header from a Radiance file.
+
+    Args:
+        inp: the contents of a Radiance file, including its header.
+
+    Returns:
+        bytes: the input with the header removed.
+    """
     cmd = [str(BINPATH / "getinfo"), "-"]
     if isinstance(inp, bytes):
         stdin = inp
@@ -1037,7 +1094,36 @@ def vwrays(
     pic: None | Path = None,
     zbuf: None | Path = None,
 ) -> bytes:
-    """vwrays."""
+    """Compute rays for a given picture or view.
+
+    Either ``view`` or ``pic`` must be provided.
+
+    Args:
+        pixpos: pixel positions to compute rays for, passed on stdin. If
+            given, vwrays reads pixel coordinates instead of scanning the
+            whole image.
+        unbuf: if True, unbuffer the output.
+        outform: output format, one of 'a', 'f', or 'd'.
+        ray_count: number of rays to sample per pixel.
+        pixel_jitter: random jitter applied to each sample, 0 to 1.
+        pixel_diameter: pixel diameter used for depth-of-field sampling.
+        pixel_aspect: pixel aspect ratio.
+        xres: horizontal resolution.
+        yres: vertical resolution.
+        dimensions: if True, report the resolved image dimensions instead of
+            the rays.
+        view: view specification as a sequence of view arguments.
+        pic: path to a picture from which to take the view.
+        zbuf: path to a depth buffer matching ``pic``, used to offset ray
+            origins to the surface hit points.
+
+    Returns:
+        bytes: the computed rays, or the image dimensions if ``dimensions``
+        is True.
+
+    Raises:
+        ValueError: if neither ``view`` nor ``pic`` is provided.
+    """
     stdin = None
     cmd = [str(BINPATH / "vwrays")]
     if pixpos is not None:
@@ -1071,7 +1157,17 @@ def vwright(
     view: View,
     distance: float = 0,
 ) -> bytes:
-    """Run vwright."""
+    """Compute a view's right-hand coordinate system.
+
+    Args:
+        view: the view to evaluate.
+        distance: distance along the view direction at which the origin of
+            the reported coordinate system is placed.
+
+    Returns:
+        bytes: the vwright output, a set of variable assignments describing
+        the view's origin and axes.
+    """
     cmd = [str(BINPATH / "vwright")]
     cmd.extend(get_view_args(view))
     cmd.append(str(distance))
@@ -1171,6 +1267,12 @@ def rttree_reduce(
 
 
 class WrapBSDF:
+    """Builder for a wrapBSDF command.
+
+    Spectral data is attached with :meth:`add_visible` and
+    :meth:`add_solar`, then the XML is produced by calling the instance.
+    """
+
     def __init__(
         self,
         inxml: None | str | Path = None,
@@ -1300,6 +1402,13 @@ class WrapBSDF:
 
 
 class Xform:
+    """Builder for an xform command.
+
+    Transformations are appended in order with methods such as
+    :meth:`translate` and :meth:`rotatex`, then the transformed scene
+    description is produced by calling the instance.
+    """
+
     def __init__(
         self,
         inp: str | Path | bytes,

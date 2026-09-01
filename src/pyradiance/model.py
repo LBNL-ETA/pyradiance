@@ -35,7 +35,12 @@ class Primitive:
     fargs: Sequence[float]
 
     @property
-    def bytes(self):
+    def bytes(self) -> bytes:
+        """Serialize the primitive to its Radiance representation.
+
+        Returns:
+            bytes: the primitive as a single-line Radiance description.
+        """
         out = f"{self.modifier} {self.ptype} {self.identifier} "
         if len(self.sargs) > 0:
             out += f"{len(self.sargs)} {' '.join(self.sargs)} "
@@ -95,12 +100,20 @@ class Scene:
 
     @property
     def sid(self) -> str:
-        """Scene id."""
+        """Scene id.
+
+        Returns:
+            str: the identifier this scene was created with.
+        """
         return self._sid
 
     @property
     def octree(self) -> str:
-        """Scene id."""
+        """Path to the scene octree.
+
+        Returns:
+            str: the octree file name, derived from the scene id.
+        """
         return self._octree
 
     @property
@@ -120,14 +133,17 @@ class Scene:
 
     @property
     def views(self):
+        """Scene views."""
         return self._views
 
     @property
     def sensors(self):
+        """Scene sensors, each a sequence of position and direction values."""
         return self._sensors
 
     @property
     def changed(self):
+        """Whether the scene has been modified since the octree was built."""
         return self._changed
 
     def _add(self, obj, target):

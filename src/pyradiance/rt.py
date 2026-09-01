@@ -56,6 +56,7 @@ def mkpmap(
     by rpict(1), rtrace(1) and rvu(1) in a backward raytracing pass.
     The photon map(s) can be reused for multiple viewpoints and sensor
     locations as long as the geometry remains unchanged.
+
     Args:
         octree: Octree file path.
         global_map: Global map file path and number of photons.
@@ -81,9 +82,23 @@ def mkpmap(
         amb_incl_modfile: File with modifiers to include in ambient calculation.
         backface_vis: Backface visibility.
         sample_res: Sample resolution.
+        partition_size: Maximum photon distribution partition size, in
+            approximate number of photons per partition.
+        progress_file: Path to a file to which the progress report is written
+            instead of the console.
+        overwrite: If True, overwrite any existing photon map files.
+        maxdist: Maximum photon search radius; photons beyond this distance
+            from a ray hitpoint are ignored.
+        scattering_albedo: Volume scattering albedo as an RGB triplet.
+        extinction_coefficient: Volume extinction coefficient as an RGB triplet.
+        scattering_eccentricity: Volume scattering eccentricity, in the range
+            -1 (backscattering) to 1 (forward scattering); 0 is isotropic.
+        nproc: Number of parallel processes to use.
+        progress_interval: Interval, in seconds, between progress reports.
 
-
-
+    Returns:
+        None: the photon map(s) are written to the paths given by the
+        ``*_map`` arguments.
     """
     cmd = [str(BINPATH / "mkpmap")]
     if global_map is not None:
@@ -163,6 +178,24 @@ def mkpmap(
 
 
 class Rcontrib:
+    """Builder for an rcontrib command.
+
+    Modifiers are added with :meth:`add_modifier`, each with its own
+    binning and output options, then the command is run by calling the
+    instance.
+
+    Args:
+        inp: input rays, passed on stdin.
+        octree: path to the octree file.
+        nproc: number of parallel processes to use.
+        yres: number of records per output row.
+        inform: input format, one of 'a', 'f', or 'd'.
+        outform: output format, one of 'a', 'f', or 'd'.
+        report: interval, in seconds, between progress reports; 0 disables
+            reporting.
+        params: additional rcontrib parameters passed through verbatim.
+    """
+
     def __init__(
         self,
         inp: bytes,
@@ -200,6 +233,29 @@ class Rcontrib:
         yres: None | int = None,
         output: None | str = None,
     ):
+        """Add a modifier, or a file of modifiers, to the command.
+
+        Exactly one of ``modifier`` or ``modifier_path`` must be given.
+
+        Args:
+            modifier: name of a single modifier to track.
+            modifier_path: path to a file listing modifiers to track.
+            calfile: path to a calculation file defining the binning
+                expressions.
+            expression: an expression definition used for binning.
+            nbins: number of bins, as a literal or an expression.
+            binv: bin selection expression.
+            param: parameter string passed to the binning expressions.
+            xres: horizontal resolution of the output for this modifier.
+            yres: vertical resolution of the output for this modifier.
+            output: output file specification for this modifier.
+
+        Returns:
+            Rcontrib: this instance, to allow chaining.
+
+        Raises:
+            ValueError: if neither modifier nor modifier_path is provided.
+        """
         arglist = []
         if calfile is not None:
             arglist.extend(["-f", str(calfile)])
@@ -320,9 +376,13 @@ def rtrace(
         xres: X resolution of the output image.
         yres: Y resolution of the output image.
         nproc: Number of processors to use.
+        params: A list of additional rtrace parameters passed through verbatim.
+        report: If True, let rtrace write its progress report to stderr
+            instead of capturing it.
+        version: If True, return the rtrace version string and skip rendering.
 
     Returns:
-        A string of bytes representing the output of rtrace.
+        bytes: the output of rtrace, or the version string if ``version`` is True.
     """
     cmd = [str(BINPATH / "rtrace")]
     if version:

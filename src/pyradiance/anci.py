@@ -11,8 +11,16 @@ BINPATH = Path(__file__).parent / "bin"
 
 
 def handle_called_process_error(func):
-    """
-    Decorator to handle subprocess.CalledProcessError.
+    """Decorator to handle subprocess.CalledProcessError.
+
+    Args:
+        func: the function to wrap; typically one that invokes a Radiance
+            binary through subprocess.
+
+    Returns:
+        Callable: the wrapped function, which re-raises any
+        CalledProcessError as a RuntimeError carrying the exit code and
+        the captured stderr of the failed command.
     """
 
     @wraps(func)

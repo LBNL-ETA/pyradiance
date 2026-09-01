@@ -19,12 +19,23 @@ M_PER_MM = 1e-3
 DEFAULT_THICKNESS_MM = 3
 
 class GlazingType(Enum):
+    """Type of a glazing layer, matching the IGSDB product subtypes."""
+
     monolithic = "monolithic"
     coated = "coated"
     laminate = "laminate"
 
 
 class SpectralPoint(NamedTuple):
+    """A single spectral measurement of a glazing layer.
+
+    Attributes:
+        wavelength_nm: wavelength of the measurement, in nanometers.
+        rf: front reflectance, 0 to 1.
+        rb: back reflectance, 0 to 1.
+        t: transmittance, 0 to 1.
+    """
+
     wavelength_nm: int
     rf: float
     rb: float
@@ -33,15 +44,26 @@ class SpectralPoint(NamedTuple):
 
 @dataclass(slots=True)
 class GlazingLayerData:
+    """Spectral description of a single glazing layer.
+
+    Attributes:
+        name: name of the layer.
+        glazing_type: type of the layer, e.g. monolithic or coated.
+        thickness_m: layer thickness, in meters.
+        spectral_points: measurements of the layer, ordered by wavelength.
+    """
+
     name: str
     glazing_type: GlazingType
     thickness_m: float
     spectral_points: list[SpectralPoint] = field(default_factory=list)
 
     def to_datstr(self) -> str:
-        """
-        Generates the string content for a 2 dimensional .dat file
-        from this layer's spectral points.
+        """Generate the content of a 2-dimensional .dat file for this layer.
+
+        Returns:
+            str: the .dat file content built from this layer's spectral
+            points, or an empty string if the layer has no spectral points.
         """
         num_points = len(self.spectral_points)
         if not self.spectral_points or num_points <= 0:
@@ -320,6 +342,18 @@ def gendaymtx(
 
 
 class GenGlaze:
+    """Builder for a genglaze command.
+
+    Layers are added in order with :meth:`add_monolithic` and
+    :meth:`add_coated`, then the command is run by calling the instance.
+
+    Args:
+        wavelength_start: first wavelength to sample, in nanometers.
+        wavelength_end: last wavelength to sample, in nanometers.
+        wavelength_interval: sampling interval, in nanometers.
+        prefix: prefix used for the generated material names.
+    """
+
     def __init__(
         self,
         wavelength_start: int = 380,
@@ -334,12 +368,35 @@ class GenGlaze:
         ]
 
     def add_monolithic(self, fpath: str, thickness: float):
+        """Add a monolithic glazing layer.
+
+        Args:
+            fpath: path to the layer's spectral .dat file.
+            thickness: layer thickness, in meters.
+
+        Returns:
+            GenGlaze: this instance, to allow chaining.
+
+        Raises:
+            ValueError: if fpath does not have a .dat suffix.
+        """
         if not fpath.endswith(".dat"):
             raise ValueError(f"Expect a .dat input file, got {fpath}")
         self.cmd.extend(["-m", fpath, str(thickness)])
         return self
 
     def add_coated(self, fpath: str):
+        """Add a coated glazing layer.
+
+        Args:
+            fpath: path to the layer's spectral .dat file.
+
+        Returns:
+            GenGlaze: this instance, to allow chaining.
+
+        Raises:
+            ValueError: if fpath does not have a .dat suffix.
+        """
         if not fpath.endswith(".dat"):
             raise ValueError(f"Expect a .dat input file, got {fpath}")
         self.cmd.extend(["-c", fpath])
@@ -358,9 +415,21 @@ def genglaze_data(
     wavelength_end: int = 780,
     wavelength_interval: int = 5,
 ) -> bytes:
-    """
-    Calls genglaze with a list of processed GlazingLayerData objects.
-    Each GlazingLayerData object can format itself for the genglaze .dat file.
+    """Call genglaze with a list of processed GlazingLayerData objects.
+
+    Each layer is written to a temporary .dat file and passed to genglaze
+    as either a monolithic or a coated layer, according to its type.
+
+    Args:
+        layers: glazing layers, in the order they appear in the assembly.
+        prefix: prefix used for the generated material names.
+        wavelength_start: first wavelength to sample, in nanometers.
+        wavelength_end: last wavelength to sample, in nanometers.
+        wavelength_interval: sampling interval, in nanometers.
+
+    Returns:
+        bytes: the genglaze output, preceded by a comment line per layer,
+        or an empty bytes object if no layers are given.
     """
     if not layers or len(layers) < 1:
         return b""
@@ -408,7 +477,22 @@ def genglaze_json(
     wavelength_end: int = 780,
     wavelength_interval: int = 5,
 ) -> bytes:
-    """Call genglaze from IGSDB glazing records (.json)."""
+    """Call genglaze from IGSDB glazing records (.json).
+
+    Args:
+        fpaths: paths to IGSDB glazing product records, in the order the
+            layers appear in the assembly.
+        prefix: prefix used for the generated material names.
+        wavelength_start: first wavelength to sample, in nanometers.
+        wavelength_end: last wavelength to sample, in nanometers.
+        wavelength_interval: sampling interval, in nanometers.
+
+    Returns:
+        bytes: the genglaze output.
+
+    Raises:
+        ValueError: if any record is not a glazing product.
+    """
     layers: list[GlazingLayerData] = []
     out: list[str] = []
     for fpath in fpaths:
@@ -458,6 +542,24 @@ def genrev(
     file: None | str = None,
     smooth: bool = False,
 ) -> bytes:
+    """Generate a RADIANCE description of a surface of revolution.
+
+    The surface is described by the parametric expressions z(t) and r(t)
+    for t from 0 to 1, revolved about the z axis.
+
+    Args:
+        mat: Material name.
+        name: Name of the generated surface.
+        z_t: Expression for z as a function of t.
+        r_t: Expression for the radius as a function of t.
+        nseg: Number of segments used to approximate the surface.
+        expr: Additional expression definitions made available to z_t and r_t.
+        file: Path to a calculation file with definitions used by z_t and r_t.
+        smooth: If True, generate smoothed surface normals.
+
+    Returns:
+        bytes: output of genrev
+    """
     cmd = [str(BINPATH / "genrev")]
     cmd.append(mat)
     cmd.append(name)
@@ -502,6 +604,7 @@ def gensdaymtx(
         ground_reflectance: ground color
         rotate: rotate
         outform: outform
+        out_dir: directory where the generated spectral sky files are written
         onesun: onesun
         nthreads: number of threads to use for precomputations
 
