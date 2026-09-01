@@ -532,6 +532,78 @@ def genglaze_json(
 
 
 @handle_called_process_error
+def genprism(
+    mat: str,
+    name: str,
+    vertices: None | Sequence[float] = None,
+    vfile: None | str = None,
+    lvect: None | Sequence[float] = None,
+    radius: None | float = None,
+    no_connect: bool = False,
+    no_ends: bool = False,
+    stdin: None | bytes = None,
+) -> bytes:
+    """Generate a RADIANCE description of a prism, or extruded polygon.
+
+    The polygon to extrude lies in the z==0 plane and is given either as a
+    flat sequence of (x,y) pairs through the vertices argument, or through a
+    vertex file.  A vfile of "-" reads the vertices from standard input, in
+    which case the data should be passed through the stdin argument.
+
+    Args:
+        mat: material name
+        name: prism name
+        vertices: flat sequence of x, y pairs, e.g. [x1, y1, x2, y2, x3, y3]
+        vfile: vertex file path, or "-" to read from standard input
+        lvect: extrusion vector (x, y, z), default (0, 0, 1) (-l)
+        radius: round the corners with spheres and cylinders (-r)
+        no_connect: inhibit the face connecting the last vertex to
+            the first (-c)
+        no_ends: inhibit generation of the end polygons (-e)
+        stdin: data to feed to standard input when vfile is "-"
+
+    Returns:
+        bytes: RADIANCE description of the prism
+
+    Examples:
+        >>> genprism("clear_plastic", "prism", [0, 0, 0.5, 0.866, 1, 0])
+        >>> genprism("mat", "prism", vfile="-", stdin=b"0 0 1 0 1 1\\n")
+    """
+    if (vertices is None) == (vfile is None):
+        raise ValueError(
+            "pyradiance.genprism: Must provide either vertices or vfile"
+        )
+    cmd = [str(BINPATH / "genprism")]
+    cmd.append(mat)
+    cmd.append(name)
+    if vertices is not None:
+        if len(vertices) % 2 != 0:
+            raise ValueError(
+                "pyradiance.genprism: vertices must contain an even number "
+                "of values (x, y pairs)"
+            )
+        if len(vertices) < 6:
+            raise ValueError(
+                "pyradiance.genprism: vertices must contain at least 3 pairs"
+            )
+        cmd.append(str(len(vertices) // 2))
+        cmd.extend(str(v) for v in vertices)
+    else:
+        cmd.append(str(vfile))
+    if lvect is not None:
+        if len(lvect) != 3:
+            raise ValueError("pyradiance.genprism: lvect must have 3 values")
+        cmd.extend(["-l", *[str(v) for v in lvect]])
+    if radius is not None:
+        cmd.extend(["-r", str(radius)])
+    if no_connect:
+        cmd.append("-c")
+    if no_ends:
+        cmd.append("-e")
+    return sp.run(cmd, input=stdin, stdout=sp.PIPE, stderr=sp.PIPE, check=True).stdout
+
+
+@handle_called_process_error
 def genrev(
     mat: str,
     name: str,
