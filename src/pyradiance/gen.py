@@ -699,6 +699,80 @@ def genssky(
 
 
 @handle_called_process_error
+def gensurf(
+    mat: str,
+    name: str,
+    x: str,
+    y: str,
+    z: str,
+    m: int,
+    n: int,
+    expr: None | str = None,
+    file: None | str = None,
+    invert: bool = False,
+    smooth: bool = False,
+    waveout: bool = False,
+    stdin: None | bytes = None,
+) -> bytes:
+    """Generate a RADIANCE or Wavefront description of a curved surface.
+
+    The surface is defined by the parametric equations x(s,t), y(s,t) and
+    z(s,t), where s varies from 0 to 1 in steps of 1/m and t varies from 0 to
+    1 in steps of 1/n.  Three invocation forms are supported:
+
+    1. x, y and z are all function expressions.
+    2. x and y are expressions and z is a data file of m*n or (m+1)*(n+1)
+       floating point z values.
+    3. x, y and z are all the same data file, containing coordinate triplets.
+
+    A data file argument may be given as "-" to read from standard input, in
+    which case the data should be passed through the stdin argument.
+
+    Args:
+        mat: material name
+        name: surface name
+        x: x(s,t) expression or data file path
+        y: y(s,t) expression or data file path
+        z: z(s,t) expression or data file path
+        m: number of subdivisions in s
+        n: number of subdivisions in t
+        expr: auxiliary expression (-e)
+        file: auxiliary function file (-f)
+        invert: reverse surface normal directions (-i)
+        smooth: add surface normal interpolation (-s)
+        waveout: wavefront (.obj) out (-o)
+        stdin: data to feed to standard input when a data file is "-"
+
+    Returns:
+        bytes: description of the surface
+
+    Examples:
+        >>> gensurf("crystal", "ball", "sin(PI*s)*cos(2*PI*t)", "cos(PI*s)",
+        ...         "sin(PI*s)*sin(2*PI*t)", 7, 10)
+        >>> gensurf("dirt", "ground", "10*s", "20*t", "height.dat", 2, 3, smooth=True)
+    """
+    cmd = [str(BINPATH / "gensurf")]
+    cmd.append(mat)
+    cmd.append(name)
+    cmd.append(x)
+    cmd.append(y)
+    cmd.append(z)
+    cmd.append(str(m))
+    cmd.append(str(n))
+    if expr is not None:
+        cmd.extend(["-e", expr])
+    if file is not None:
+        cmd.extend(["-f", file])
+    if invert:
+        cmd.append("-i")
+    if smooth:
+        cmd.append("-s")
+    if waveout:
+        cmd.append("-o")
+    return sp.run(cmd, input=stdin, stdout=sp.PIPE, stderr=sp.PIPE, check=True).stdout
+
+
+@handle_called_process_error
 def mkillum(
     inp: bytes,
     octree: str | Path,

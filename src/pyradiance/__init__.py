@@ -35,6 +35,7 @@ from .gen import (
     gensdaymtx,
     gensky,
     genssky,
+    gensurf,
     mkillum,
 )
 from .genbsdf import (
@@ -171,6 +172,7 @@ __all__ = [
     "gensdaymtx",
     "gensky",
     "genssky",
+    "gensurf",
     "getbbox",
     "get_header",
     "get_image_dimensions",
