@@ -66,6 +66,29 @@ from .px import (
     ra_xyze,
 )
 
+# Provided by the compiled radiance_ext extension, which is POSIX only.
+_RADIANCE_EXT_NAMES = (
+    "RCCONTEXT",
+    "RcontribSimulManager",
+    "RcOutputOp",
+    "RTdoFIFO",
+    "RTimmIrrad",
+    "RTlimDist",
+    "RTmask",
+    "RtraceSimulManager",
+    "RTtraceSources",
+    "calcontext",
+    "eval",
+    "get_ray_params",
+    "initfunc",
+    "loadfunc",
+    "ray_done",
+    "set_eparams",
+    "set_option",
+    "set_ray_params",
+    "setspectrsamp",
+)
+
 if os.name == "posix":
     from .radiance_ext import (
         RCCONTEXT,
@@ -114,6 +137,7 @@ from .util import (
     rcode_depth,
     rcode_ident,
     rcode_norm,
+    rcollate,
     Rmtxop,
     Rcomb,
     render,
@@ -126,9 +150,14 @@ from .util import (
 
 __version__ = version("pyradiance")
 
-os.environ["RAYPATH"] = (
-    "." + os.pathsep + os.path.join(os.path.dirname(__file__), "lib")
-)
+_LIBPATH = os.path.join(os.path.dirname(__file__), "lib")
+# Prepend rather than overwrite, so a user- or site-configured RAYPATH
+# (custom .cal files, material libraries) survives importing pyradiance.
+_raypath = [p for p in os.environ.get("RAYPATH", "").split(os.pathsep) if p]
+for _p in (_LIBPATH, "."):
+    if _p not in _raypath:
+        _raypath.insert(0, _p)
+os.environ["RAYPATH"] = os.pathsep.join(_raypath)
 if str(BINPATH) not in os.environ["PATH"].split(os.pathsep):
     os.environ["PATH"] = str(BINPATH) + os.pathsep + os.environ["PATH"]
 
@@ -212,6 +241,7 @@ __all__ = [
     "rfluxmtx",
     "rlam",
     "rmtxop",
+    "rcollate",
     "robjutil",
     "rpict",
     "rsensor",
@@ -240,3 +270,11 @@ __all__ = [
     "get_view_args",
     "get_ray_params_args",
 ]
+
+
+# The radiance_ext extension is only built on POSIX, so the names it provides
+# must not be advertised elsewhere -- "from pyradiance import *" would raise
+# AttributeError.
+if os.name != "posix":
+    for _name in _RADIANCE_EXT_NAMES:
+        __all__.remove(_name)

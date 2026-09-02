@@ -2,7 +2,9 @@
 Radiance picture processing utilities.
 """
 
+import os
 import subprocess as sp
+import tempfile
 from pathlib import Path
 from typing import NamedTuple, Sequence
 
@@ -31,7 +33,7 @@ class Pcomb:
         yres: None | int = None,
         inform: str = "a",
         fout: bool = True,
-        header: bool = False,
+        header: bool = True,
         expression: None | str | Sequence[str] = None,
         source: None | str | Sequence[str] = None,
     ):
@@ -40,9 +42,12 @@ class Pcomb:
         Args:
             xres: horizontal resolution
             yres: vertical resolution
-            inform: input data format. Default is "a" for ascii.
-            fout: if True, write output to file
-            header: if True, write header
+            inform: kept for backwards compatibility. pcomb has no input-format
+                option -- it detects the format from the input header -- so any
+                value other than "a" raises a ValueError.
+            fout: if True, produce float (-ff) output
+            header: if True (default), keep the information header; if False,
+                emit ``-h`` so pcomb strips it
             expression: expression or list of expressions
             source: source cal file or list of source cal files
         """
@@ -54,10 +59,14 @@ class Pcomb:
         if yres is not None:
             self.cmd.extend(["-y", str(yres)])
         if inform != "a":
-            self.cmd.extend(["-i", inform])
+            raise ValueError(
+                "pcomb has no input-format option; it reads the format from the "
+                "input header. Remove the 'inform' argument."
+            )
         if fout:
             self.cmd.append("-ff")
-        if header:
+        if not header:
+            # pcomb -h *reduces* the information header.
             self.cmd.append("-h")
         if expression is not None:
             if isinstance(expression, str):
@@ -156,58 +165,59 @@ def pcompos(
     """
     cmd = [str(BINPATH / "pcompos")]
     stdin = None
-    if ncols is not None:
+    array_mode = ncols is not None
+    if array_mode:
         cmd.extend(["-a", str(ncols)])
         if spacing > 0:
             cmd.extend(["-s", str(spacing)])
         if anchor_point is not None:
-            cmd.extend(["-o", *anchor_point])
+            cmd.extend(["-o", *map(str, anchor_point)])
     else:
         if pos is None:
             raise ValueError("Either pos or ncols must be specified")
         if len(pos) != len(inputs):
             raise ValueError("pos must have the same number of elements as inputs")
-        if xres is not None:
-            cmd.extend(["-x", str(xres)])
-        if yres is not None:
-            cmd.extend(["-y", str(yres)])
-        if background is not None:
-            cmd.extend(
-                ["-b", str(background[0]), str(background[1]), str(background[2])]
-            )
-        if lower_threashold is not None:
-            cmd.extend(["-t", str(lower_threashold)])
-        if upper_threshold is not None:
-            cmd.extend(["+t", str(upper_threshold)])
-        if label is not None:
-            if label == "":
-                cmd.append("-la")
-            else:
-                cmd.extend(["-l", label])
-            if label_height is not None:
-                cmd.extend(["-lh", str(label_height)])
-        if not header:
-            cmd.append("-h")
-        for i, input in enumerate(inputs):
-            if anchors is not None:
-                if anchors[i] is not None:
-                    cmd.append(f"={anchors[i]}")
-            if isinstance(input, (str, Path)):
-                cmd.append(str(input))
-            elif isinstance(input, bytes):
-                if stdin is not None:
-                    raise ValueError("Only one bytes input is allowed with pcompos.")
-                stdin = input
-                cmd.append("-")
-            else:
-                raise ValueError(f"Unsupported input type: {type(input)}")
+    if xres is not None:
+        cmd.extend(["-x", str(xres)])
+    if yres is not None:
+        cmd.extend(["-y", str(yres)])
+    if background is not None:
+        cmd.extend(["-b", str(background[0]), str(background[1]), str(background[2])])
+    if lower_threashold is not None:
+        cmd.extend(["-t", str(lower_threashold)])
+    if upper_threshold is not None:
+        cmd.extend(["+t", str(upper_threshold)])
+    if label is not None:
+        if label == "":
+            cmd.append("-la")
+        else:
+            cmd.extend(["-l", label])
+        if label_height is not None:
+            cmd.extend(["-lh", str(label_height)])
+    if not header:
+        cmd.append("-h")
+    # The input pictures must be appended in *both* modes; in array mode they
+    # simply carry no explicit position.
+    for i, input in enumerate(inputs):
+        if not array_mode and anchors is not None and anchors[i] is not None:
+            cmd.append(f"={anchors[i]}")
+        if isinstance(input, (str, Path)):
+            cmd.append(str(input))
+        elif isinstance(input, bytes):
+            if stdin is not None:
+                raise ValueError("Only one bytes input is allowed with pcompos.")
+            stdin = input
+            cmd.append("-")
+        else:
+            raise ValueError(f"Unsupported input type: {type(input)}")
+        if not array_mode:
             cmd.extend(list(map(str, pos[i])))
     return sp.run(cmd, input=stdin, stdout=sp.PIPE, check=True).stdout
 
 
 @handle_called_process_error
 def pcond(
-    hdr: Path,
+    hdr: str | Path | bytes,
     human: bool = False,
     acuity: bool = False,
     veiling: bool = False,
@@ -273,7 +283,10 @@ def pcond(
     if fixfrac > 0:
         if fixpoints is None:
             raise ValueError("fixfrac is set but fixpoints is not provided.")
-        stdin = str(fixpoints).encode()
+        # pcond expects whitespace-separated "x y" pairs, one per line.
+        stdin = (
+            "\n".join(" ".join(str(v) for v in pt) for pt in fixpoints) + "\n"
+        ).encode()
         cmd.extend(["-i", str(fixfrac)])
     elif histo:
         stdin = histo.encode()
@@ -290,10 +303,21 @@ def pcond(
         cmd.extend(["-f", macbeth])
     if mapfile != "":
         cmd.extend(["-x", mapfile])
-    if not isinstance(hdr, (str, Path)):
-        raise TypeError("hdr should be a string or a Path.")
-    cmd.append(str(hdr))
-    return sp.run(cmd, input=stdin, stdout=sp.PIPE, check=True).stdout
+    if isinstance(hdr, (str, Path)):
+        cmd.append(str(hdr))
+        return sp.run(cmd, input=stdin, stdout=sp.PIPE, check=True).stdout
+    if isinstance(hdr, bytes):
+        # pcond makes two passes over its input, so it cannot read a pipe.
+        # Spill the bytes to a temporary file to keep the bytes-in convention.
+        fd, tmppath = tempfile.mkstemp(suffix=".hdr")
+        try:
+            with os.fdopen(fd, "wb") as wtr:
+                wtr.write(hdr)
+            cmd.append(tmppath)
+            return sp.run(cmd, input=stdin, stdout=sp.PIPE, check=True).stdout
+        finally:
+            os.remove(tmppath)
+    raise TypeError("hdr should be bytes, a string, or a Path.")
 
 
 @handle_called_process_error
@@ -571,6 +595,8 @@ def pvaluer(
         cmd.append(str(pic))
     elif isinstance(pic, bytes):
         stdin = pic
+    else:
+        raise TypeError("pic must be a Path, str, or bytes")
     return sp.run(cmd, check=True, stdout=sp.PIPE, input=stdin).stdout
 
 
@@ -724,6 +750,8 @@ def ra_tiff(
     elif isinstance(inp, bytes):
         stdin = inp
         cmd.append("-")
+    else:
+        raise TypeError("inp must be a Path, str, or bytes")
     if out is not None:
         cmd.append(str(out))
     pout = sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
@@ -775,6 +803,8 @@ def ra_ppm(
         cmd.append(str(inp))
     elif isinstance(inp, bytes):
         stdin = inp
+    else:
+        raise TypeError("inp must be a Path, str, or bytes")
     return sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
 
 

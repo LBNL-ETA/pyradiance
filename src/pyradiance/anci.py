@@ -32,6 +32,18 @@ def handle_called_process_error(func):
             raise RuntimeError(
                 f"An error occurred with exit code {e.returncode}: {errmsg.decode()}"
             )
+        except FileNotFoundError as e:
+            # A missing Radiance executable produces a bare FileNotFoundError
+            # pointing at an internal path; say what is actually wrong.
+            missing = getattr(e, "filename", None)
+            if missing and str(BINPATH) in str(missing):
+                raise FileNotFoundError(
+                    f"'{Path(missing).name}' is not bundled with this pyradiance "
+                    f"build (looked in {BINPATH}). Install Radiance separately and "
+                    f"call the tool directly, or use a different pyradiance "
+                    f"function."
+                ) from None
+            raise
         else:
             return result
 

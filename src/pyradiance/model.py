@@ -51,6 +51,9 @@ class Primitive:
             out += f"{len(self.fargs)} {' '.join(str(v) for v in self.fargs)} "
         else:
             out += "0 "
+        # NOTE: this is a single line with a *trailing space and no newline*.
+        # Callers concatenating primitives with other scene text must supply
+        # their own separator.
         return out.encode("utf-8")
 
     def __str__(self) -> str:
@@ -85,6 +88,12 @@ class Scene:
         """
         if len(sid) < 1:
             raise ValueError("Scene id must be at least one character long")
+        if os.sep in sid or (os.altsep and os.altsep in sid):
+            raise ValueError(
+                f"Scene id must be a bare name, not a path: {sid!r}. "
+                "Scene builds both '{sid}.oct' and 'm{sid}.oct' in the current "
+                "directory, so a separator produces a broken path."
+            )
         self._sid = sid
         self._octree = f"{sid}.oct"
         self._moctree = f"m{sid}.oct"
@@ -159,11 +168,15 @@ class Scene:
 
     def _remove(self, obj, target):
         if isinstance(obj, Primitive):
-            del getattr(self, target)[obj.identifier]
+            key = obj.identifier
         elif isinstance(obj, (str, Path)):
-            del getattr(self, target)[str(obj)]
+            key = str(obj)
         else:
             raise TypeError("Unsupported type: ", type(obj))
+        try:
+            del getattr(self, target)[key]
+        except KeyError:
+            raise KeyError(f"{key!r} is not in scene {target}") from None
         self._changed = True
 
     def add_material(self, material: str | Path | Primitive):

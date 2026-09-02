@@ -120,8 +120,8 @@ def mkpmap(
                 str(pre_global_map[2]),
             ]
         )
-        if precomp is not None:
-            cmd.extend(["-apP", str(precomp)])
+    if precomp is not None:
+        cmd.extend(["-apP", str(precomp)])
     if predistrib is not None:
         cmd.extend(["-apD", str(predistrib)])
     if rect_region is not None:
@@ -400,13 +400,13 @@ def rtrace(
     if outspec:
         cmd.append(f"-o{outspec}")
     if trace_exclude:
-        cmd.append(f"-te{trace_exclude}")
+        cmd.extend(["-te", str(trace_exclude)])
     elif trace_include:
-        cmd.append(f"-ti{trace_include}")
+        cmd.extend(["-ti", str(trace_include)])
     elif trace_exclude_file:
-        cmd.append(f"-tE{trace_exclude_file}")
+        cmd.extend(["-tE", str(trace_exclude_file)])
     elif trace_include_file:
-        cmd.append(f"-tI{trace_include_file}")
+        cmd.extend(["-tI", str(trace_include_file)])
     if uncorrelated:
         cmd.append("-u+")
     if xres is not None:

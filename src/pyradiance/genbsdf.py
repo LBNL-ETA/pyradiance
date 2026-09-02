@@ -145,7 +145,7 @@ def generate_blinds(mat: ShadingMaterial, geom: BlindsGeometry) -> bytes:
         geom.angle,
         geom.rcurv,
     )
-    return material.bytes + blinds
+    return material.bytes + b"\n" + blinds
 
 
 def generate_blinds_for_bsdf(mat: ShadingMaterial, geom: BlindsGeometry) -> bytes:
@@ -568,7 +568,11 @@ def generate_bsdf(
         param_args.extend(params)
     param_args.extend(["-n", str(nproc)])
 
-    device = Xform(*inp)()
+    if not inp:
+        raise ValueError("generate_bsdf requires at least one input")
+    # Xform takes a *single* input; passing *inp would bind the 2nd/3rd
+    # arguments to its expand_cmd/invert keyword slots.
+    device = b"\n".join(Xform(i)() for i in inp)
     dim = _get_sampling_box(device=device, dim=dim)
 
     nx = int(math.sqrt(nsamp * (dim.xmax - dim.xmin) / (dim.ymax - dim.ymin)) + 1)
@@ -576,44 +580,72 @@ def generate_bsdf(
     param_args.extend(["-c", str(nx * ny)])
     param_args.extend(["-cs", str(nspec)])
 
-    if working_dir == "":
+    owns_working_dir = working_dir == ""
+    if owns_working_dir:
         working_dir = tempfile.mkdtemp(prefix="genBSDF")
     octree_file = os.path.join(working_dir, "device.oct")
-    with open(octree_file, "wb") as fp:
-        fp.write(oconv(stdin=device, warning=False))
+    try:
+        with open(octree_file, "wb") as fp:
+            fp.write(oconv(stdin=device, warning=False))
 
-    if tensortree:
-        fmt = "a" if os.name == "nt" else "f"
-        param_args.append(f"-f{fmt}")
-        tt_kwargs = dict(
-            tensortree=tensortree,
-            ttlog2=ttlog2,
-            octree_file=octree_file,
-            dim=dim,
-            nx=nx,
-            ny=ny,
-            tmpdir=working_dir,
-            params=param_args,
-            pctcull=pctcull,
-            recip=recip,
-        )
-        result.back = generate_tensortree_sdf(forw=False, **tt_kwargs)
-        if front:
-            result.front = generate_tensortree_sdf(forw=True, **tt_kwargs)
-    else:
-        param_args.append("-fd")
-        result.back = _generate_back_sdf(
-            octree_file, basis, dim, working_dir, params=param_args, outspec=outspec
-        )
-        if front:
-            result.front = _generate_front_sdf(
+        if tensortree:
+            fmt = "a" if os.name == "nt" else "f"
+            param_args.append(f"-f{fmt}")
+            tt_kwargs = dict(
+                tensortree=tensortree,
+                ttlog2=ttlog2,
+                octree_file=octree_file,
+                dim=dim,
+                nx=nx,
+                ny=ny,
+                tmpdir=working_dir,
+                params=param_args,
+                pctcull=pctcull,
+                recip=recip,
+            )
+            result.back = generate_tensortree_sdf(forw=False, **tt_kwargs)
+            if front:
+                result.front = generate_tensortree_sdf(forw=True, **tt_kwargs)
+        else:
+            param_args.append("-fd")
+            result.back = _generate_back_sdf(
                 octree_file, basis, dim, working_dir, params=param_args, outspec=outspec
             )
+            if front:
+                result.front = _generate_front_sdf(
+                    octree_file,
+                    basis,
+                    dim,
+                    working_dir,
+                    params=param_args,
+                    outspec=outspec,
+                )
+    finally:
+        # Always clean up, even if sampling raised. Only ever remove the
+        # working directory if we created it -- never the caller's own.
+        if os.path.exists(octree_file):
+            os.remove(octree_file)
+        if cleanup and owns_working_dir:
+            shutil.rmtree(working_dir, ignore_errors=True)
 
-    os.remove(octree_file)
-    if cleanup:
-        shutil.rmtree(working_dir)
     return result
+
+
+def _mean_of_matrix(data: bytes | float | int) -> float:
+    """Average the numbers in a Radiance matrix (or pass a scalar through).
+
+    ``SDFDataBytes.transmittance``/``.reflectance`` hold whole matrices, so
+    ``float()`` cannot be applied to them directly.
+    """
+    if isinstance(data, (float, int)):
+        return float(data)
+    if not data:
+        return 0.0
+    body = strip_header(data) if data.lstrip().startswith(b"#?") else data
+    values = [float(tok) for tok in body.split()]
+    if not values:
+        return 0.0
+    return sum(values) / len(values)
 
 
 def generate_xml(
@@ -647,16 +679,12 @@ def generate_xml(
         correct_solid_angle = not basis.startswith("t")
     emissivity_front = emissivity_back = 1.0
     if ir_results is not None:
-        emissivity_front = (
-            1
-            - float(ir_results.front.transmittance)
-            - float(ir_results.front.reflectance)
-        )
-        emissivity_back = (
-            1
-            - float(ir_results.back.transmittance)
-            - float(ir_results.back.reflectance)
-        )
+        emissivity_front = 1 - _mean_of_matrix(
+            ir_results.front.transmittance
+        ) - _mean_of_matrix(ir_results.front.reflectance)
+        emissivity_back = 1 - _mean_of_matrix(
+            ir_results.back.transmittance
+        ) - _mean_of_matrix(ir_results.back.reflectance)
 
     wrapper = WrapBSDF(
         basis=basis,

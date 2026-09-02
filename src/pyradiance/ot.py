@@ -10,15 +10,15 @@ from .anci import BINPATH, handle_called_process_error
 
 @handle_called_process_error
 def getbbox(
-    *inputs: str | bytes,
+    *inputs: str | Path | bytes,
     header: bool = False,
     warning: bool = True,
 ) -> list[float]:
     """Get axis-aligned bounding box of a Radiance scene.
 
     Args:
-        inputs: paths to Radiance scene files, or scene descriptions as bytes
-            which are piped to stdin.
+        inputs: paths to Radiance scene files, Primitive objects, or scene
+            descriptions as bytes which are piped to stdin.
         header: if True, include the header in the output
         warning: if False, warnings will be suppressed
 
@@ -32,7 +32,14 @@ def getbbox(
         if isinstance(inp, bytes):
             stdins.append(inp)
         elif isinstance(inp, (str, Path)):
-            paths.append(inp)
+            paths.append(str(inp))
+        elif hasattr(inp, "bytes"):
+            # Primitive (duck-typed to avoid a circular import with .model)
+            stdins.append(inp.bytes)
+        else:
+            raise TypeError(f"Unsupported input type: {type(inp)}")
+    if not stdins and not paths:
+        raise ValueError("getbbox() requires at least one input")
     stdin: None | bytes = None
     if not header:
         cmd.append("-h")
@@ -49,7 +56,7 @@ def getbbox(
 
 @handle_called_process_error
 def oconv(
-    *paths: str,
+    *paths: str | Path,
     warning: bool = True,
     stdin: None | bytes = None,
     frozen: bool = False,
@@ -74,7 +81,7 @@ def oconv(
         cmd.append("-w")
     if frozen:
         cmd.append("-f")
-    cmd.extend(paths)
+    cmd.extend(str(p) for p in paths)
     if stdin:
         if isinstance(stdin, bytes):
             cmd.append("-")

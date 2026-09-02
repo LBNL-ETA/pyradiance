@@ -123,8 +123,9 @@ def evalglare(
             cmd.append("-C")
             cmd.append(str(correction_mode))
         if not peak_extraction:
+            # -x disables peak extraction; -Y would silently re-enable it.
             cmd.append("-x")
-        if peak_extraction_value:
+        elif peak_extraction_value:
             cmd.append("-Y")
             cmd.append(str(peak_extraction_value))
         if search_radius != 0.2:
@@ -134,12 +135,14 @@ def evalglare(
         stdin = inp
     elif isinstance(inp, (Path, str)):
         cmd.append(str(inp))
+    else:
+        raise TypeError("inp must be a Path, str, or bytes")
     return sp.run(cmd, input=stdin, check=True, capture_output=True).stdout
 
 
 @handle_called_process_error
 def dctimestep(
-    *mtx: str | bytes,
+    *mtx: str | Path | bytes,
     nstep: None | int = None,
     header: bool = True,
     xres: None | int = None,
@@ -166,8 +169,8 @@ def dctimestep(
     _stdout = True
     stdin = None
     cmd = [str(BINPATH / "dctimestep")]
-    if len(mtx) not in (2, 4):
-        raise ValueError("mtx must be a list of 2 or 4 items")
+    if len(mtx) not in (1, 2, 3, 4):
+        raise ValueError("dctimestep takes between 1 and 4 matrix arguments")
     if nstep:
         cmd.extend(["-n", str(nstep)])
     if not header:
@@ -183,10 +186,25 @@ def dctimestep(
     if ospec:
         cmd.extend(["-o", ospec])
         _stdout = False
-    if isinstance(mtx[-1], bytes):
-        stdin = mtx[-1]
-        mtx = mtx[:-1]
-    cmd.extend(mtx)
+    # dctimestep has no "-" pseudo-filename: the only matrix it can read from
+    # memory is the trailing sky, which is passed by omitting the argument.
+    # The old code checked only mtx[-1], so a bytes matrix in any other
+    # position was extended into argv as a raw bytes object.
+    args: list[str] = []
+    for i, m in enumerate(mtx):
+        if isinstance(m, bytes):
+            if i != len(mtx) - 1:
+                raise ValueError(
+                    "Only the last matrix may be given as bytes; dctimestep "
+                    "reads it from stdin and every other argument must be a "
+                    "file path."
+                )
+            stdin = m
+        elif isinstance(m, (str, Path)):
+            args.append(str(m))
+        else:
+            raise TypeError(f"Unsupported matrix type: {type(m)}")
+    cmd.extend(args)
     result = sp.run(cmd, check=True, input=stdin, capture_output=True)
     if _stdout:
         return result.stdout
@@ -195,7 +213,7 @@ def dctimestep(
 
 @handle_called_process_error
 def getinfo(
-    *inputs: tuple[str | Path | bytes, ...],
+    *inputs: str | Path | bytes,
     dimension_only: bool = False,
     dimension: bool = False,
     strip_header: bool = False,
@@ -236,7 +254,18 @@ def getinfo(
     else:
         if any(isinstance(i, bytes) for i in inputs):
             raise TypeError("All inputs must be str or Path if one is")
-        cmd.extend(map(str, inputs))
+        if strip_header:
+            # "getinfo -" only strips the header of its *stdin*; naming a file
+            # on the command line makes getinfo print the header instead.
+            if len(inputs) != 1:
+                raise ValueError(
+                    "strip_header requires exactly one input; got "
+                    f"{len(inputs)}"
+                )
+            stdin = Path(str(inputs[0])).read_bytes()
+            cmd.append("-")
+        else:
+            cmd.extend(map(str, inputs))
     return sp.run(cmd, input=stdin, capture_output=True, check=True).stdout
 
 
@@ -249,8 +278,13 @@ def get_image_dimensions(image: str | Path | bytes) -> tuple[int, int]:
     Returns:
         Tuple[int, int]: width and height
     """
+    # "getinfo -d" prints "-Y H +X W" for stdin, but prefixes the filename
+    # ("file.hdr: -Y H +X W") when given a path, so index from the end.
     output = getinfo(image, dimension_only=True).decode().split()
-    return int(output[3]), int(output[1])
+    if len(output) < 4:
+        raise ValueError(f"Could not parse image dimensions from {output!r}")
+    yres, xres = int(output[-3]), int(output[-1])
+    return xres, yres
 
 
 @handle_called_process_error
@@ -726,10 +760,21 @@ def render(
     rad_render_options = []
     if ambbounce is not None:
         rad_render_options.extend(["-ab", str(ambbounce)])
+    _ambbounce = 0 if ambbounce is None else ambbounce
     if not ambcache:
         rad_render_options.extend(["-aa", "0"])
     aview = scene.views[0] if view is None else view
     xmin, xmax, ymin, ymax, zmin, zmax = getbbox(*scene.surfaces.values())
+    # rad rejects a ZONE with a zero-extent axis, which is what a flat scene
+    # (a single floor polygon, say) produces. Pad any degenerate axis.
+    _span = max(xmax - xmin, ymax - ymin, zmax - zmin, 1.0)
+    _pad = _span * 1e-3
+    if xmax - xmin <= 0:
+        xmin, xmax = xmin - _pad, xmax + _pad
+    if ymax - ymin <= 0:
+        ymin, ymax = ymin - _pad, ymax + _pad
+    if zmax - zmin <= 0:
+        zmin, zmax = zmin - _pad, zmax + _pad
     distance = (
         ((xmax - xmin) / 2) ** 2 + ((ymax - ymin) / 2) ** 2 + ((zmax - zmin) / 2) ** 2
     )
@@ -748,14 +793,18 @@ def render(
     radvars = [
         f"ZONE={zone}",
         f"OCTREE={scene.octree}",
-        f"scene={scenestring}",
-        f"materials={materialstring}",
         f"QUALITY={quality}",
         f"VARIABILITY={variability}",
         f"DETAIL={detail}",
         f"render= {' '.join(rad_render_options)}",
         f"OPT= {optpath}",
     ]
+    # rad rejects an empty "scene=" / "materials=" assignment, which is what a
+    # Scene built purely from Primitive objects would produce.
+    if scenestring.strip():
+        radvars.insert(2, f"scene={scenestring}")
+    if materialstring.strip():
+        radvars.insert(2, f"materials={materialstring}")
     if ambbounce and ambcache:
         ambfile = f"{scene.sid}.amb"
         radvars.append(f"AMBFILE={ambfile}")
@@ -766,24 +815,30 @@ def render(
         radvars.append(f"RESOLUTION={xres} {yres}")
     else:
         xres = yres = 512
-    rad(os.devnull, dryrun=True, varstr=radvars).decode().splitlines()
-    with open(optpath) as f:
-        param_strs = f.read().strip().replace("\n", " ").split()
-    os.remove(optpath)
+    # The octree has to exist before the rad dry run: with a Primitive-only
+    # scene there is no "scene=" variable, so OCTREE is rad's only input.
     scene.build()
+    try:
+        rad(os.devnull, dryrun=True, varstr=radvars).decode().splitlines()
+        with open(optpath) as f:
+            param_strs = f.read().strip().replace("\n", " ").split()
+    finally:
+        if os.path.exists(optpath):
+            os.remove(optpath)
     specout = ncssamp > 3
     if specout:
         param_strs.extend(["-co+", "-cs", str(ncssamp)])
     if params is not None:
         param_strs.extend(get_ray_params_args(params))
     vargs = get_view_args(aview)
+    # vwrays -d prints "-x W -y H" (unlike getinfo -d, which prints "-Y H +X W")
     res_raw = vwrays(view=vargs, dimensions=True, xres=xres, yres=yres).decode().split()
-    xres, yres = int(res_raw[3]), int(res_raw[1])
+    xres, yres = int(res_raw[1]), int(res_raw[3])
     if not specout and nproc == 1:
         return rpict(
             vargs, scene.octree, params=["-ps", "1"] + param_strs, xres=xres, yres=yres
         )
-    if nproc > 1 and ambbounce > 0 and ambcache:
+    if nproc > 1 and _ambbounce > 0 and ambcache:
         # straight picture output, so just shuffle sample order
         if not specout:
             ord = cnt(xres, yres, shuffled=True)
@@ -804,9 +859,15 @@ def render(
                 o + b"\t" + p
                 for o, p in zip(ord.splitlines(), strip_header(pix).splitlines())
             )
-            content = sp.run(
-                ["sort", "-k2rn", "-k1n"], input=sorted_lines, check=True, stdout=sp.PIPE
-            ).stdout
+            # Sort by scanline descending, then by pixel ascending. Done in
+            # Python because Windows' sort.exe does not understand -k.
+            def _sortkey(line: bytes):
+                # cnt emits tab-separated "\tX\tY"; the pixel value follows.
+                tok = line.split()
+                return (-int(tok[1]), int(tok[0]))
+
+            _lines = sorted(sorted_lines.splitlines(), key=_sortkey)
+            content = b"\n".join(_lines) + b"\n" if _lines else b""
             return pvaluer(header + content, yres=yres, xres=xres)
         # else randomize overture calculation to prime ambient cache
         oxres, oyres = int(xres / 6), int(yres / 6)
@@ -875,10 +936,11 @@ def rfluxmtx(
     if octree is not None:
         cmd.extend(["-i", str(octree)])
     if scene is not None:
-        if os.name == "nt":
-            cmd.extend(f'"{str(s)}"' for s in scene)
-        else:
-            cmd.extend(str(s) for s in scene)
+        # rfluxmtx quotes the scene files itself when it re-invokes oconv, so
+        # they must be passed verbatim. The old Windows branch wrapped each
+        # one in literal double quotes, which became part of the filename
+        # because sp.run is not called with shell=True.
+        cmd.extend(str(s) for s in scene)
     return sp.run(cmd, check=True, stdout=sp.PIPE, input=rays).stdout
 
 
@@ -916,12 +978,15 @@ def rmtxop(
     if transform is not None:
         cmd.extend(["-c", *[str(c) for c in transform]])
     if reflectance is not None:
-        cmd.append(f"r{reflectance}")
+        # usage is -rf / -rb
+        cmd.append(f"-r{reflectance[0]}")
     if isinstance(inp, bytes):
         stdin = inp
         cmd.append("-")
     elif isinstance(inp, (str, Path)):
         cmd.append(str(inp))
+    else:
+        raise TypeError("inp must be a Path, str, or bytes")
     return sp.run(cmd, check=True, input=stdin, stdout=sp.PIPE).stdout
 
 
@@ -943,7 +1008,10 @@ class Rmtxop:
         self.stdin = None
         self.cmd.append(f"-f{outform}")
         if color is not None:
-            self.cmd.extend(["-C", color])
+            raise ValueError(
+                "rmtxop has no -C option (that belongs to rcomb). Use the "
+                "'transform' argument of add_input() instead."
+            )
         self.nparts = 0
 
     def add_input(
@@ -988,7 +1056,8 @@ class Rmtxop:
             else:
                 self.cmd.extend(map(str, scale))
         if refl_side is not None:
-            self.cmd.append(f"r{refl_side[0]}")
+            # usage is -rf / -rb
+            self.cmd.append(f"-r{refl_side[0]}")
         if transpose:
             self.cmd.append("-t")
         if transform is not None:
@@ -998,7 +1067,10 @@ class Rmtxop:
             else:
                 self.cmd.extend(map(str, transform))
         elif color is not None:
-            self.cmd.extend(["-C", color])
+            raise ValueError(
+                "rmtxop has no -C option (that belongs to rcomb). Use "
+                "'transform' instead."
+            )
         if isinstance(input_data, bytes):
             if self.stdin is None:
                 self.stdin = input_data
@@ -1041,10 +1113,20 @@ def rsensor(
     """
     cmd = [str(BINPATH / "rsensor")]
 
+    nsensors = len(sensor)
+    for name, seq in (
+        ("sensor_view", sensor_view),
+        ("direct_ray", direct_ray),
+        ("ray_count", ray_count),
+    ):
+        if seq is not None and len(seq) != nsensors:
+            raise ValueError(
+                f"{name} has {len(seq)} entries but there are {nsensors} sensors"
+            )
     for i, sf in enumerate(sensor):
         if ray_count is not None:
             cmd.extend(["-rd", str(ray_count[i])])
-        if (direct_ray is not None) and octree is not None:
+        if direct_ray is not None:
             cmd.extend(["-dn", str(direct_ray[i])])
         if sensor_view is not None:
             cmd.append(str(sensor_view[i]))
@@ -1553,11 +1635,18 @@ class Xform:
 
     @handle_called_process_error
     def _execute(self):
+        # Build the argv locally: mutating self.args here would append the
+        # input file again on every subsequent call.
+        args = list(self.args)
+        stdin: None | bytes = None
         if isinstance(self.inp, bytes):
-            self.stdin = self.inp
+            stdin = self.inp
+        elif isinstance(self.inp, (str, Path)):
+            args.append(str(self.inp))
         else:
-            self.args.append(str(self.inp))
-        return sp.run(self.args, check=True, input=self.stdin, stdout=sp.PIPE).stdout
+            raise TypeError("inp must be a Path, str, or bytes")
+        self.stdin = stdin
+        return sp.run(args, check=True, input=stdin, stdout=sp.PIPE).stdout
 
     def __call__(self):
         return self._execute()
@@ -1601,7 +1690,7 @@ def load_material_smd(
     max_wvl = max(wvls)
 
     sce_cie = spec_xyz(sces, min_wvl, max_wvl)
-    if all(scis):
+    if scis:
         sci_cie = spec_xyz(scis, min_wvl, max_wvl)
         specular = sci_cie[1] - sce_cie[1]
 

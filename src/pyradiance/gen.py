@@ -114,9 +114,10 @@ def genblinds(
     """
     cmd = [str(BINPATH / "genblinds"), mat, name, str(depth), str(width), str(height)]
     cmd.extend([str(nslats), str(angle)])
-    if rcurv is not None:
-        cmd.append("+r") if rcurv > 0 else cmd.append("-r")
-        cmd.append(str(rcurv))
+    if rcurv:
+        # rcurv == 0 means flat slats; genblinds wants the option omitted.
+        cmd.append("+r" if rcurv > 0 else "-r")
+        cmd.append(str(abs(rcurv)))
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
@@ -367,7 +368,7 @@ class GenGlaze:
             "-p", prefix,
         ]
 
-    def add_monolithic(self, fpath: str, thickness: float):
+    def add_monolithic(self, fpath: str | Path, thickness: float):
         """Add a monolithic glazing layer.
 
         Args:
@@ -380,12 +381,13 @@ class GenGlaze:
         Raises:
             ValueError: if fpath does not have a .dat suffix.
         """
+        fpath = str(fpath)
         if not fpath.endswith(".dat"):
             raise ValueError(f"Expect a .dat input file, got {fpath}")
         self.cmd.extend(["-m", fpath, str(thickness)])
         return self
 
-    def add_coated(self, fpath: str):
+    def add_coated(self, fpath: str | Path):
         """Add a coated glazing layer.
 
         Args:
@@ -397,6 +399,7 @@ class GenGlaze:
         Raises:
             ValueError: if fpath does not have a .dat suffix.
         """
+        fpath = str(fpath)
         if not fpath.endswith(".dat"):
             raise ValueError(f"Expect a .dat input file, got {fpath}")
         self.cmd.extend(["-c", fpath])
@@ -448,7 +451,8 @@ def genglaze_data(
         for idx, layer in enumerate(layers):
             output_lines.append(
                 (
-                    f"# Layer {idx + 1}: {layer.name}({layer.thickness_m:.4f}m) {layer.glazing_type}"
+                    f"# Layer {idx + 1}: {layer.name}({layer.thickness_m:.4f}m) "
+                    f"{layer.glazing_type.value}"
                 ).encode()
             )
 
@@ -458,8 +462,14 @@ def genglaze_data(
 
             if layer.glazing_type == GlazingType.monolithic:
                 cmd.extend(["-m", dat_fpath, str(layer.thickness_m)])
-            else:
+            elif layer.glazing_type == GlazingType.coated:
                 cmd.extend(["-c", dat_fpath])
+            elif layer.glazing_type == GlazingType.laminate:
+                # A laminate has a physical thickness, so it is modelled the
+                # same way as a monolithic layer rather than as a thin coating.
+                cmd.extend(["-m", dat_fpath, str(layer.thickness_m)])
+            else:
+                raise ValueError(f"Unknown glazing type: {layer.glazing_type}")
 
         output_lines.append(b"")
 
@@ -697,7 +707,7 @@ def gensdaymtx(
     if onesun:
         cmd.extend(["-5", ".533"])
     if ground_reflectance:
-        cmd.extend(["-g", str(ground_reflectance)])
+        cmd.extend(["-g", *[str(g) for g in ground_reflectance]])
     cmd.extend(["-n", str(nthreads)])
     if daylight_hours_only:
         cmd.append("-u")
@@ -705,7 +715,8 @@ def gensdaymtx(
         cmd.extend(["-r", str(rotate)])
     if outform is not None:
         cmd.append(f"-o{outform}")
-    cmd.extend(["-p", out_dir])
+    os.makedirs(out_dir, exist_ok=True)
+    cmd.extend(["-p", str(out_dir)])
     if isinstance(weather_data, bytes):
         stdin = weather_data
     elif isinstance(weather_data, (str, Path)):
@@ -866,7 +877,8 @@ def genssky(
     cmd.extend(["-g", str(ground_reflectance)])
     if mie_file is not None:
         cmd.extend(["-l", str(mie_file)])
-    cmd.extend(["-p", out_dir])
+    os.makedirs(out_dir, exist_ok=True)
+    cmd.extend(["-p", str(out_dir)])
     cmd.extend(["-f", out_name])
     if (dir_norm_illum is not None) and (diff_hor_illum is not None):
         cmd.extend(["-L", str(dir_norm_illum), str(diff_hor_illum)])

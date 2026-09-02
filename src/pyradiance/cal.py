@@ -83,11 +83,10 @@ def rcalc(
         cmd.append(f"-i{inform}{incount}")
     if outform is not None:
         cmd.append(f"-o{outform}")
-    if inform and outform:
-        if passive:
-            cmd.append("-p")
-        elif pass_negative:
-            cmd.append("-P")
+    if passive:
+        cmd.append("-p")
+    elif pass_negative:
+        cmd.append("-P")
     if inlimit is not None:
         cmd.extend(["-in", str(inlimit)])
     if outlimit is not None:

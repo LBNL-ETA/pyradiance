@@ -33,7 +33,7 @@ def obj2rad(
     cmd = [str(BINPATH / "obj2rad")]
     if quallist:
         cmd.append("-n")
-    elif flatten:
+    if flatten:
         cmd.append("-f")
     if objname is not None:
         cmd.extend(["-o", objname])
@@ -80,9 +80,11 @@ def obj2mesh(
         cmd.extend(["-l", matlib])
     cmd.extend(["-n", str(objlim)])
     cmd.extend(["-r", str(maxres)])
-    if isinstance(matfiles, Sequence):
+    if matfiles is not None:
+        if isinstance(matfiles, (str, Path)):
+            matfiles = [matfiles]
         for matfile in matfiles:
-            cmd.extend(["-a", matfile])
+            cmd.extend(["-a", str(matfile)])
     if isinstance(inp, bytes):
         stdin = inp
     else:
@@ -92,7 +94,7 @@ def obj2mesh(
 
 @handle_called_process_error
 def pkgbsdf(
-    *xml: tuple[str | Path, ...], frozen: bool = False, stdout: bool = False
+    *xml: str | Path, frozen: bool = False, stdout: bool = False
 ) -> None | bytes:
     """Pacakge BSDFs provided as XML for Radiance.
 
@@ -212,13 +214,13 @@ def mgf2rad(
         cmd.extend(["-e", str(mult)])
     if dist is not None:
         cmd.extend(["-g", str(dist)])
-    cmd.extend(inp)
+    cmd.extend(str(i) for i in inp)
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
 @handle_called_process_error
 def ies2rad(
-    *inp: tuple[str | Path, ...],
+    *inp: str | Path,
     libdir: None | str = None,
     prefdir: None | str = None,
     outname: None | str = None,
@@ -285,7 +287,7 @@ def ies2rad(
 
 @handle_called_process_error
 def bsdf2klems(
-    *inp: str,
+    *inp: str | Path,
     spp: None | int = None,
     half: bool = False,
     quater: bool = False,
@@ -323,13 +325,17 @@ def bsdf2klems(
         cmd.append("-h")
     elif quater:
         cmd.append("-q")
-    if not progress_bar:
-        cmd.append("-p")
-    elif progress_bar_length is not None:
-        cmd.append(f"p{progress_bar_length}")
-    if len(inp) == 1:
+    if progress_bar:
+        if progress_bar_length is not None:
+            cmd.append(f"-p{progress_bar_length}")
+        else:
+            cmd.append("-p")
+    inps = [str(i) for i in inp]
+    if not inps:
+        raise ValueError("bsdf2klems requires at least one input")
+    if len(inps) == 1 and not inps[0].endswith(".sir"):
+        inp0 = inps[0]
         # xml input
-        inp0: str = inp[0]
         if inp0.endswith(".xml"):
             cmd.append(inp0)
         # func input
@@ -346,18 +352,19 @@ def bsdf2klems(
     # sir input
     else:
         if maxlobes is not None:
-            cmd.extend(["-m", str(maxlobes)])
-        cmd.extend(inp)
+            # usage is -l maxlobes, not -m
+            cmd.extend(["-l", str(maxlobes)])
+        cmd.extend(inps)
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
 @handle_called_process_error
 def bsdf2ttree(
-    *inp: str,
+    *inp: str | Path,
     isotropic: bool = False,
     reciprocity_averaging: bool = True,
     resolution: int = 6,
-    percent_cull: Sequence[float] = [90],
+    percent_cull: None | float | Sequence[float] = None,
     super_samples: int = 256,
     difference_threshold: float = 0.35,
     progress_bar: bool = False,
@@ -391,47 +398,59 @@ def bsdf2ttree(
         Tensor tree BSDF XML in bytes
     """
     cmd = [str(BINPATH / "bsdf2ttree")]
-    if not progress_bar:
-        cmd.append("-p")
-    elif progress_bar_length is not None:
-        cmd.append(f"p{progress_bar_length}")
+    if progress_bar:
+        if progress_bar_length is not None:
+            cmd.append(f"-p{progress_bar_length}")
+        else:
+            cmd.append("-p")
     if not reciprocity_averaging:
         cmd.append("-a")
     cmd.extend(["-g", str(resolution)])
     cmd.extend(["-n", str(super_samples)])
     cmd.extend(["-s", str(difference_threshold)])
-    if all([f.endswith(".sir") for f in inp]):
+    inps = [str(i) for i in inp]
+    if not inps:
+        raise ValueError("bsdf2ttree requires at least one input")
+    if isinstance(percent_cull, (float, int)):
+        culls: None | list[float] = [float(percent_cull)]
+    elif percent_cull is None:
+        culls = None
+    else:
+        culls = [float(c) for c in percent_cull]
+    if all(f.endswith(".sir") for f in inps):
         cmd.extend(["-l", str(maxlobes)])
-        if percent_cull is not None:
-            if len(percent_cull) not in (1, len(inp)):
+        if culls is not None:
+            if len(culls) not in (1, len(inps)):
                 raise ValueError(
                     "number of percent_cull should be 1 or equal to number of inputs."
                 )
-            if len(percent_cull) == 1:
-                cmd.extend(["-t", str(percent_cull[0])])
+            if len(culls) == 1:
+                # one global cull percentage, then all the .sir inputs
+                cmd.extend(["-t", str(culls[0])])
+                cmd.extend(inps)
             else:
-                for i, p in zip(inp, percent_cull):
-                    cmd.extend(["-t", str(i), str(p)])
+                # per-input cull percentage: -t pctcull precedes its input
+                for i, p in zip(inps, culls):
+                    cmd.extend(["-t", str(p), i])
         else:
-            cmd.extend(inp)
+            cmd.extend(inps)
     else:
-        if len(inp) > 1:
+        if len(inps) > 1:
             raise ValueError("only one input is allowed for bsdf_func invocation.")
-        if isotropic:
-            cmd.append("-t3")
+        # -t{3|4} selects the tree rank and must come first; it is a *different*
+        # option from "-t pctcull", so only emit a cull if one was requested.
+        cmd.insert(1, "-t3" if isotropic else "-t4")
         if forward:
             cmd.append("+forward")
         if not backward:
             cmd.append("-backward")
-        if isinstance(percent_cull, (float, int)):
-            cmd.extend(["-t", str(percent_cull)])
-        else:
-            cmd.extend(["-t", str(percent_cull[0])])
+        if culls is not None:
+            cmd.extend(["-t", str(culls[0])])
         if expr is not None:
             cmd.extend(["-e", expr])
         if file is not None:
             cmd.extend(["-f", file])
-        cmd.append(inp[0])
+        cmd.append(inps[0])
     return sp.run(cmd, check=True, stdout=sp.PIPE).stdout
 
 
