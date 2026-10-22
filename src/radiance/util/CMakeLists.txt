@@ -47,6 +47,7 @@ target_link_libraries(rfluxmtx PRIVATE rtrad ${PLATFORM_MATH_LIB})
 
 install(
   FILES ambpos.cal
+        cieskyscan.cal
         disk2square.cal
         hsv_rgb.cal
         klems_full.cal

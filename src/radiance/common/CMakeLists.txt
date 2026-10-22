@@ -140,3 +140,6 @@ set_target_properties(rtrad PROPERTIES POSITION_INDEPENDENT_CODE ON)
 # Special compile definitions
 target_compile_definitions(rtrad
                            PRIVATE DEFPATH=":${CMAKE_INSTALL_PREFIX}/lib/ray")
+
+# Function file referenced by obj2rad and tmesh2rad output
+install(FILES tmesh.cal DESTINATION ${SKBUILD_PLATLIB_DIR}/pyradiance/lib)
