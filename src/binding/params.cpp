@@ -33,8 +33,58 @@ std::string viewstr(VIEW &v) {
     return std::string(buffer);
 }
 
+// Compute derived view vectors, raising on an invalid view.
+// vdir and vdist are left as given (setview() would normalize vdir).
+void check_setview(VIEW &v) {
+    VIEW tmp = v;
+    const char *err = setview(&tmp);
+    if (err != NULL)
+        throw nb::value_error((std::string("invalid view: ") + err).c_str());
+    VCOPY(v.hvec, tmp.hvec);
+    VCOPY(v.vvec, tmp.vvec);
+    v.hn2 = tmp.hn2;
+    v.vn2 = tmp.vn2;
+}
+
+// Ambient include/exclude list stored inside a RAYPARAMS struct
+std::vector<std::string> get_amblist(const RAYPARAMS &rp) {
+    std::vector<std::string> result;
+    for (int i = 0; i < AMBLLEN; i++) {
+        const char *s = rpambmod(&rp, i);
+        if (s == NULL)
+            break;
+        result.emplace_back(s);
+    }
+    return result;
+}
+
+void set_amblist(RAYPARAMS &rp, const std::vector<std::string> &vals) {
+    if (vals.size() > AMBLLEN)
+        throw nb::value_error("too many entries in ambient list");
+    size_t ndx = 0;
+    memset(rp.amblval, '\0', sizeof(rp.amblval));
+    for (size_t i = 0; i < vals.size(); i++) {
+        size_t len = vals[i].size();
+        if (ndx + len >= sizeof(rp.amblval))
+            throw nb::value_error("ambient list too long");
+        memcpy(rp.amblval + ndx, vals[i].c_str(), len + 1);
+        rp.amblndx[i] = (short)ndx;
+        ndx += len + 1;
+    }
+    for (size_t i = vals.size(); i <= AMBLLEN; i++)
+        rp.amblndx[i] = -1;
+}
+
+void set_color3(COLOR c, const std::vector<float> &vals, const char *name) {
+    if (vals.size() != 3)
+        throw nb::value_error((std::string(name) + " requires 3 values").c_str());
+    c[0] = vals[0];
+    c[1] = vals[1];
+    c[2] = vals[2];
+}
+
 NB_MODULE(rad_params, m) {
-	progname = "rad_params";
+	progname = const_cast<char *>("rad_params");
     m.doc() = "Radiance common";
 
     nb::class_<VIEW>(m, "View")
@@ -97,26 +147,15 @@ NB_MODULE(rad_params, m) {
           })
         .def_rw("hn2", &VIEW::hn2)  /* DOT(hvec,hvec) */
         .def_rw("vn2", &VIEW::vn2) /* DOT(vvec,vvec) */
+        .def("setview", &check_setview,
+             "Recompute derived vectors (hvec, vvec, hn2, vn2) after "
+             "changing view parameters; raises ValueError if invalid")
         .def("__repr__", &viewstr)
         .def("__str__", &viewstr);
 
     m.def("create_default_view", []() {
-        VIEW v = {0};  // Zero-initialize the struct
-        v.type = 'v';
-        v.vp[0] = 0.; v.vp[1] = 0.; v.vp[2] = 0.;
-        v.vdir[0] = 0.; v.vdir[1] = 1.; v.vdir[2] = 0.;
-        v.vup[0] = 0.; v.vup[1] = 0.; v.vup[2] = 1.;
-        v.vdist = 1.;
-        v.horiz = 45.;
-        v.vert = 45.;
-        v.hoff = 0.;
-        v.voff = 0.;
-        v.vfore = 0.;
-        v.vaft = 0.; 
-        v.hvec[0] = 1.; v.hvec[1] = 0.; v.hvec[2] = 0.;
-        v.vvec[0] = 0.; v.vvec[1] = 0.; v.vvec[2] = 0.;
-        v.hn2 = 0.;
-        v.vn2 = 0.;
+        VIEW v = STDVIEW;
+        check_setview(v);
         return v;
     });
 
@@ -126,18 +165,22 @@ NB_MODULE(rad_params, m) {
         .def_rw("xr", &RESOLU::xr)
         .def_rw("yr", &RESOLU::yr);
 
-    m.def("parse_view", [](const char *s) {
-        VIEW vp;
-        sscanview(&vp, const_cast<char *>(s));
+    m.def("parse_view", [](const std::string &s) {
+        VIEW vp = STDVIEW;
+        std::vector<char> buf(s.begin(), s.end());
+        buf.push_back('\0');
+        sscanview(&vp, buf.data());
+        check_setview(vp);
         return vp;
-    }, "Parse a view string into a View object");
+    }, nb::arg("s"), "Parse a view string into a View object");
 
     m.def("viewfile", [](const char *fname) {
-        VIEW vp = {0};
+        VIEW vp = STDVIEW;
         int result = viewfile(const_cast<char *>(fname), &vp, NULL);
-		if (result <= 0) {  // viewfile failed
-        throw std::runtime_error("Failed to read view file: " + std::string(fname ? fname : "stdin"));
-		}
+        if (result <= 0) {  // viewfile failed
+            throw std::runtime_error("Failed to read view file: " + std::string(fname ? fname : "stdin"));
+        }
+        check_setview(vp);
         return vp;
     }, "Read a view file into a View object");
 
@@ -222,10 +265,8 @@ NB_MODULE(rad_params, m) {
               return nb::make_tuple(param.cextinction[0], param.cextinction[1],
                                     param.cextinction[2]);
             },
-            [](RAYPARAMS &param, const float v1, const float v2, const float v3) {
-              param.cextinction[0] = v1;
-              param.cextinction[1] = v2;
-              param.cextinction[2] = v3;
+            [](RAYPARAMS &param, const std::vector<float> &vals) {
+              set_color3(param.cextinction, vals, "me");
             },
             "medium(mist) extinction coefficients")
         .def_prop_rw(
@@ -234,10 +275,8 @@ NB_MODULE(rad_params, m) {
               return nb::make_tuple(param.salbedo[0], param.salbedo[1],
                                     param.salbedo[2]);
             },
-            [](RAYPARAMS &param, const float v1, const float v2, const float v3) {
-              param.salbedo[0] = v1;
-              param.salbedo[1] = v2;
-              param.salbedo[2] = v3;
+            [](RAYPARAMS &param, const std::vector<float> &vals) {
+              set_color3(param.salbedo, vals, "ma");
             },
             "medium (mist) scattering albedo")
         .def_prop_rw(
@@ -281,10 +320,8 @@ NB_MODULE(rad_params, m) {
               return nb::make_tuple(param.ambval[0], param.ambval[1],
                                     param.ambval[2]);
             },
-            [](RAYPARAMS &param, std::vector<float> vals) {
-              param.ambval[0] = vals[0];
-              param.ambval[1] = vals[1];
-              param.ambval[2] = vals[2];
+            [](RAYPARAMS &param, const std::vector<float> &vals) {
+              set_color3(param.ambval, vals, "av");
             },
             "ambient values")
         .def_prop_rw(
@@ -313,28 +350,14 @@ NB_MODULE(rad_params, m) {
             "ambient bounce")
         .def_prop_rw(
             "ambincl", [](RAYPARAMS &param) { return param.ambincl; },
-            [](RAYPARAMS &param, const bool val) { param.ambincl = val; },
-            "ambient inclusion/exclusion")
-        .def_prop_rw(
-            "amblist",
-            [](RAYPARAMS &param) {
-                nb::list result;
-                for (int i = 0; i < AMBLLEN + 1; i++) {
-                  if (amblist[i] == nullptr) {
-                    break;
-                  }
-                  result.append(amblist[i]);
-                }
-                return result;
+            [](RAYPARAMS &param, const int val) {
+              if (val < -1 || val > 1)
+                throw nb::value_error("ambincl must be 1 (include), 0 (exclude), or -1 (unset)");
+              param.ambincl = val;
             },
-            [](RAYPARAMS &param, std::vector<const char *> vals) {
-                char **amblp = amblist;
-                for (int i = 0; i < vals.size(); i++) {
-                  *amblp++ = savqstr(vals[i]);
-                }
-                *amblp = NULL;
-            }
-        );
+            "ambient inclusion/exclusion: 1 = include, 0 = exclude, -1 = unset")
+        .def_prop_rw("amblist", &get_amblist, &set_amblist,
+            "ambient include/exclude modifier list");
 
     m.def("get_default_ray_params", []() {
         RAYPARAMS rp;
@@ -394,16 +417,10 @@ NB_MODULE(rad_params, m) {
         args.append("-ab");
         args.append(std::to_string(r.ambounce));
         if (r.ambincl == 1 || r.ambincl == 0) {
-            if (r.ambincl == 1) {
-                args.append("-ai");
-            } else if (r.ambincl == 0) {
-                args.append("-ae");
-            }
-            for (int i = 0; i < AMBLLEN + 1; i++) {
-              if (amblist[i] == nullptr) {
-                break;
-              }
-              args.append(amblist[i]);
+            const char *flag = (r.ambincl == 1) ? "-ai" : "-ae";
+            for (const std::string &mod : get_amblist(r)) {
+              args.append(flag);
+              args.append(mod);
             }
         }
         if (r.ambfile[0] != '\0') {

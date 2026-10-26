@@ -1,5 +1,10 @@
 #include "bsdf.h"
+#include "bsdf_m.h"
+#include "random.h"
 #include "ray.h"
+#include <initializer_list>
+#include <stdexcept>
+#include <string>
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
 #include <nanobind/stl/string.h>
@@ -9,7 +14,31 @@ namespace nb = nanobind;
 
 using Mat3 = nb::ndarray<double, nb::shape<3, 3>>;
 using Vec3 = nb::ndarray<double, nb::shape<3>>;
-using Vec6 = nb::ndarray<double, nb::shape<6>>;
+using NpArray = nb::ndarray<nb::numpy, double>;
+
+// Copy data into a heap buffer owned by the returned numpy array
+template <typename T>
+NpArray owned_array(const T *src, std::initializer_list<size_t> shape) {
+  size_t n = 1;
+  for (size_t s : shape)
+    n *= s;
+  double *buf = new double[n];
+  for (size_t i = 0; i < n; i++)
+    buf[i] = src[i];
+  nb::capsule owner(buf, [](void *p) noexcept { delete[] (double *)p; });
+  return NpArray(buf, shape.size(), shape.begin(), owner);
+}
+
+void check_sderror(SDError ec) {
+  if (ec == SDEnone)
+    return;
+  std::string msg = SDerrorList[ec];
+  if (SDerrorDetail[0]) {
+    msg += ": ";
+    msg += SDerrorDetail;
+  }
+  throw std::runtime_error(msg);
+}
 
 void vec_from_deg(double theta, double phi, FVECT vec) {
   const double DEG = 0.01745329251;
@@ -47,9 +76,13 @@ NB_MODULE(bsdf, m) {
       .def_ro("clock", &C_COLOR::clock)
       .def_ro("client_data", &C_COLOR::client_data)
       .def_ro("flags", &C_COLOR::flags)
-      .def_prop_ro(
-          "ssamp",
-          [](C_COLOR &c) { return nb::make_tuple(&c.ssamp[0], C_CNSS); })
+      .def_prop_ro("ssamp",
+                   [](C_COLOR &c) {
+                     nb::list result;
+                     for (int i = 0; i < C_CNSS; i++)
+                       result.append(c.ssamp[i]);
+                     return result;
+                   })
       .def_ro("ssum", &C_COLOR::ssum)
       .def_ro("cx", &C_COLOR::cx)
       .def_ro("cy", &C_COLOR::cy)
@@ -123,52 +156,58 @@ NB_MODULE(bsdf, m) {
       .def_ro("tf", &SDData::tf)
       .def_ro("tb", &SDData::tb);
 
-  m.def("load_file", &SDcacheFile);
-  m.def("free", &SDfreeCache);
   m.def(
-      "inv_xform",
-      [](const Mat3 v_mtx) {
-        RREAL iMtx[3][3] = {{0}};
-        RREAL vMtx[3][3] = {{v_mtx(0, 0), v_mtx(0, 1), v_mtx(0, 2)},
-                            {v_mtx(1, 0), v_mtx(1, 1), v_mtx(1, 2)},
-                            {v_mtx(2, 0), v_mtx(2, 1), v_mtx(2, 2)}};
-        SDinvXform(iMtx, vMtx);
-        return Mat3(iMtx);
+      "load_file",
+      [](const char *fname) {
+        const SDData *sd = SDcacheFile(fname);
+        if (sd == NULL)
+          throw std::runtime_error(std::string("cannot load BSDF file: ") +
+                                   fname +
+                                   (SDerrorDetail[0]
+                                        ? std::string(" (") + SDerrorDetail + ")"
+                                        : std::string()));
+        return sd;
       },
-      nb::rv_policy::reference_internal);
+      nb::arg("fname"), nb::rv_policy::reference,
+      "Load a BSDF file into the cache. The returned object is owned by the "
+      "cache; release it with free().");
+  m.def("free", &SDfreeCache, nb::arg("sd") = nb::none(),
+        "Free a BSDF from the cache, or the entire cache if None.");
+  m.def("inv_xform", [](const Mat3 v_mtx) {
+    RREAL iMtx[3][3] = {{0}};
+    RREAL vMtx[3][3] = {{v_mtx(0, 0), v_mtx(0, 1), v_mtx(0, 2)},
+                        {v_mtx(1, 0), v_mtx(1, 1), v_mtx(1, 2)},
+                        {v_mtx(2, 0), v_mtx(2, 1), v_mtx(2, 2)}};
+    check_sderror(SDinvXform(iMtx, vMtx));
+    return owned_array(&iMtx[0][0], {3, 3});
+  });
 
-  m.def(
-      "comp_xform",
-      [](const Vec3 s_nrm, const Vec3 u_vec) {
-        RREAL vMtx[3][3] = {{0}};
-        const FVECT sNrm = {s_nrm(0), s_nrm(1), s_nrm(2)};
-        const FVECT uVec = {u_vec(0), u_vec(1), u_vec(2)};
-        SDcompXform(vMtx, sNrm, uVec);
-        return Vec3(vMtx);
-      },
-      nb::rv_policy::reference_internal);
+  m.def("comp_xform", [](const Vec3 s_nrm, const Vec3 u_vec) {
+    RREAL vMtx[3][3] = {{0}};
+    const FVECT sNrm = {s_nrm(0), s_nrm(1), s_nrm(2)};
+    const FVECT uVec = {u_vec(0), u_vec(1), u_vec(2)};
+    check_sderror(SDcompXform(vMtx, sNrm, uVec));
+    return owned_array(&vMtx[0][0], {3, 3});
+  });
 
-  m.def(
-      "map_dir",
-      [](const Vec3 inp_vec, Mat3 v_mtx) {
-        FVECT resVec = {0};
-        RREAL vMtx[3][3] = {
-            {v_mtx(0, 0), v_mtx(0, 1), v_mtx(0, 2)},
-            {v_mtx(1, 0), v_mtx(1, 1), v_mtx(1, 2)},
-            {v_mtx(2, 0), v_mtx(2, 1), v_mtx(2, 2)},
-        };
-        const FVECT inpVec = {inp_vec(0), inp_vec(1), inp_vec(2)};
-        SDmapDir(resVec, vMtx, inpVec);
-        return Vec3(resVec);
-      },
-      nb::rv_policy::reference_internal);
+  m.def("map_dir", [](const Vec3 inp_vec, const Mat3 v_mtx) {
+    FVECT resVec = {0};
+    RREAL vMtx[3][3] = {
+        {v_mtx(0, 0), v_mtx(0, 1), v_mtx(0, 2)},
+        {v_mtx(1, 0), v_mtx(1, 1), v_mtx(1, 2)},
+        {v_mtx(2, 0), v_mtx(2, 1), v_mtx(2, 2)},
+    };
+    const FVECT inpVec = {inp_vec(0), inp_vec(1), inp_vec(2)};
+    check_sderror(SDmapDir(resVec, vMtx, inpVec));
+    return owned_array(resVec, {3});
+  });
 
   m.def("size", [](const SDData *sd, const double theta, const double phi,
                    const int qflags) {
     double proj_sa[2] = {0};
     FVECT v1 = {0};
     vec_from_deg(theta, phi, v1);
-    SDsizeBSDF(proj_sa, v1, NULL, qflags, sd);
+    check_sderror(SDsizeBSDF(proj_sa, v1, NULL, qflags, sd));
     return nb::make_tuple(proj_sa[0], proj_sa[1]);
   });
 
@@ -179,7 +218,7 @@ NB_MODULE(bsdf, m) {
     FVECT v2 = {0};
     vec_from_deg(theta, phi, v1);
     vec_from_deg(t2, p2, v2);
-    SDsizeBSDF(proj_sa, v1, v2, qflags, sd);
+    check_sderror(SDsizeBSDF(proj_sa, v1, v2, qflags, sd));
     return nb::make_tuple(proj_sa[0], proj_sa[1]);
   });
 
@@ -193,6 +232,8 @@ NB_MODULE(bsdf, m) {
 
   m.def("sample", [](const SDData *sd, const double theta, const double phi,
                      const int nsamp, const int sflags) {
+    if (nsamp <= 0)
+      throw std::invalid_argument("nsamp must be positive");
     FVECT vin = {0};
     FVECT vout = {0};
     SDValue val;
@@ -202,9 +243,12 @@ NB_MODULE(bsdf, m) {
     for (int i = 0; i<nsamp; i++) {
       int ii = i * 6;
       VCOPY(vout, vin);
-      SDsampBSDF(&val, vout,
-                 (i + rand() * (1. / (RAND_MAX + .5))) / (double)nsamp, sflags,
-                 sd);
+      SDError ec = SDsampBSDF(
+          &val, vout, (i + frandom()) / (double)nsamp, sflags, sd);
+      if (ec) {
+        delete[] result;
+        check_sderror(ec);
+      }
       result[ii] = vout[0];
       result[ii + 1] = vout[1];
       result[ii + 2] = vout[2];
@@ -228,21 +272,19 @@ NB_MODULE(bsdf, m) {
           FVECT vout = {0};
           vec_from_deg(theta_in, phi_in, vin);
           vec_from_deg(theta_out, phi_out, vout);
-          SDevalBSDF(&val, vin, vout, sd);
+          check_sderror(SDevalBSDF(&val, vin, vout, sd));
           get_cie_xyz(&val, cie_xyz);
-          return nb::ndarray<nb::numpy, double, nb::ndim<1>>(cie_xyz, {3});
+          return owned_array(cie_xyz, {3});
         });
 
   m.def("spec_xyz",
         [](std::vector<double> spec, double wlmin, double wlmax){
             C_COLOR clr;
             double cie_x, cie_y, cie_z;
-            int nwvl = spec.size();
-            float* ssamp = new float[nwvl];
-            for (size_t i=0; i<nwvl; i++) {
-                ssamp[i] = static_cast<float>(spec[i]);
-            }
-            cie_y = c_sset(&clr, wlmin, wlmax, ssamp, nwvl);
+            std::vector<float> ssamp(spec.begin(), spec.end());
+            if (ssamp.empty())
+                throw std::invalid_argument("spec must not be empty");
+            cie_y = c_sset(&clr, wlmin, wlmax, ssamp.data(), (int)ssamp.size());
             c_ccvt(&clr, 4);
             double d = clr.cx / clr.cy;
             cie_x = d * cie_y;
@@ -257,6 +299,27 @@ NB_MODULE(bsdf, m) {
             cie_rgb(rgb, xyz);
             return nb::make_tuple(rgb[0], rgb[1], rgb[2]);
         });
-  // TODO: add abase_list
 
+  m.def(
+      "abase_list",
+      []() {
+        nb::list result;
+        for (int i = 0; i < nabases; i++) {
+          const ANGLE_BASIS &ab = abase_list[i];
+          nb::list lats;
+          for (int j = 0; j <= MAXLATS; j++) {
+            lats.append(nb::make_tuple(ab.lat[j].tmin, ab.lat[j].nphis));
+            if (ab.lat[j].nphis == 0)
+              break;
+          }
+          nb::dict basis;
+          basis["name"] = std::string(ab.name);
+          basis["nangles"] = ab.nangles;
+          basis["lat"] = lats;
+          result.append(basis);
+        }
+        return result;
+      },
+      "List the defined angle bases (Klems etc.) as dicts with 'name', "
+      "'nangles', and 'lat' as (theta_min, nphis) pairs ending at 90 degrees.");
 }
